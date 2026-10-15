@@ -15,8 +15,6 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <StartupObject>FModel.App</StartupObject>
-    <!-- reference sources for the blueprint viewer port, not part of this project -->
-    <DefaultItemExcludes>$(DefaultItemExcludes);UEBlueprintGraphViewer-main\**</DefaultItemExcludes>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

@@ -1,33 +1,52 @@
-FModel - An Unreal Engine Archives Explorer in C#
-------------------------------------------
+# Flora
 
-[![CI Status](https://img.shields.io/github/actions/workflow/status/4sval/FModel/qa.yml?label=CI)](https://github.com/4sval/FModel/actions)
-[![Latest](https://img.shields.io/github/v/release/4sval/FModel?color=yellow)](https://fmodel.app/download)
-[![Donate](https://img.shields.io/badge/sponsor-DB61A2?logo=GitHub-Sponsors&logoColor=white)](https://fmodel.app/donate)
-[![Discord](https://discord.com/api/guilds/637265123144237061/widget.png?style=shield)](https://fmodel.app/discord)
+Flora is a customized fork of [FModel](https://github.com/4sval/FModel), the Unreal Engine archive explorer, built on [CUE4Parse](https://github.com/FabianFG/CUE4Parse). On top of FModel it adds an IDA-style dockable workspace, a visual blueprint viewer and a UMG widget designer.
+
 ***
 
-### Description:
-FModel is an archive explorer for [Unreal Engine](https://www.unrealengine.com/en-US/) games that uses [CUE4Parse](https://github.com/FabianFG/CUE4Parse) as its core parsing library, providing robust support for the latest UE4 and UE5 archive formats. It aims to deliver a modern and intuitive user interface, powerful features, and a comprehensive set of tools for previewing and converting game packages, empowering YOU to understand games' inner workings with ease.
+## Features
 
-FModel is actively maintained and developed by a dedicated community of contributors, and welcomes all new contributions and feedback.
+### Dockable workspace
+- Panels (archives, folders, packages, search, audio player, image merger, AES/backup managers, settings, ...) live in one window instead of popups.
+- Every panel can be docked, floated, pinned **always on top** (sticky-note style) or detached as an independent window.
+- Layout is saved to `%AppData%\FModel\DockLayout.xml`; *Window → Reset Layout* restores the default.
 
-### Installation:
-For installation, follow the instructions from [here](https://github.com/4sval/FModel/wiki/Installing-FModel)
+### Blueprint graph viewer
+- Double-click a Blueprint package to open it in the graph viewer (toggle: *Settings → Open Blueprints in Graph Viewer*).
+- Decompiled Kismet is shown as node graphs, with pseudo-code and C++ style output.
+- Uses `.usmap` / `.jmap` mappings for unversioned properties.
 
-### Sponsorship:
-<p>
-  <a href="https://www.jetbrains.com/">
-    <img src="https://cdn.fmodel.app/i/svg/jetbrains.svg" width="256px">
-  </a>
-  <a href="https://1password.com/">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://cdn.fmodel.app/i/svg/1password-light.svg">
-      <source media="(prefers-color-scheme: light)" srcset="https://cdn.fmodel.app/i/svg/1password-dark.svg">
-      <img src="https://cdn.fmodel.app/i/svg/1password-light.svg" width="256px">
-    </picture>
-  </a>
-</p>
+### UMG widget designer
+- Renders the widget tree with layout, slots, brushes, game fonts and localized text.
+- Resolves referenced textures, Paper2D sprites and materials automatically, with a shared cache.
+- **Edit (Preview)** tab: change widget/slot properties to try things out. Edits are in-memory only, are highlighted, can be reset per property / widget / all, and are **never written back** to the asset.
 
-### License:
-FModel is licensed under [GPL-3](https://github.com/4sval/FModel/blob/dev/LICENSE), and licenses of third-party libraries used are listed [here](https://github.com/4sval/FModel/blob/dev/NOTICE).
+### Other
+- English UI by default; Chinese (zh-CN) localization is included.
+- Blueprint export helpers (C++ / UAssetAPI JSON) and patch-pak write-back tooling.
+
+## Project layout
+
+| Path | Content |
+| --- | --- |
+| `FModel/` | WPF application (UI, view models, docking, blueprint viewer views) |
+| `FModel.BlueprintGraph/` | Blueprint decompiler, graph model, widget layout/props |
+| `FModel.BlueprintGraph.Tests/` | Unit tests for the above |
+| `CUE4Parse/` | Local CUE4Parse copy used by the app |
+| `KardsExtract/` | Small headless CUE4Parse CLI used for testing |
+
+## Building
+
+Requires the .NET SDK matching `FModel.csproj` and Windows (WPF).
+
+```bash
+git clone https://github.com/CCB-TEAM/Flora.git
+cd Flora
+dotnet build FModel/FModel.csproj -c Release
+```
+
+## Credits and license
+
+Flora is based on [FModel](https://github.com/4sval/FModel) by 4sval and contributors, [CUE4Parse](https://github.com/FabianFG/CUE4Parse) by FabianFG and contributors, and ideas from UEBlueprintGraphViewer.
+
+Licensed under [GPL-3.0](LICENSE). Third-party libraries are listed in [NOTICE](NOTICE).
