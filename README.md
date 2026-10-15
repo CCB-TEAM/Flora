@@ -33,7 +33,6 @@ Flora is a customized fork of [FModel](https://github.com/4sval/FModel), the Unr
 | `FModel.BlueprintGraph/` | Blueprint decompiler, graph model, widget layout/props |
 | `FModel.BlueprintGraph.Tests/` | Unit tests for the above |
 | `CUE4Parse/` | Local CUE4Parse copy used by the app |
-| `KardsExtract/` | Small headless CUE4Parse CLI used for testing |
 
 ## Building
 
