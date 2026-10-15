@@ -1,0 +1,393 @@
+<UserControl x:Class="FModel.Views.BlueprintViewer.BlueprintViewerWindow"
+         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+         xmlns:loc="clr-namespace:FModel.Localization"
+         xmlns:bp="clr-namespace:FModel.Views.BlueprintViewer"
+         xmlns:converters="clr-namespace:FModel.Views.Resources.Converters"
+         xmlns:adonisUi="clr-namespace:AdonisUI;assembly=AdonisUI"
+         xmlns:adonisControls="clr-namespace:AdonisUI.Controls;assembly=AdonisUI"
+         xmlns:adonisExtensions="clr-namespace:AdonisUI.Extensions;assembly=AdonisUI"
+         xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
+         xmlns:vm="clr-namespace:FModel.ViewModels" PreviewKeyDown="OnPreviewKeyDown">
+    <UserControl.Resources>
+        <!-- dark tree items: the default template falls back to a white selection outside of the main window -->
+        <Style x:Key="WidgetTreeItemStyle" TargetType="{x:Type TreeViewItem}">
+            <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+            <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
+            <Setter Property="Foreground" Value="{DynamicResource {x:Static adonisUi:Brushes.ForegroundBrush}}" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type TreeViewItem}">
+                        <StackPanel>
+                            <Border x:Name="Bd" Background="Transparent" CornerRadius="3" Padding="2 2 6 2"
+                                    TextElement.Foreground="{TemplateBinding Foreground}">
+                                <DockPanel>
+                                    <ToggleButton x:Name="Expander" DockPanel.Dock="Left" Width="16" Height="16" Margin="0 0 2 0"
+                                                  Focusable="False" ClickMode="Press"
+                                                  IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}}">
+                                        <ToggleButton.Template>
+                                            <ControlTemplate TargetType="{x:Type ToggleButton}">
+                                                <Border Background="Transparent">
+                                                    <Path x:Name="Arrow" Data="M 5 3 L 10 8 L 5 13 Z" Fill="#8A90A0"
+                                                          HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsChecked" Value="True">
+                                                        <Setter TargetName="Arrow" Property="Data" Value="M 3 5 L 13 5 L 8 10 Z" />
+                                                    </Trigger>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="Arrow" Property="Fill" Value="#E6E8EE" />
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </ToggleButton.Template>
+                                    </ToggleButton>
+                                    <ContentPresenter ContentSource="Header" VerticalAlignment="Center" />
+                                </DockPanel>
+                            </Border>
+                            <ItemsPresenter x:Name="ItemsHost" Margin="14 0 0 0" />
+                        </StackPanel>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsExpanded" Value="False">
+                                <Setter TargetName="ItemsHost" Property="Visibility" Value="Collapsed" />
+                            </Trigger>
+                            <Trigger Property="HasItems" Value="False">
+                                <Setter TargetName="Expander" Property="Visibility" Value="Hidden" />
+                            </Trigger>
+                            <Trigger SourceName="Bd" Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#2E3340" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource {x:Static adonisUi:Brushes.AccentBrush}}" />
+                                <Setter TargetName="Bd" Property="TextElement.Foreground" Value="White" />
+                            </Trigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsSelected" Value="True" />
+                                    <Condition Property="Selector.IsSelectionActive" Value="False" />
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="Bd" Property="Background" Value="#34496A" />
+                            </MultiTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+    <DockPanel>
+    <!-- editing: pending changes and saving -->
+    <Border DockPanel.Dock="Bottom" Padding="8 5" BorderThickness="0 1 0 0" BorderBrush="{DynamicResource {x:Static adonisUi:Brushes.Layer1BorderBrush}}"
+            DataContext="{Binding Editor}">
+        <DockPanel>
+            <Button DockPanel.Dock="Right" Margin="5 0 0 0" MinWidth="80" Content="{loc:Loc BlueprintEditor_Discard}" Click="OnDiscardClick"
+                    IsEnabled="{Binding IsDirty}" />
+            <Button DockPanel.Dock="Right" Margin="5 0 0 0" MinWidth="120" Content="{loc:Loc BlueprintEditor_SavePak}" Click="OnSavePakClick"
+                    IsEnabled="{Binding CanEdit}" />
+            <Button DockPanel.Dock="Right" Margin="5 0 0 0" MinWidth="120" Content="{loc:Loc BlueprintEditor_ExportAsset}" Click="OnExportAssetClick"
+                    IsEnabled="{Binding CanEdit}" />
+            <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" FontWeight="SemiBold" Margin="0 0 10 0" Text="{Binding PendingText}" />
+            <TextBlock VerticalAlignment="Center" Text="{Binding Status}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Status}" />
+        </DockPanel>
+    </Border>
+    <TabControl x:Name="ModeTabs" SelectionChanged="OnModeTabChanged">
+        <TabItem Header="{loc:Loc BlueprintViewer_GraphTab}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="260" MinWidth="150" />
+                    <ColumnDefinition Width="5" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="5" />
+                    <ColumnDefinition Width="340" MinWidth="150" />
+                </Grid.ColumnDefinitions>
+
+                <!-- events and functions -->
+                <DockPanel Grid.Column="0" Margin="5">
+                    <TextBox x:Name="FunctionFilter" DockPanel.Dock="Top" Margin="0 0 0 5" TextChanged="OnFunctionFilterChanged"
+                             adonisExtensions:WatermarkExtension.Watermark="{loc:Loc BlueprintViewer_FilterFunctions}" />
+                    <ListBox x:Name="FunctionList" ItemsSource="{Binding Functions}" SelectedItem="{Binding SelectedFunction, Mode=TwoWay}"
+                             SelectionChanged="OnFunctionSelected">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <DockPanel ToolTip="{Binding Function.Name}">
+                                    <Border DockPanel.Dock="Left" Width="6" Height="6" Margin="0 0 6 0" CornerRadius="3" VerticalAlignment="Center">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#86279F" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Kind}" Value="Event">
+                                                        <Setter Property="Background" Value="#A01B2B" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                    </Border>
+                                    <TextBlock Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" />
+                                </DockPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </DockPanel>
+
+                <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Background="Transparent" />
+
+                <!-- graph -->
+                <DockPanel Grid.Column="2" Margin="0 5">
+                    <DockPanel DockPanel.Dock="Top" Margin="0 0 0 5">
+                        <Button DockPanel.Dock="Right" Content="{loc:Loc BlueprintViewer_Fit}" MinWidth="50" Margin="5 0 0 0" Click="OnFitClick" ToolTip="Zoom to fit the whole graph" />
+                        <Button DockPanel.Dock="Right" Content="▼" Width="30" Margin="5 0 0 0" Click="OnSearchNextClick" ToolTip="Next result (Enter)" />
+                        <Button DockPanel.Dock="Right" Content="▲" Width="30" Margin="5 0 0 0" Click="OnSearchPreviousClick" ToolTip="Previous result (Shift+Enter)" />
+                        <TextBlock x:Name="SearchCount" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="5 0 0 0" MinWidth="50" TextAlignment="Right" />
+                        <TextBox x:Name="SearchBox" TextChanged="OnSearchChanged" KeyDown="OnSearchKeyDown"
+                                 adonisExtensions:WatermarkExtension.Watermark="{loc:Loc BlueprintViewer_SearchNodes}" />
+                    </DockPanel>
+                    <TextBlock DockPanel.Dock="Bottom" Margin="0 5 0 0" Text="{Binding StatusText}" TextTrimming="CharacterEllipsis" />
+                    <Grid>
+                        <bp:BlueprintGraphCanvas x:Name="GraphCanvas" />
+                        <Border Background="#80000000" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <TextBlock Text="{Binding StatusText}" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontSize="16" />
+                        </Border>
+                    </Grid>
+                </DockPanel>
+
+                <GridSplitter Grid.Column="3" Width="5" HorizontalAlignment="Stretch" Background="Transparent" />
+
+                <!-- details -->
+                <Grid Grid.Column="4" Margin="5">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" MaxHeight="220" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Text="{loc:Loc BlueprintViewer_Selection}" FontWeight="SemiBold" Margin="0 0 0 5" />
+                    <TextBox Grid.Row="1" Text="{Binding SelectionText, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" MinHeight="60" MaxHeight="220"
+                             VerticalScrollBarVisibility="Auto" FontFamily="Consolas" />
+                    <StackPanel x:Name="PinEditPanel" Grid.Row="2" Margin="0 5 0 0" Visibility="Collapsed">
+                        <TextBlock x:Name="PinEditLabel" FontWeight="SemiBold" Margin="0 0 0 3" TextWrapping="Wrap" />
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Margin="5 0 0 0" MinWidth="60" Content="{loc:Loc BlueprintEditor_Apply}" Click="OnPinApplyClick" />
+                            <TextBox x:Name="PinEditBox" KeyDown="OnPinEditKeyDown" AcceptsReturn="False" />
+                        </DockPanel>
+                        <TextBlock x:Name="PinEditError" Foreground="#E05050" TextWrapping="Wrap" Margin="0 3 0 0" Visibility="Collapsed" />
+                    </StackPanel>
+                    <TabControl Grid.Row="3" Margin="0 5 0 0">
+                        <TabItem Header="{loc:Loc BlueprintViewer_NodeBytecode}">
+                            <avalonEdit:TextEditor x:Name="NodeJsonEditor" IsReadOnly="True" FontFamily="Consolas" FontSize="12"
+                                                   ShowLineNumbers="False" WordWrap="False" Background="Transparent" />
+                        </TabItem>
+                        <TabItem Header="{loc:Loc BlueprintViewer_FunctionBytecode}">
+                            <avalonEdit:TextEditor x:Name="FunctionJsonEditor" IsReadOnly="True" FontFamily="Consolas" FontSize="12"
+                                                   ShowLineNumbers="True" WordWrap="False" Background="Transparent" />
+                        </TabItem>
+                    </TabControl>
+                    <TextBlock Grid.Row="4" Text="{loc:Loc BlueprintViewer_Problems}" FontWeight="SemiBold" Margin="0 5 0 5" />
+                    <TextBox Grid.Row="5" Text="{Binding ProblemsText, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap"
+                             VerticalScrollBarVisibility="Auto" />
+                </Grid>
+            </Grid>
+        </TabItem>
+            <TabItem Header="{loc:Loc BlueprintViewer_DesignerTab}" Visibility="{Binding IsWidgetBlueprint, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Grid DataContext="{Binding Designer}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="260" MinWidth="150" />
+                        <ColumnDefinition Width="5" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="5" />
+                        <ColumnDefinition Width="340" MinWidth="150" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- widget hierarchy -->
+                    <TreeView x:Name="WidgetTree" Grid.Column="0" Margin="5" ItemsSource="{Binding Roots}" SelectedItemChanged="OnWidgetTreeSelected"
+                              ItemContainerStyle="{StaticResource WidgetTreeItemStyle}" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                              Background="{DynamicResource {x:Static adonisUi:Brushes.Layer1BackgroundBrush}}" BorderThickness="0"
+                              Foreground="{DynamicResource {x:Static adonisUi:Brushes.ForegroundBrush}}">
+                        <TreeView.ItemTemplate>
+                            <HierarchicalDataTemplate DataType="{x:Type vm:WidgetTreeItem}" ItemsSource="{Binding Children}">
+                                <TextBlock Text="{Binding DisplayName}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsCollapsedWidget}" Value="True">
+                                                    <Setter Property="Opacity" Value="0.5" />
+                                                    <Setter Property="FontStyle" Value="Italic" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding HasPreviewEdits}" Value="True">
+                                                    <Setter Property="Foreground" Value="#F0C674" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </HierarchicalDataTemplate>
+                        </TreeView.ItemTemplate>
+                    </TreeView>
+
+                    <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Background="Transparent" />
+
+                    <!-- preview -->
+                    <DockPanel Grid.Column="2" Margin="0 5">
+                        <DockPanel DockPanel.Dock="Top" Margin="0 0 0 5" LastChildFill="False">
+                            <TextBlock DockPanel.Dock="Left" Text="{loc:Loc BlueprintViewer_DesignSize}" VerticalAlignment="Center" Margin="0 0 5 0" />
+                            <ComboBox DockPanel.Dock="Left" MinWidth="160" ItemsSource="{Binding DesignSizes}" SelectedItem="{Binding SelectedDesignSize, Mode=TwoWay}"
+                                      SelectionChanged="OnDesignSizeChanged" />
+                            <CheckBox x:Name="OutlinesCheckBox" DockPanel.Dock="Left" Margin="10 0 0 0" VerticalAlignment="Center" IsChecked="True"
+                                      Content="{loc:Loc BlueprintViewer_Outlines}" Click="OnOutlinesClick" />
+                            <Button DockPanel.Dock="Right" Content="{loc:Loc BlueprintViewer_Fit}" MinWidth="50" Click="OnDesignerFitClick" />
+                            <Button DockPanel.Dock="Right" Content="{loc:Loc WidgetEditor_Button}" MinWidth="90" Margin="0 0 5 0"
+                                    Click="OnEditPropertiesClick" ToolTip="{loc:Loc WidgetEditor_PreviewOnly}" />
+                        </DockPanel>
+                        <bp:WidgetDesignerCanvas x:Name="DesignerCanvas" />
+                    </DockPanel>
+
+                    <GridSplitter Grid.Column="3" Width="5" HorizontalAlignment="Stretch" Background="Transparent" />
+
+                    <!-- widget details -->
+                    <Grid Grid.Column="4" Margin="5">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" MaxHeight="200" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Text="{loc:Loc BlueprintViewer_Selection}" FontWeight="SemiBold" Margin="0 0 0 5" />
+                        <TextBox Grid.Row="1" Text="{Binding SelectionText, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" MinHeight="60" MaxHeight="220"
+                                 VerticalScrollBarVisibility="Auto" FontFamily="Consolas" />
+                        <TabControl x:Name="DesignerDetailsTabs" Grid.Row="2" Margin="0 5 0 0">
+                            <TabItem Header="{loc:Loc BlueprintViewer_WidgetProperties}">
+                                <avalonEdit:TextEditor x:Name="WidgetJsonEditor" IsReadOnly="True" FontFamily="Consolas" FontSize="12"
+                                                       ShowLineNumbers="False" WordWrap="False" Background="Transparent" />
+                            </TabItem>
+                            <TabItem x:Name="DesignerEditTab" Header="{loc:Loc WidgetEditor_Tab}">
+                                <DockPanel>
+                                    <Border DockPanel.Dock="Top" Background="#3A3018" CornerRadius="3" Padding="6 4" Margin="0 0 0 5">
+                                        <TextBlock TextWrapping="Wrap" Foreground="#F0C674" Text="{loc:Loc WidgetEditor_PreviewOnly}" />
+                                    </Border>
+                                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0 0 0 5">
+                                        <Button MinWidth="90" Content="{loc:Loc WidgetEditor_ResetWidget}" Click="OnResetWidgetClick" />
+                                        <Button MinWidth="90" Margin="5 0 0 0" Content="{loc:Loc WidgetEditor_ResetAll}" Click="OnResetAllClick" />
+                                    </StackPanel>
+                                    <TextBlock DockPanel.Dock="Top" Opacity="0.6" TextWrapping="Wrap" Text="{loc:Loc WidgetEditor_NoSelection}"
+                                               Visibility="{Binding HasEditableSelection, Converter={x:Static converters:InvertBoolToVisibilityConverter.Instance}}" />
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                        <ItemsControl ItemsSource="{Binding PropertyRows}" KeyboardNavigation.TabNavigation="Continue">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate DataType="{x:Type vm:WidgetPropertyRow}">
+                                                    <Grid Margin="0 1" MinHeight="24">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="45*" />
+                                                            <ColumnDefinition Width="55*" />
+                                                            <ColumnDefinition Width="22" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Grid.Column="0" Grid.ColumnSpan="{Binding IsHeader, Converter={x:Static bp:HeaderSpanConverter.Instance}}"
+                                                                   Text="{Binding Label}" ToolTip="{Binding Tooltip}" Margin="{Binding Indent}"
+                                                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsHeader}" Value="True">
+                                                                            <Setter Property="FontWeight" Value="SemiBold" />
+                                                                            <Setter Property="Opacity" Value="0.8" />
+                                                                        </DataTrigger>
+                                                                        <DataTrigger Binding="{Binding IsOverridden}" Value="True">
+                                                                            <Setter Property="FontWeight" Value="SemiBold" />
+                                                                            <Setter Property="Foreground" Value="#F0C674" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                        <TextBox Grid.Column="1" Text="{Binding ValueText, UpdateSourceTrigger=LostFocus}" KeyDown="OnPropertyValueKeyDown"
+                                                                 ToolTip="{Binding ErrorText}"
+                                                                 Visibility="{Binding IsTextEditor, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                                        <ComboBox Grid.Column="1" ItemsSource="{Binding Options}" SelectedItem="{Binding ValueText}"
+                                                                  Visibility="{Binding IsEnumEditor, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                                        <CheckBox Grid.Column="1" VerticalAlignment="Center" IsChecked="{Binding BoolValue}"
+                                                                  Visibility="{Binding IsBoolEditor, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                                        <TextBlock Grid.Column="1" Text="{Binding ValueText}" Opacity="0.55" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                                                   ToolTip="{Binding ValueText}"
+                                                                   Visibility="{Binding IsReadOnlyValue, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                                        <Button Grid.Column="2" Content="&#x21BA;" Padding="0" Margin="2 0 0 0" ToolTip="{loc:Loc WidgetEditor_ResetProperty}"
+                                                                Click="OnResetPropertyClick"
+                                                                Visibility="{Binding IsOverridden, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
+                                </DockPanel>
+                            </TabItem>
+                        </TabControl>
+                        <TextBlock Grid.Row="3" Text="{loc:Loc BlueprintViewer_Bindings}" FontWeight="SemiBold" Margin="0 5 0 5" />
+                        <ListBox Grid.Row="4" ItemsSource="{Binding Bindings}" MouseDoubleClick="OnBindingDoubleClick" />
+                    </Grid>
+                </Grid>
+            </TabItem>
+        <TabItem x:Name="DefaultsTab" Header="{loc:Loc BlueprintEditor_DefaultsTab}">
+            <Grid DataContext="{Binding Editor}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" MinWidth="300" />
+                    <ColumnDefinition Width="5" />
+                    <ColumnDefinition Width="420" MinWidth="200" />
+                </Grid.ColumnDefinitions>
+
+                <DockPanel Grid.Column="0" Margin="5">
+                    <TextBlock DockPanel.Dock="Top" Text="{Binding CdoTitle}" FontWeight="SemiBold" Margin="0 0 0 5" TextTrimming="CharacterEllipsis" />
+                    <DockPanel DockPanel.Dock="Top" Margin="0 0 0 5">
+                        <CheckBox x:Name="OverriddenOnlyCheckBox" DockPanel.Dock="Right" Margin="10 0 0 0" VerticalAlignment="Center"
+                                  Content="{loc:Loc BlueprintEditor_OverriddenOnly}" Click="OnCdoFilterChanged" />
+                        <TextBox x:Name="CdoFilter" TextChanged="OnCdoFilterChanged"
+                                 adonisExtensions:WatermarkExtension.Watermark="{loc:Loc BlueprintEditor_FilterProperties}" />
+                    </DockPanel>
+                    <Grid>
+                        <ListView x:Name="CdoList" ItemsSource="{Binding CdoProperties}" SelectionMode="Single" SelectionChanged="OnCdoSelected">
+                            <ListView.ItemContainerStyle>
+                                <Style TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsOverridden}" Value="False">
+                                            <Setter Property="Opacity" Value="0.55" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ListView.ItemContainerStyle>
+                            <ListView.View>
+                                <GridView>
+                                    <GridViewColumn Header="{loc:Loc BlueprintEditor_ColumnName}" Width="220" DisplayMemberBinding="{Binding DisplayName}" />
+                                    <GridViewColumn Header="{loc:Loc BlueprintEditor_ColumnType}" Width="150" DisplayMemberBinding="{Binding TypeText}" />
+                                    <GridViewColumn Header="{loc:Loc BlueprintEditor_ColumnValue}" Width="260" DisplayMemberBinding="{Binding Preview}" />
+                                    <GridViewColumn Header="{loc:Loc BlueprintEditor_ColumnOwner}" Width="160" DisplayMemberBinding="{Binding Owner}" />
+                                </GridView>
+                            </ListView.View>
+                        </ListView>
+                        <Border Background="#80000000" Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <TextBlock Text="{Binding Status}" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontSize="16" />
+                        </Border>
+                    </Grid>
+                </DockPanel>
+
+                <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Background="Transparent" />
+
+                <DockPanel Grid.Column="2" Margin="5">
+                    <TextBlock x:Name="CdoSelectionTitle" DockPanel.Dock="Top" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0 0 0 5" />
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0 0 0 5">
+                        <Button x:Name="CdoApplyButton" MinWidth="70" Content="{loc:Loc BlueprintEditor_Apply}" Click="OnCdoApplyClick" />
+                        <Button x:Name="CdoAddButton" MinWidth="70" Margin="5 0 0 0" Content="{loc:Loc BlueprintEditor_Override}" Click="OnCdoAddClick"
+                                ToolTip="{loc:Loc BlueprintEditor_OverrideTip}" />
+                        <Button x:Name="CdoRemoveButton" MinWidth="70" Margin="5 0 0 0" Content="{loc:Loc BlueprintEditor_Revert}" Click="OnCdoRemoveClick"
+                                ToolTip="{loc:Loc BlueprintEditor_RevertTip}" />
+                    </StackPanel>
+                    <TextBlock x:Name="CdoError" DockPanel.Dock="Top" Foreground="#E05050" TextWrapping="Wrap" Margin="0 0 0 5" Visibility="Collapsed" />
+                    <ComboBox x:Name="CdoValueBox" DockPanel.Dock="Top" IsEditable="True" Visibility="Collapsed" KeyDown="OnCdoValueKeyDown" />
+                    <avalonEdit:TextEditor x:Name="CdoJsonEditor" FontFamily="Consolas" FontSize="12" ShowLineNumbers="True" WordWrap="False"
+                                           Background="Transparent" Visibility="Collapsed" />
+                </DockPanel>
+            </Grid>
+        </TabItem>
+    </TabControl>
+    </DockPanel>
+</UserControl>

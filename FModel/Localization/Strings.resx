@@ -1,0 +1,960 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Menu_Directory" xml:space="preserve">
+    <value>Directory</value>
+  </data>
+  <data name="Menu_Directory_Selector" xml:space="preserve">
+    <value>Selector</value>
+  </data>
+  <data name="Menu_Directory_AES" xml:space="preserve">
+    <value>AES</value>
+  </data>
+  <data name="Menu_Directory_Backup" xml:space="preserve">
+    <value>Backup</value>
+  </data>
+  <data name="Menu_Directory_ArchivesInfo" xml:space="preserve">
+    <value>Archives Info</value>
+  </data>
+  <data name="Menu_Packages" xml:space="preserve">
+    <value>Packages</value>
+  </data>
+  <data name="Menu_Packages_Search" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="Menu_Packages_References" xml:space="preserve">
+    <value>References</value>
+  </data>
+  <data name="Menu_Packages_FavoriteDirectories" xml:space="preserve">
+    <value>Favorite Directories</value>
+  </data>
+  <data name="Menu_Views" xml:space="preserve">
+    <value>Views</value>
+  </data>
+  <data name="Menu_Views_3DViewer" xml:space="preserve">
+    <value>3D Viewer</value>
+  </data>
+  <data name="Menu_Views_AudioPlayer" xml:space="preserve">
+    <value>Audio Player</value>
+  </data>
+  <data name="Menu_Views_ImageMerger" xml:space="preserve">
+    <value>Image Merger</value>
+  </data>
+  <data name="Menu_Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Menu_Help" xml:space="preserve">
+    <value>Help</value>
+  </data>
+  <data name="Menu_Help_Donate" xml:space="preserve">
+    <value>Donate</value>
+  </data>
+  <data name="Menu_Help_Releases" xml:space="preserve">
+    <value>Releases</value>
+  </data>
+  <data name="Menu_Help_BugsReport" xml:space="preserve">
+    <value>Bugs Report</value>
+  </data>
+  <data name="Menu_Help_DiscordServer" xml:space="preserve">
+    <value>Discord Server</value>
+  </data>
+  <data name="Menu_Help_AboutFModel" xml:space="preserve">
+    <value>About FModel</value>
+  </data>
+  <data name="Main_PreviewNewExplorerSystem" xml:space="preserve">
+    <value>Preview New Explorer System</value>
+  </data>
+  <data name="Main_UpdatesDisabledCustomBuild" xml:space="preserve">
+    <value>Updates Disabled (Custom Build)</value>
+  </data>
+  <data name="Main_Tooltip_BringSelectedFolderToView" xml:space="preserve">
+    <value>Bring Selected Folder To View</value>
+  </data>
+  <data name="Main_Tooltip_CollapseAll" xml:space="preserve">
+    <value>Collapse All</value>
+  </data>
+  <data name="Main_Tooltip_OpenOutputFolder" xml:space="preserve">
+    <value>Open Output Folder</value>
+  </data>
+  <data name="Main_Tooltip_ClearLogs" xml:space="preserve">
+    <value>Clear Logs</value>
+  </data>
+  <data name="Main_Tab_Archives" xml:space="preserve">
+    <value>Archives</value>
+  </data>
+  <data name="Main_Tab_Folders" xml:space="preserve">
+    <value>Folders</value>
+  </data>
+  <data name="Main_LoadingMode" xml:space="preserve">
+    <value>Loading Mode</value>
+  </data>
+  <data name="Main_Load" xml:space="preserve">
+    <value>Load</value>
+  </data>
+  <data name="Main_Section_GameArchives" xml:space="preserve">
+    <value>GAME ARCHIVES</value>
+  </data>
+  <data name="Main_Section_Information" xml:space="preserve">
+    <value>INFORMATION</value>
+  </data>
+  <data name="Main_Info_MountPoint" xml:space="preserve">
+    <value>Mount Point</value>
+  </data>
+  <data name="Main_Info_FileCount" xml:space="preserve">
+    <value>File Count</value>
+  </data>
+  <data name="Main_Info_IsEncrypted" xml:space="preserve">
+    <value>Is Encrypted</value>
+  </data>
+  <data name="Main_Info_GlobalUniqueIdentifier" xml:space="preserve">
+    <value>Global Unique Identifier</value>
+  </data>
+  <data name="Main_Info_PackagesCount" xml:space="preserve">
+    <value>Packages Count</value>
+  </data>
+  <data name="Main_Info_FoldersCount" xml:space="preserve">
+    <value>Folders Count</value>
+  </data>
+  <data name="Main_Info_IncludedInArchive" xml:space="preserve">
+    <value>Included In Archive</value>
+  </data>
+  <data name="Main_Info_ArchiveMountPoint" xml:space="preserve">
+    <value>Archive Mount Point</value>
+  </data>
+  <data name="Main_Info_ArchiveVersion" xml:space="preserve">
+    <value>Archive Version</value>
+  </data>
+  <data name="Main_Info_Offset" xml:space="preserve">
+    <value>Offset</value>
+  </data>
+  <data name="Main_Info_Size" xml:space="preserve">
+    <value>Size</value>
+  </data>
+  <data name="Main_Info_CompressionMethod" xml:space="preserve">
+    <value>Compression Method</value>
+  </data>
+  <data name="Settings_Title" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Settings_Section_Game" xml:space="preserve">
+    <value>GAME</value>
+  </data>
+  <data name="Settings_Section_Advanced" xml:space="preserve">
+    <value>ADVANCED</value>
+  </data>
+  <data name="Settings_Category_General" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="Settings_Category_Creator" xml:space="preserve">
+    <value>Creator</value>
+  </data>
+  <data name="Settings_Category_Models" xml:space="preserve">
+    <value>Models</value>
+  </data>
+  <data name="Settings_Category_Keybindings" xml:space="preserve">
+    <value>Keybindings</value>
+  </data>
+  <data name="Settings_General_OutputDirectory" xml:space="preserve">
+    <value>Output Directory *</value>
+  </data>
+  <data name="Settings_General_OutputDirectory_Tooltip" xml:space="preserve">
+    <value>Directory where log files, backups and other do-not-delete files will be put in.</value>
+  </data>
+  <data name="Settings_General_CustomizeOutputFolders_Tooltip" xml:space="preserve">
+    <value>Customize the directory of more output folders</value>
+  </data>
+  <data name="Settings_General_ExportRawDataDirectory" xml:space="preserve">
+    <value>Export Raw Data Directory *</value>
+  </data>
+  <data name="Settings_General_SavePropertiesDirectory" xml:space="preserve">
+    <value>Save Properties Directory *</value>
+  </data>
+  <data name="Settings_General_SaveTextureDirectory" xml:space="preserve">
+    <value>Save Texture Directory *</value>
+  </data>
+  <data name="Settings_General_SaveAudioDirectory" xml:space="preserve">
+    <value>Save Audio Directory *</value>
+  </data>
+  <data name="Settings_General_DiscordRichPresence" xml:space="preserve">
+    <value>Discord Rich Presence</value>
+  </data>
+  <data name="Settings_General_ArchiveDirectory" xml:space="preserve">
+    <value>Archive Directory *</value>
+  </data>
+  <data name="Settings_General_UEVersions" xml:space="preserve">
+    <value>UE Versions *</value>
+  </data>
+  <data name="Settings_General_UEVersions_Tooltip" xml:space="preserve">
+    <value>Override the UE version to use when parsing packages</value>
+  </data>
+  <data name="Settings_General_TexturePlatform" xml:space="preserve">
+    <value>Texture Platform *</value>
+  </data>
+  <data name="Settings_General_TexturePlatform_Tooltip" xml:space="preserve">
+    <value>Override the game's platform to ensure texture compatibility</value>
+  </data>
+  <data name="Settings_General_CompressedAudio" xml:space="preserve">
+    <value>Compressed Audio</value>
+  </data>
+  <data name="Settings_General_CompressedAudio_Tooltip" xml:space="preserve">
+    <value>What to do when encountering a compressed audio file</value>
+  </data>
+  <data name="Settings_General_PackagesLanguage" xml:space="preserve">
+    <value>Packages Language</value>
+  </data>
+  <data name="Settings_General_PackagesLanguage_Tooltip" xml:space="preserve">
+    <value>Language used and shown when parsing packages</value>
+  </data>
+  <data name="Settings_General_KeepDirectoryStructure" xml:space="preserve">
+    <value>Keep Directory Structure</value>
+  </data>
+  <data name="Settings_General_KeepDirectoryStructure_Tooltip" xml:space="preserve">
+    <value>Auto-save packages following their game directory</value>
+  </data>
+  <data name="Settings_General_LocalMappingFile" xml:space="preserve">
+    <value>Local Mapping File (drag &amp; drop)</value>
+  </data>
+  <data name="Settings_General_MappingFilePath" xml:space="preserve">
+    <value>Mapping File Path</value>
+  </data>
+  <data name="Settings_General_UnrealPakExecutable" xml:space="preserve">
+    <value>UnrealPak Executable</value>
+  </data>
+  <data name="Settings_General_UnrealPakExecutable_Tooltip" xml:space="preserve">
+    <value>Used to build a mod patch .pak when writing back edited Blueprint JSON from mounted archives.</value>
+  </data>
+  <data name="Settings_General_VersioningConfiguration" xml:space="preserve">
+    <value>Versioning Configuration *</value>
+  </data>
+  <data name="Settings_General_CustomVersions" xml:space="preserve">
+    <value>Custom Versions</value>
+  </data>
+  <data name="Settings_General_Options" xml:space="preserve">
+    <value>Options</value>
+  </data>
+  <data name="Settings_General_MapStructTypes" xml:space="preserve">
+    <value>MapStructTypes</value>
+  </data>
+  <data name="Settings_General_AESReloadAtLaunch" xml:space="preserve">
+    <value>AES Reload at Launch</value>
+  </data>
+  <data name="Settings_General_EndpointConfiguration" xml:space="preserve">
+    <value>Endpoint Configuration</value>
+  </data>
+  <data name="Settings_General_AES" xml:space="preserve">
+    <value>AES</value>
+  </data>
+  <data name="Settings_General_Mapping" xml:space="preserve">
+    <value>Mapping</value>
+  </data>
+  <data name="Settings_General_SerializeScriptBytecode" xml:space="preserve">
+    <value>Serialize Script Bytecode</value>
+  </data>
+  <data name="Settings_General_SerializeInlinedShaderMaps" xml:space="preserve">
+    <value>Serialize Inlined Shader Maps</value>
+  </data>
+  <data name="Settings_General_DecompileBlueprintToPseudoCpp" xml:space="preserve">
+    <value>Decompile Blueprint to Pseudo C++</value>
+  </data>
+  <data name="Settings_General_DecompileBlueprintToPseudoCpp_Tooltip" xml:space="preserve">
+    <value>Adds a right click option to decompile UClass packages into a pseudo C++ friendly format</value>
+  </data>
+  <data name="Settings_General_ConvertAudioDuringExport" xml:space="preserve">
+    <value>Convert Audio During Export (.wav)</value>
+  </data>
+  <data name="Settings_General_CriwareDecryptionKey" xml:space="preserve">
+    <value>CRIWARE Decryption Key</value>
+  </data>
+  <data name="Settings_General_CriwareDecryptionKey_Tooltip" xml:space="preserve">
+    <value>Enter decryption key in numeric or hexadecimal format (valid key is up to 20 digits or 8 bytes long)</value>
+  </data>
+  <data name="Settings_Creator_CosmeticStyle" xml:space="preserve">
+    <value>Cosmetic Style</value>
+  </data>
+  <data name="Settings_Creator_CosmeticShopIcon" xml:space="preserve">
+    <value>Cosmetic Shop Icon</value>
+  </data>
+  <data name="Settings_Models_ModelExportDirectory" xml:space="preserve">
+    <value>Model Export Directory *</value>
+  </data>
+  <data name="Settings_Models_ModelExportDirectory_Tooltip" xml:space="preserve">
+    <value>This will be the directory where Meshes, Materials and Animations will be exported</value>
+  </data>
+  <data name="Settings_Models_MeshFormat" xml:space="preserve">
+    <value>Mesh Format</value>
+  </data>
+  <data name="Settings_Models_ImporterBlenderUe" xml:space="preserve">
+    <value>Importer (Blender/UE): </value>
+  </data>
+  <data name="Settings_Models_ImportersBlender" xml:space="preserve">
+    <value>Importers (Blender): </value>
+  </data>
+  <data name="Settings_Models_SocketFormatActorX" xml:space="preserve">
+    <value>Socket Format (ActorX)</value>
+  </data>
+  <data name="Settings_Models_CompressionFormatUEFormat" xml:space="preserve">
+    <value>Compression Format (UEFormat)</value>
+  </data>
+  <data name="Settings_Models_LevelOfDetailFormat" xml:space="preserve">
+    <value>Level Of Detail Format</value>
+  </data>
+  <data name="Settings_Models_PreviewMaxTextureSize" xml:space="preserve">
+    <value>Preview Max Texture Size</value>
+  </data>
+  <data name="Settings_Models_PreviewStaticMeshes" xml:space="preserve">
+    <value>Preview Static Meshes</value>
+  </data>
+  <data name="Settings_Models_PreviewSkeletalMeshes" xml:space="preserve">
+    <value>Preview Skeletal Meshes</value>
+  </data>
+  <data name="Settings_Models_PreviewAnimations" xml:space="preserve">
+    <value>Preview Animations</value>
+  </data>
+  <data name="Settings_Models_PreviewMaterials" xml:space="preserve">
+    <value>Preview Materials</value>
+  </data>
+  <data name="Settings_Models_PreviewLevels" xml:space="preserve">
+    <value>Preview Levels (.umap)</value>
+  </data>
+  <data name="Settings_Models_SaveMaterialsEmbeddedWithinMeshes" xml:space="preserve">
+    <value>Save Materials Embedded within Meshes</value>
+  </data>
+  <data name="Settings_Models_SaveMorphTargetsInMeshes" xml:space="preserve">
+    <value>Save Morph Targets in Meshes</value>
+  </data>
+  <data name="Settings_Models_HandleSkeletonsAsEmptyMeshes" xml:space="preserve">
+    <value>Handle Skeletons as Empty Meshes</value>
+  </data>
+  <data name="Settings_Models_NaniteFormat" xml:space="preserve">
+    <value>Nanite Format</value>
+  </data>
+  <data name="Settings_Models_MaterialFormat" xml:space="preserve">
+    <value>Material Format</value>
+  </data>
+  <data name="Settings_Models_TextureFormat" xml:space="preserve">
+    <value>Texture Format</value>
+  </data>
+  <data name="Settings_Models_SaveHdrTexturesAsRadianceHdr" xml:space="preserve">
+    <value>Save HDR Textures as Radiance .hdr</value>
+  </data>
+  <data name="Settings_Keybindings_LeftSwitchOnDirectoryTab" xml:space="preserve">
+    <value>Left Switch on Directory Tab</value>
+  </data>
+  <data name="Settings_Keybindings_RightSwitchOnDirectoryTab" xml:space="preserve">
+    <value>Right Switch on Directory Tab</value>
+  </data>
+  <data name="Settings_Keybindings_SwitchAssetExplorer" xml:space="preserve">
+    <value>Switch Asset Explorer</value>
+  </data>
+  <data name="Settings_Keybindings_LeftSwitchOnAssetTab" xml:space="preserve">
+    <value>Left Switch on Asset Tab</value>
+  </data>
+  <data name="Settings_Keybindings_RightSwitchOnAssetTab" xml:space="preserve">
+    <value>Right Switch on Asset Tab</value>
+  </data>
+  <data name="Settings_Keybindings_AddAssetTab" xml:space="preserve">
+    <value>Add Asset Tab</value>
+  </data>
+  <data name="Settings_Keybindings_RemoveSelectedAssetTab" xml:space="preserve">
+    <value>Remove Selected Asset Tab</value>
+  </data>
+  <data name="Settings_Keybindings_AddAudioFile" xml:space="preserve">
+    <value>Add Audio File</value>
+  </data>
+  <data name="Settings_Keybindings_PlayPauseCurrentAudio" xml:space="preserve">
+    <value>Play / Pause Current Audio</value>
+  </data>
+  <data name="Settings_Keybindings_PreviousAudio" xml:space="preserve">
+    <value>Previous Audio</value>
+  </data>
+  <data name="Settings_Keybindings_NextAudio" xml:space="preserve">
+    <value>Next Audio</value>
+  </data>
+  <data name="Settings_UiLanguage" xml:space="preserve">
+    <value>UI Language</value>
+  </data>
+  <data name="Settings_UiLanguageTooltip" xml:space="preserve">
+    <value>Language used by the FModel interface</value>
+  </data>
+  <data name="Settings_RestartHint" xml:space="preserve">
+    <value>* May require a restart for changes to take effect</value>
+  </data>
+  <data name="Common_Ok" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Updates_Disabled_Title" xml:space="preserve">
+    <value>Updates Disabled</value>
+  </data>
+  <data name="Updates_Disabled_Message" xml:space="preserve">
+    <value>Update/release checking is disabled in this custom build to preserve local modifications.</value>
+  </data>
+  <data name="About_Title" xml:space="preserve">
+    <value>About</value>
+  </data>
+  <data name="About_MadeBy" xml:space="preserve">
+    <value>Made with ♥ by Asval</value>
+  </data>
+  <data name="About_Description" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="About_Contributors" xml:space="preserve">
+    <value>Contributors</value>
+  </data>
+  <data name="About_Donators" xml:space="preserve">
+    <value>Donators</value>
+  </data>
+  <data name="About_PoweredBy" xml:space="preserve">
+    <value>Powered by</value>
+  </data>
+  <data name="AesManager_Title" xml:space="preserve">
+    <value>AES Manager</value>
+  </data>
+  <data name="AesManager_Instruction" xml:space="preserve">
+    <value>Instruction</value>
+  </data>
+  <data name="AesManager_InstructionBody" xml:space="preserve">
+    <value>In order to decipher archives' information, an AES key, in most cases, is needed. Here you can set the key for your static and dynamic archives. If you don't know what key to use for your set game, simply Google it. Keys must start with "0x" and contain 64 more characters.</value>
+  </data>
+  <data name="AudioPlayer_Title" xml:space="preserve">
+    <value>Audio Player</value>
+  </data>
+  <data name="AudioPlayer_Devices" xml:space="preserve">
+    <value>Devices</value>
+  </data>
+  <data name="AudioPlayer_Volume" xml:space="preserve">
+    <value>Volume</value>
+  </data>
+  <data name="AudioPlayer_Encoding" xml:space="preserve">
+    <value>Encoding</value>
+  </data>
+  <data name="AudioPlayer_Length" xml:space="preserve">
+    <value>Length</value>
+  </data>
+  <data name="AudioPlayer_BytesPerSecond" xml:space="preserve">
+    <value>Bytes Per Second</value>
+  </data>
+  <data name="AudioPlayer_SearchByName" xml:space="preserve">
+    <value>Search by name...</value>
+  </data>
+  <data name="AudioPlayer_Play" xml:space="preserve">
+    <value>Play</value>
+  </data>
+  <data name="AudioPlayer_Remove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="AudioPlayer_Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="AudioPlayer_SavePlaylist" xml:space="preserve">
+    <value>Save Playlist</value>
+  </data>
+  <data name="AudioPlayer_Previous" xml:space="preserve">
+    <value>Previous</value>
+  </data>
+  <data name="AudioPlayer_Next" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="Avalon_SearchUp" xml:space="preserve">
+    <value>Search Up</value>
+  </data>
+  <data name="Avalon_MatchWholeWord" xml:space="preserve">
+    <value>Match Whole Word</value>
+  </data>
+  <data name="Common_Refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="Common_Path" xml:space="preserve">
+    <value>Path</value>
+  </data>
+  <data name="Common_Archive" xml:space="preserve">
+    <value>Archive</value>
+  </data>
+  <data name="Common_Size" xml:space="preserve">
+    <value>Size</value>
+  </data>
+  <data name="Common_GoTo" xml:space="preserve">
+    <value>Go To</value>
+  </data>
+  <data name="Common_ExtractInNewTab" xml:space="preserve">
+    <value>Extract in New Tab</value>
+  </data>
+  <data name="Common_FindReferences" xml:space="preserve">
+    <value>Find References</value>
+  </data>
+  <data name="Common_ViewDecompiledBlueprint" xml:space="preserve">
+    <value>View Decompiled Blueprint (Pseudo C++)</value>
+  </data>
+  <data name="Common_ViewBlueprintJson" xml:space="preserve">
+    <value>View Blueprint JSON (UAssetAPI)</value>
+  </data>
+  <data name="Common_ExportRawData" xml:space="preserve">
+    <value>Export Raw Data</value>
+  </data>
+  <data name="Common_SavePropertiesJson" xml:space="preserve">
+    <value>Save Properties (.json)</value>
+  </data>
+  <data name="Common_SaveTexture" xml:space="preserve">
+    <value>Save Texture</value>
+  </data>
+  <data name="Common_SaveModel" xml:space="preserve">
+    <value>Save Model</value>
+  </data>
+  <data name="Common_SaveAnimation" xml:space="preserve">
+    <value>Save Animation</value>
+  </data>
+  <data name="Common_SaveAudio" xml:space="preserve">
+    <value>Save Audio</value>
+  </data>
+  <data name="Common_Copy" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="Common_PackagePath" xml:space="preserve">
+    <value>Package Path</value>
+  </data>
+  <data name="Common_PackageName" xml:space="preserve">
+    <value>Package Name</value>
+  </data>
+  <data name="Common_DirectoryPath" xml:space="preserve">
+    <value>Directory Path</value>
+  </data>
+  <data name="Common_PackagePathNoExt" xml:space="preserve">
+    <value>Package Path w/o Extension</value>
+  </data>
+  <data name="Common_PackageNameNoExt" xml:space="preserve">
+    <value>Package Name w/o Extension</value>
+  </data>
+  <data name="Common_ShowMetadata" xml:space="preserve">
+    <value>Show Metadata</value>
+  </data>
+  <data name="Common_Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Common_CloseAllTabs" xml:space="preserve">
+    <value>Close All Tabs</value>
+  </data>
+  <data name="Common_CloseOtherTabs" xml:space="preserve">
+    <value>Close Other Tabs</value>
+  </data>
+  <data name="Common_OpenProperties" xml:space="preserve">
+    <value>Open Properties</value>
+  </data>
+  <data name="Common_JumpToPackageFolder" xml:space="preserve">
+    <value>Jump to Package Folder</value>
+  </data>
+  <data name="Common_CopyPackagePath" xml:space="preserve">
+    <value>Copy Package Path</value>
+  </data>
+  <data name="Search_Title" xml:space="preserve">
+    <value>Search For Packages</value>
+  </data>
+  <data name="Search_Tab_ByPath" xml:space="preserve">
+    <value>By Path</value>
+  </data>
+  <data name="Search_Watermark_Pattern" xml:space="preserve">
+    <value>Write your pattern and press enter...</value>
+  </data>
+  <data name="Search_Watermark_Regex" xml:space="preserve">
+    <value>Write your regex pattern and press enter...</value>
+  </data>
+  <data name="Search_Tooltip_MatchCase" xml:space="preserve">
+    <value>Match Case</value>
+  </data>
+  <data name="Search_Tooltip_Regex" xml:space="preserve">
+    <value>Regex</value>
+  </data>
+  <data name="Search_Tooltip_SortFileSizes" xml:space="preserve">
+    <value>Sort File Sizes</value>
+  </data>
+  <data name="Search_Tooltip_ClearSearch" xml:space="preserve">
+    <value>Clear Search Filter</value>
+  </data>
+  <data name="Search_NoPackages" xml:space="preserve">
+    <value>No packages found matching the query</value>
+  </data>
+  <data name="Search_NoReferences" xml:space="preserve">
+    <value>No references found in other packages</value>
+  </data>
+  <data name="UpdateView_Title" xml:space="preserve">
+    <value>Releases</value>
+  </data>
+  <data name="UpdateView_Description" xml:space="preserve">
+    <value>All releases listed below are available for download. They are sorted by date, with the latest release at the top. We regularly remove old ones to keep the list clean and up to date with the latest UE releases. If you wish to manually check for updates, this window is accessible via the Help &gt; Releases menu.</value>
+  </data>
+  <data name="UpdateView_DownloadLatest" xml:space="preserve">
+    <value>Download Latest Release</value>
+  </data>
+  <data name="UpdateView_RemindMeNow" xml:space="preserve">
+    <value>Remind Me Now ...</value>
+  </data>
+  <data name="UpdateView_RemindIn3Days" xml:space="preserve">
+    <value>In 3 Days</value>
+  </data>
+  <data name="UpdateView_RemindNextWeek" xml:space="preserve">
+    <value>Next Week</value>
+  </data>
+  <data name="UpdateView_RemindNextMonth" xml:space="preserve">
+    <value>Next Month</value>
+  </data>
+  <data name="UpdateView_RemindNever" xml:space="preserve">
+    <value>Never</value>
+  </data>
+  <data name="UpdateView_History" xml:space="preserve">
+    <value>History</value>
+  </data>
+  <data name="UpdateView_CommitsOn" xml:space="preserve">
+    <value>Commits on</value>
+  </data>
+  <data name="UpdateView_NoCommitsFound" xml:space="preserve">
+    <value>No commits found</value>
+  </data>
+  <data name="DropOverlay_Title" xml:space="preserve">
+    <value>Drop .usmap to import</value>
+  </data>
+  <data name="DropOverlay_Description" xml:space="preserve">
+    <value>Mapping file will be applied immediately</value>
+  </data>
+  <data name="FolderMenu_ExportRawData" xml:space="preserve">
+    <value>Export Folder's Packages Raw Data (.uasset)</value>
+  </data>
+  <data name="FolderMenu_SaveProperties" xml:space="preserve">
+    <value>Save Folder's Packages Properties (.json)</value>
+  </data>
+  <data name="FolderMenu_SaveTextures" xml:space="preserve">
+    <value>Save Folder's Packages Textures</value>
+  </data>
+  <data name="FolderMenu_SaveDecompiledBlueprints" xml:space="preserve">
+    <value>Save Folder's Decompiled Blueprints</value>
+  </data>
+  <data name="FolderMenu_SaveModels" xml:space="preserve">
+    <value>Save Folder's Packages Models</value>
+  </data>
+  <data name="FolderMenu_SaveAnimations" xml:space="preserve">
+    <value>Save Folder's Packages Animations</value>
+  </data>
+  <data name="FolderMenu_SaveAudio" xml:space="preserve">
+    <value>Save Folder's Packages Audio</value>
+  </data>
+  <data name="FolderMenu_FavoriteDirectory" xml:space="preserve">
+    <value>Favorite Directory</value>
+  </data>
+  <data name="FolderMenu_CopyDirectoryPath" xml:space="preserve">
+    <value>Copy Directory Path</value>
+  </data>
+  <data name="Tab_OpenLinkedBlueprintJson" xml:space="preserve">
+    <value>Open Linked Blueprint JSON</value>
+  </data>
+  <data name="Tab_LocateCurrentStatementInJson" xml:space="preserve">
+    <value>Locate Current Statement In JSON</value>
+  </data>
+  <data name="Tab_OpenLinkedDecompiledCpp" xml:space="preserve">
+    <value>Open Linked Decompiled C++</value>
+  </data>
+  <data name="Tab_LocateCurrentStatementInCpp" xml:space="preserve">
+    <value>Locate Current Statement In C++</value>
+  </data>
+  <data name="Tab_SerializeJsonAndSaveAsset" xml:space="preserve">
+    <value>Serialize JSON and Save .uasset/.uexp</value>
+  </data>
+  <data name="Tab_SaveBlueprintJsonAs" xml:space="preserve">
+    <value>Save Blueprint JSON As...</value>
+  </data>
+  <data name="Tab_SaveBlueprintUassetAs" xml:space="preserve">
+    <value>Save Blueprint UAsset As...</value>
+  </data>
+  <data name="Tab_WriteBackOrBuildPatchPak" xml:space="preserve">
+    <value>Write Back (Loose) / Build Patch Pak</value>
+  </data>
+  <data name="TiledExplorer_NoFoldersOrPackages" xml:space="preserve">
+    <value>No folders or packages found</value>
+  </data>
+  <data name="TiledExplorer_NoPackagesInFolder" xml:space="preserve">
+    <value>No packages found in folder</value>
+  </data>
+  <data name="UpdateView_CommitsOnDateFormat" xml:space="preserve">
+    <value>Commits on {0:MMM d, yyyy}</value>
+  </data>
+  <data name="ImportManager_Title" xml:space="preserve">
+    <value>Import Manager</value>
+  </data>
+  <data name="ImportManager_Header" xml:space="preserve">
+    <value>Asset Imports</value>
+  </data>
+  <data name="ImportManager_Description" xml:space="preserve">
+    <value>View and manage imports referenced by the current asset. Imports are external assets that this asset depends on.</value>
+  </data>
+  <data name="ImportManager_Search" xml:space="preserve">
+    <value>Search:</value>
+  </data>
+  <data name="ImportManager_NoImports" xml:space="preserve">
+    <value>No imports found</value>
+  </data>
+  <data name="ImportManager_Total" xml:space="preserve">
+    <value>Total:</value>
+  </data>
+  <data name="Common_ViewBlueprintGraph" xml:space="preserve">
+    <value>View Blueprint Graph</value>
+  </data>
+  <data name="Common_OpenBlueprintGraph" xml:space="preserve">
+    <value>Open Blueprint Graph</value>
+  </data>
+  <data name="BlueprintViewer_FilterFunctions" xml:space="preserve">
+    <value>Filter events and functions...</value>
+  </data>
+  <data name="BlueprintViewer_SearchNodes" xml:space="preserve">
+    <value>Search nodes, pins and values (Ctrl+F)...</value>
+  </data>
+  <data name="BlueprintViewer_Fit" xml:space="preserve">
+    <value>Fit</value>
+  </data>
+  <data name="BlueprintViewer_Selection" xml:space="preserve">
+    <value>Selection</value>
+  </data>
+  <data name="BlueprintViewer_NodeBytecode" xml:space="preserve">
+    <value>Node Bytecode</value>
+  </data>
+  <data name="BlueprintViewer_FunctionBytecode" xml:space="preserve">
+    <value>Function Bytecode</value>
+  </data>
+  <data name="BlueprintViewer_Problems" xml:space="preserve">
+    <value>Problems</value>
+  </data>
+  <data name="BlueprintViewer_Loading" xml:space="preserve">
+    <value>Loading blueprint...</value>
+  </data>
+  <data name="BlueprintViewer_LoadingWithSignatures" xml:space="preserve">
+    <value>Loading blueprint and function signatures...</value>
+  </data>
+  <data name="BlueprintViewer_NotBlueprint" xml:space="preserve">
+    <value>This package has no blueprint generated class.</value>
+  </data>
+  <data name="BlueprintViewer_Summary" xml:space="preserve">
+    <value>{0}: {1} event(s), {2} function(s)</value>
+  </data>
+  <data name="BlueprintViewer_Decompiling" xml:space="preserve">
+    <value>Decompiling {0}...</value>
+  </data>
+  <data name="BlueprintViewer_DecompileFailed" xml:space="preserve">
+    <value>Failed to decompile {0}: {1}</value>
+  </data>
+  <data name="BlueprintViewer_GraphStatus" xml:space="preserve">
+    <value>{0}: {1} nodes</value>
+  </data>
+  <data name="BlueprintViewer_GraphInferred" xml:space="preserve">
+    <value>, {0} with inferred signatures</value>
+  </data>
+  <data name="BlueprintViewer_GraphFailed" xml:space="preserve">
+    <value> (decompilation failed, see problems)</value>
+  </data>
+  <data name="BlueprintViewer_ProblemFailed" xml:space="preserve">
+    <value>Decompilation failed, the graph is incomplete.</value>
+  </data>
+  <data name="BlueprintViewer_ProblemInferred" xml:space="preserve">
+    <value>{0} native function signature(s) were inferred from their call sites (orange dot on the node). Load a .jmap as mapping file or set "Blueprint Signature Jmap" in settings for exact pins.</value>
+  </data>
+  <data name="Settings_BlueprintSignatureJmap" xml:space="preserve">
+    <value>Blueprint Signature Jmap</value>
+  </data>
+  <data name="Settings_BlueprintSignatureJmap_Tooltip" xml:space="preserve">
+    <value>Optional .jmap / .jmap.gz used for native function signatures in the Blueprint Viewer when the mapping file is a .usmap</value>
+  </data>
+  <data name="BlueprintViewer_GraphTab" xml:space="preserve">
+    <value>Graph</value>
+  </data>
+  <data name="BlueprintViewer_DesignerTab" xml:space="preserve">
+    <value>Designer</value>
+  </data>
+  <data name="BlueprintViewer_Outlines" xml:space="preserve">
+    <value>Outlines</value>
+  </data>
+  <data name="BlueprintViewer_Bindings" xml:space="preserve">
+    <value>Property Bindings</value>
+  </data>
+  <data name="BlueprintViewer_WidgetProperties" xml:space="preserve">
+    <value>Widget Properties</value>
+  </data>
+  <data name="BlueprintViewer_DesignSize" xml:space="preserve">
+    <value>Design size</value>
+  </data>
+  <data name="BlueprintEditor_Pending" xml:space="preserve">
+    <value>{0} class default change(s), {1} pin value change(s)</value>
+  </data>
+  <data name="BlueprintEditor_Loading" xml:space="preserve">
+    <value>Loading the asset with UAssetAPI for editing...</value>
+  </data>
+  <data name="BlueprintEditor_NoCdo" xml:space="preserve">
+    <value>No class default object was found in this package.</value>
+  </data>
+  <data name="BlueprintEditor_LoadFailed" xml:space="preserve">
+    <value>Could not load the asset for editing: {0}</value>
+  </data>
+  <data name="BlueprintEditor_NotLoaded" xml:space="preserve">
+    <value>The asset is not loaded for editing.</value>
+  </data>
+  <data name="BlueprintEditor_PinNotEditable" xml:space="preserve">
+    <value>This pin's value can't be edited.</value>
+  </data>
+  <data name="BlueprintEditor_InvalidValue" xml:space="preserve">
+    <value>'{0}' is not a valid {1} value.</value>
+  </data>
+  <data name="BlueprintEditor_Saving" xml:space="preserve">
+    <value>Saving and verifying...</value>
+  </data>
+  <data name="BlueprintEditor_SavedAsset" xml:space="preserve">
+    <value>Exported {0}</value>
+  </data>
+  <data name="BlueprintEditor_SavedPak" xml:space="preserve">
+    <value>Patch pak: {0}</value>
+  </data>
+  <data name="BlueprintEditor_SaveFailed" xml:space="preserve">
+    <value>Save failed: {0}</value>
+  </data>
+  <data name="BlueprintEditor_Discarded" xml:space="preserve">
+    <value>All changes were discarded.</value>
+  </data>
+  <data name="BlueprintEditor_Discard" xml:space="preserve">
+    <value>Discard</value>
+  </data>
+  <data name="BlueprintEditor_SavePak" xml:space="preserve">
+    <value>Save as patch pak</value>
+  </data>
+  <data name="BlueprintEditor_ExportAsset" xml:space="preserve">
+    <value>Export .uasset</value>
+  </data>
+  <data name="BlueprintEditor_Apply" xml:space="preserve">
+    <value>Apply</value>
+  </data>
+  <data name="BlueprintEditor_DefaultsTab" xml:space="preserve">
+    <value>Class Defaults</value>
+  </data>
+  <data name="BlueprintEditor_OverriddenOnly" xml:space="preserve">
+    <value>Overridden only</value>
+  </data>
+  <data name="BlueprintEditor_FilterProperties" xml:space="preserve">
+    <value>Filter properties...</value>
+  </data>
+  <data name="BlueprintEditor_ColumnName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="BlueprintEditor_ColumnType" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="BlueprintEditor_ColumnValue" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="BlueprintEditor_ColumnOwner" xml:space="preserve">
+    <value>Declared in</value>
+  </data>
+  <data name="BlueprintEditor_Override" xml:space="preserve">
+    <value>Override</value>
+  </data>
+  <data name="BlueprintEditor_OverrideTip" xml:space="preserve">
+    <value>Store a value for this property in the class defaults</value>
+  </data>
+  <data name="BlueprintEditor_Revert" xml:space="preserve">
+    <value>Revert to default</value>
+  </data>
+  <data name="BlueprintEditor_RevertTip" xml:space="preserve">
+    <value>Remove the override so the parent class default applies</value>
+  </data>
+  <data name="BlueprintEditor_PinValue" xml:space="preserve">
+    <value>Value of {0} ({1}, {2} constant(s) in bytecode)</value>
+  </data>
+  <data name="BlueprintEditor_Inherited" xml:space="preserve">
+    <value>Inherited: not stored in this blueprint's class defaults. Use Override to set it.</value>
+  </data>
+  <data name="BlueprintEditor_DiscardConfirm" xml:space="preserve">
+    <value>Discard all pending changes?</value>
+  </data>
+  <data name="BlueprintEditor_CloseConfirm" xml:space="preserve">
+    <value>This blueprint has changes that were not saved. Close anyway?</value>
+  </data>
+  <data name="Menu_Window" xml:space="preserve">
+    <value>Window</value>
+  </data>
+  <data name="Main_Tab_Packages" xml:space="preserve">
+    <value>Packages</value>
+  </data>
+  <data name="Main_Tab_Workspace" xml:space="preserve">
+    <value>Workspace</value>
+  </data>
+  <data name="Main_Tab_Output" xml:space="preserve">
+    <value>Output</value>
+  </data>
+  <data name="Dock_Float" xml:space="preserve">
+    <value>Float</value>
+  </data>
+  <data name="Dock_Dock" xml:space="preserve">
+    <value>Dock</value>
+  </data>
+  <data name="Dock_DockAsDocument" xml:space="preserve">
+    <value>Dock as Document</value>
+  </data>
+  <data name="Dock_AutoHide" xml:space="preserve">
+    <value>Auto Hide</value>
+  </data>
+  <data name="Dock_Hide" xml:space="preserve">
+    <value>Hide</value>
+  </data>
+  <data name="Dock_CloseOthers" xml:space="preserve">
+    <value>Close All But This</value>
+  </data>
+  <data name="Dock_NewVerticalTabGroup" xml:space="preserve">
+    <value>New Vertical Tab Group</value>
+  </data>
+  <data name="Dock_NewHorizontalTabGroup" xml:space="preserve">
+    <value>New Horizontal Tab Group</value>
+  </data>
+  <data name="Dock_Pin" xml:space="preserve">
+    <value>Always on Top (Sticky Note)</value>
+  </data>
+  <data name="Dock_Detach" xml:space="preserve">
+    <value>Independent Window (Own Taskbar Entry)</value>
+  </data>
+  <data name="Dock_PinActive" xml:space="preserve">
+    <value>Pin Active Panel on Top</value>
+  </data>
+  <data name="Dock_DetachActive" xml:space="preserve">
+    <value>Detach Active Panel as Independent Window</value>
+  </data>
+  <data name="Dock_ResetLayout" xml:space="preserve">
+    <value>Reset Layout</value>
+  </data>
+  <data name="Dock_Properties" xml:space="preserve">
+    <value>Properties</value>
+  </data>
+  <data name="WidgetEditor_Button" xml:space="preserve">
+    <value>Edit Properties</value>
+  </data>
+  <data name="WidgetEditor_Tab" xml:space="preserve">
+    <value>Edit (Preview)</value>
+  </data>
+  <data name="WidgetEditor_PreviewOnly" xml:space="preserve">
+    <value>Preview only: edits change this designer preview and are never saved to the asset.</value>
+  </data>
+  <data name="WidgetEditor_ResetWidget" xml:space="preserve">
+    <value>Reset Widget</value>
+  </data>
+  <data name="WidgetEditor_ResetAll" xml:space="preserve">
+    <value>Reset All</value>
+  </data>
+  <data name="WidgetEditor_ResetProperty" xml:space="preserve">
+    <value>Reset to the asset value</value>
+  </data>
+  <data name="WidgetEditor_NoSelection" xml:space="preserve">
+    <value>Select a widget to edit its properties.</value>
+  </data>
+  <data name="WidgetEditor_InvalidValue" xml:space="preserve">
+    <value>Invalid value</value>
+  </data>
+</root>

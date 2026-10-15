@@ -1,0 +1,27 @@
+﻿using CUE4Parse.UE4.Kismet;
+using FModel.BlueprintGraph.Engine;
+using static FModel.BlueprintGraph.Engine.EngineBPData;
+using static FModel.BlueprintGraph.Engine.EngineEnums;
+
+namespace FModel.BlueprintGraph.Nodes
+{
+    public class K2Node_VariableGet : BPNode
+    {
+        public GraphPin? TargetPin;
+        public GraphPin VarPin;
+        public PropertyData Property;
+        
+        public K2Node_VariableGet(PropertyData data, string variableName, GraphPin? targetPin, KismetExpression instr) : base("", instr)
+        {
+            Property = data;
+            HeaderHidden = true;
+            Pure = true;
+            TargetPin = targetPin;
+            VarPin = new GraphPin(variableName, EEdGraphPinDirection.EGPD_Output, data.PinType);
+            TintPin = VarPin;
+            AddOutputPin(VarPin);
+            if (TargetPin != null)
+                AddInputPin(TargetPin);
+        }
+    }
+}

@@ -1,0 +1,301 @@
+﻿using CUE4Parse.UE4.Assets.Exports;
+using CUE4Parse.UE4.Objects.UObject;
+using System;
+using System.Linq;
+using CUE4Parse.UE4.Assets.Objects;
+using CUE4Parse.UE4.Assets.Objects.Properties;
+using CUE4Parse.UE4.Objects.Core.i18N;
+using CUE4Parse.UE4.Objects.Core.Misc;
+using FModel.BlueprintGraph.Decompiler;
+using static FModel.BlueprintGraph.Engine.EngineBPData;
+using static FModel.BlueprintGraph.Engine.EngineEnums;
+
+namespace FModel.BlueprintGraph.Engine
+{
+    // Object containing property info
+    public class PropertyData
+    {
+        public string Name;
+
+        public EPropertyFlags Flags;
+
+        public UObject? OwnerObject;
+        public string Owner;
+
+        public GraphPinType PinType;
+        
+        public FPackageIndex? PropertyClassPackageIndex;
+        public string DelegateSignatureFunction;
+        public string DelegateSignatureObjectPath;
+        public UObject? DelegateSignatureObject;
+
+        public string DefaultValue;
+
+        public override string ToString()
+        {
+            return $"{PinType.ContainerType} {PinType.PinCategory} {Name}";
+        }
+
+        public bool IsFunctionParam()
+        {
+            return Flags.HasFlag(EPropertyFlags.Parm);
+        }
+
+        // ReferenceParm always requires OutParam to be set, even if it's not output parameter
+        // flag check is taken from https://github.com/EpicGames/UnrealEngine/blob/5.4/Engine/Source/Editor/BlueprintGraph/Private/K2Node_CallFunction.cpp#L1189
+        public bool IsOutParam()
+        {
+            return Flags.HasFlag(EPropertyFlags.ReturnParm) || Flags.HasFlag(EPropertyFlags.OutParm) && !Flags.HasFlag(EPropertyFlags.ReferenceParm);
+        }
+
+        public bool IsInputParam()
+        {
+            return IsFunctionParam() && !IsOutParam();
+        }
+
+        public bool IsTempVar()
+        {
+            return Name.Starts("Temp_");
+        }
+
+        public PropertyData(FProperty? prop, UObject owner) : this(new PropertyContainer(prop), owner) { }
+        public PropertyData(UProperty? prop, UObject owner) : this(new PropertyContainer(prop), owner) { }
+
+        public PropertyData(PropertyContainer? prop, UObject? owner)
+        {
+            if (prop == null || owner == null)
+                return;
+
+            Name = prop.GetName();
+            Owner = owner.GetPathName();
+            OwnerObject = owner;
+            Flags = prop.GetFlags();
+            MakePinType(prop);
+            if (prop.New is FMulticastInlineDelegateProperty d)
+            {
+                SetDelegateSignature(d.SignatureFunction);
+            }
+            else if (prop.Old is UMulticastInlineDelegateProperty d2)
+            {
+                SetDelegateSignature(d2.SignatureFunction);
+            }
+
+            void SetDelegateSignature(FPackageIndex sig)
+            {
+                DelegateSignatureFunction = sig.Name;
+                DelegateSignatureObjectPath = sig.ResolvedObject?.Outer?.GetPathName() ??
+                                              throw new DecompilerException("Delegate signature function object is null");
+                DelegateSignatureObject = sig.ResolvedObject.Outer.Load();
+            }
+            
+            prop.Clear();
+        }
+
+        public PropertyData(
+            string name,
+            string owner,
+            string type,
+            EPropertyFlags flags,
+            string className,
+            string innerProp,
+            string keyProp,
+            string valueProp,
+            string delegateSignatureFunction,
+            string delegateSignatureObject)
+        {
+            Name = name;
+            Owner = owner;
+            Flags = flags;
+            DelegateSignatureFunction = delegateSignatureFunction;
+            DelegateSignatureObjectPath = delegateSignatureObject;
+            MakePinType(type, innerProp, keyProp, valueProp, className);
+        }
+
+        private string GetClassName(PropertyContainer prop)
+        {
+            FPackageIndex? index;
+            if (prop.IsNew)
+            {
+                index = prop.New switch
+                {
+                    FInterfaceProperty p => p.InterfaceClass,
+                    FSoftClassProperty p => p.MetaClass,
+                    FClassProperty p => p.MetaClass,
+                    FObjectProperty p => p.PropertyClass,
+                    FStructProperty p => p.Struct,
+                    FByteProperty p => p.Enum,
+                    FEnumProperty p => p.Enum,
+                    _ => null,
+                };
+            }
+            else
+            {
+                index = prop.Old switch
+                {
+                    UInterfaceProperty p => p.InterfaceClass,
+                    USoftClassProperty p => p.MetaClass,
+                    UClassProperty p => p.MetaClass,
+                    UObjectProperty p => p.PropertyClass,
+                    UStructProperty p => p.Struct,
+                    UByteProperty p => p.Enum,
+                    UEnumProperty p => p.Enum,
+                    _ => null,
+                };
+            }
+
+            if (index == null || index.IsNull) { return ""; };
+            PropertyClassPackageIndex = index;
+            return index.ResolvedObject?.GetPathName() ?? "";
+        }
+
+        // Make pin type for this property
+        private void MakePinType(PropertyContainer prop)
+        {
+            PinType = new GraphPinType();
+
+            PropertyContainer propContainer;
+
+            if (prop.IsNew)
+            {
+                propContainer = prop.New switch
+                {
+                    FMapProperty p => new PropertyContainer(p.KeyProp!),
+                    FSetProperty p => new PropertyContainer(p.ElementProp!),
+                    FArrayProperty p => new PropertyContainer(p.Inner!),
+                    _ => prop,
+                };
+
+                PinType.ContainerType = prop.New switch
+                {
+                    FMapProperty => EPinContainerType.Map,
+                    FSetProperty => EPinContainerType.Set,
+                    FArrayProperty => EPinContainerType.Array,
+                    _ => EPinContainerType.None,
+                };
+
+                if (prop.New is FMapProperty map)
+                {
+                    PinType.PinSubCategory = PropTypeToPinType(new PropertyContainer(map.ValueProp!).GetPropType());
+                }
+            }
+            else
+            {
+                propContainer = prop.Old switch
+                {
+                    UMapProperty p => new PropertyContainer(p.KeyProp.Load<UProperty>()!),
+                    USetProperty p => new PropertyContainer(p.ElementProp.Load<UProperty>()!),
+                    UArrayProperty p => new PropertyContainer(p.Inner.Load<UProperty>()!),
+                    _ => prop,
+                };
+
+                PinType.ContainerType = prop.Old switch
+                {
+                    UMapProperty => EPinContainerType.Map,
+                    USetProperty => EPinContainerType.Set,
+                    UArrayProperty => EPinContainerType.Array,
+                    _ => EPinContainerType.None,
+                };
+
+                if (prop.Old is UMapProperty map)
+                {
+                    PinType.PinSubCategory = PropTypeToPinType(new PropertyContainer(map.ValueProp.Load<UProperty>()!).GetPropType());
+                }
+            }
+
+            PinType.PinCategory = PropTypeToPinType(propContainer.GetPropType());
+            PinType.PinSubCategoryObject = GetClassName(propContainer);
+            PinType.IsReference = Flags.HasFlag(EPropertyFlags.OutParm) && Flags.HasFlag(EPropertyFlags.ReferenceParm);
+        }
+
+        // Make pin type from types string
+        private void MakePinType(string type, string inner, string key, string value, string className)
+        {
+            PinType = new GraphPinType();
+
+            PinType.ContainerType = type switch
+            {
+                "MapProperty" => EPinContainerType.Map,
+                "SetProperty" => EPinContainerType.Set,
+                "ArrayProperty" => EPinContainerType.Array,
+                _ => EPinContainerType.None,
+            };
+
+            if (PinType.ContainerType == EPinContainerType.Map)
+            {
+                PinType.PinCategory = PropTypeToPinType(key);
+                PinType.PinSubCategory = PropTypeToPinType(value);
+            }
+            else
+            {
+                PinType.PinCategory = PropTypeToPinType(inner == None || type == "EnumProperty" ? type : inner);
+            }
+            PinType.PinSubCategoryObject = className == None ? None : className;
+            PinType.IsReference = Flags.HasFlag(EPropertyFlags.OutParm) && Flags.HasFlag(EPropertyFlags.ReferenceParm);
+        }
+        
+        public void SetPropertyDefaults(UObject source)
+        {
+            if (source?.Properties.FirstOrDefault(o => o.Name == Name) is { } value)
+            {
+                DefaultValue = TagToValueString(value);
+
+                string TagTypeToValueString(FPropertyTagType? type)
+                {
+                    object? rawValue = type?.GenericValue;
+                    return rawValue switch
+                    {
+                        int a => a.ToString(),
+                        float a => a.ToString(),
+                        double a => a.ToString(),
+                        ulong a => a.ToString(),
+                        long a => a.ToString(),
+                        byte a => a.ToString(),
+                        bool a => a.ToString(),
+                        string a => a.ToString(),
+                        FText a => a.ToString(),
+                        FName a => a.ToString(),
+                        FGuid a => a.ToString(),
+                        UScriptArray a => $"[{string.Join(", ", a.Properties.Select(o => $"{TagTypeToValueString(o)}"))}]",
+                        UScriptMap a => $"({string.Join("; ", a.Properties.Select(o => $"{TagTypeToValueString(o.Key)}={TagTypeToValueString(o.Value)}"))})",
+                        FPackageIndex a => a.ResolvedObject?.GetFullName() ?? a.ToString(),
+                        FScriptStruct { StructType: FStructFallback f } => $"({string.Join("; ", f.Properties.Select(o => $"{o.Name}={TagToValueString(o)}"))})",
+                        FScriptStruct a => a.ToString(),
+                        FMulticastScriptDelegate a => $"({string.Join("; ", a.InvocationList.Select(o => $"{o.Object.ResolvedObject?.GetPathName()}:{o.FunctionName}"))})",
+                        _ => rawValue?.ToString(),
+                    };
+                }
+                
+                string TagToValueString(FPropertyTag tag)
+                {
+                    return TagTypeToValueString(tag.Tag);
+                }
+            }
+            else
+            {
+                DefaultValue = "[ENGINE DEFAULT]";
+            }
+        }
+
+        private static PinType PropTypeToPinType(string type)
+        {
+            if (type == None)
+                return EngineBPData.PinType.Unknown;
+
+            if (type == "StrProperty")
+            {
+                return EngineBPData.PinType.String;
+            }
+            if (type.Ends("DelegateProperty"))
+            {
+                return EngineBPData.PinType.Delegate;
+            }
+            if (type.Ends("Property"))
+            {
+                type = type[..^"Property".Length];
+            }
+
+            return Enum.GetValues<PinType>().FirstOrDefault(v => v.ToString() == type);
+        }
+
+    }
+}

@@ -1,0 +1,960 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Menu_Directory" xml:space="preserve">
+    <value>目录</value>
+  </data>
+  <data name="Menu_Directory_Selector" xml:space="preserve">
+    <value>目录选择</value>
+  </data>
+  <data name="Menu_Directory_AES" xml:space="preserve">
+    <value>AES</value>
+  </data>
+  <data name="Menu_Directory_Backup" xml:space="preserve">
+    <value>备份管理</value>
+  </data>
+  <data name="Menu_Directory_ArchivesInfo" xml:space="preserve">
+    <value>归档信息</value>
+  </data>
+  <data name="Menu_Packages" xml:space="preserve">
+    <value>资源包</value>
+  </data>
+  <data name="Menu_Packages_Search" xml:space="preserve">
+    <value>搜索</value>
+  </data>
+  <data name="Menu_Packages_References" xml:space="preserve">
+    <value>引用</value>
+  </data>
+  <data name="Menu_Packages_FavoriteDirectories" xml:space="preserve">
+    <value>收藏目录</value>
+  </data>
+  <data name="Menu_Views" xml:space="preserve">
+    <value>视图</value>
+  </data>
+  <data name="Menu_Views_3DViewer" xml:space="preserve">
+    <value>3D 查看器</value>
+  </data>
+  <data name="Menu_Views_AudioPlayer" xml:space="preserve">
+    <value>音频播放器</value>
+  </data>
+  <data name="Menu_Views_ImageMerger" xml:space="preserve">
+    <value>图片合并</value>
+  </data>
+  <data name="Menu_Settings" xml:space="preserve">
+    <value>设置</value>
+  </data>
+  <data name="Menu_Help" xml:space="preserve">
+    <value>帮助</value>
+  </data>
+  <data name="Menu_Help_Donate" xml:space="preserve">
+    <value>赞助</value>
+  </data>
+  <data name="Menu_Help_Releases" xml:space="preserve">
+    <value>发布</value>
+  </data>
+  <data name="Menu_Help_BugsReport" xml:space="preserve">
+    <value>问题反馈</value>
+  </data>
+  <data name="Menu_Help_DiscordServer" xml:space="preserve">
+    <value>Discord 社区</value>
+  </data>
+  <data name="Menu_Help_AboutFModel" xml:space="preserve">
+    <value>关于 FModel</value>
+  </data>
+  <data name="Main_PreviewNewExplorerSystem" xml:space="preserve">
+    <value>预览新版资源浏览器</value>
+  </data>
+  <data name="Main_UpdatesDisabledCustomBuild" xml:space="preserve">
+    <value>更新已禁用（自定义构建）</value>
+  </data>
+  <data name="Main_Tooltip_BringSelectedFolderToView" xml:space="preserve">
+    <value>定位到已选文件夹</value>
+  </data>
+  <data name="Main_Tooltip_CollapseAll" xml:space="preserve">
+    <value>全部折叠</value>
+  </data>
+  <data name="Main_Tooltip_OpenOutputFolder" xml:space="preserve">
+    <value>打开输出目录</value>
+  </data>
+  <data name="Main_Tooltip_ClearLogs" xml:space="preserve">
+    <value>清空日志</value>
+  </data>
+  <data name="Main_Tab_Archives" xml:space="preserve">
+    <value>归档</value>
+  </data>
+  <data name="Main_Tab_Folders" xml:space="preserve">
+    <value>文件夹</value>
+  </data>
+  <data name="Main_LoadingMode" xml:space="preserve">
+    <value>加载模式</value>
+  </data>
+  <data name="Main_Load" xml:space="preserve">
+    <value>加载</value>
+  </data>
+  <data name="Main_Section_GameArchives" xml:space="preserve">
+    <value>游戏归档</value>
+  </data>
+  <data name="Main_Section_Information" xml:space="preserve">
+    <value>信息</value>
+  </data>
+  <data name="Main_Info_MountPoint" xml:space="preserve">
+    <value>挂载点</value>
+  </data>
+  <data name="Main_Info_FileCount" xml:space="preserve">
+    <value>文件数量</value>
+  </data>
+  <data name="Main_Info_IsEncrypted" xml:space="preserve">
+    <value>是否加密</value>
+  </data>
+  <data name="Main_Info_GlobalUniqueIdentifier" xml:space="preserve">
+    <value>全局唯一标识</value>
+  </data>
+  <data name="Main_Info_PackagesCount" xml:space="preserve">
+    <value>资源包数量</value>
+  </data>
+  <data name="Main_Info_FoldersCount" xml:space="preserve">
+    <value>文件夹数量</value>
+  </data>
+  <data name="Main_Info_IncludedInArchive" xml:space="preserve">
+    <value>所属归档</value>
+  </data>
+  <data name="Main_Info_ArchiveMountPoint" xml:space="preserve">
+    <value>归档挂载点</value>
+  </data>
+  <data name="Main_Info_ArchiveVersion" xml:space="preserve">
+    <value>归档版本</value>
+  </data>
+  <data name="Main_Info_Offset" xml:space="preserve">
+    <value>偏移</value>
+  </data>
+  <data name="Main_Info_Size" xml:space="preserve">
+    <value>大小</value>
+  </data>
+  <data name="Main_Info_CompressionMethod" xml:space="preserve">
+    <value>压缩方式</value>
+  </data>
+  <data name="Settings_Title" xml:space="preserve">
+    <value>设置</value>
+  </data>
+  <data name="Settings_Section_Game" xml:space="preserve">
+    <value>游戏</value>
+  </data>
+  <data name="Settings_Section_Advanced" xml:space="preserve">
+    <value>高级</value>
+  </data>
+  <data name="Settings_Category_General" xml:space="preserve">
+    <value>通用</value>
+  </data>
+  <data name="Settings_Category_Creator" xml:space="preserve">
+    <value>创作</value>
+  </data>
+  <data name="Settings_Category_Models" xml:space="preserve">
+    <value>模型</value>
+  </data>
+  <data name="Settings_Category_Keybindings" xml:space="preserve">
+    <value>快捷键</value>
+  </data>
+  <data name="Settings_General_OutputDirectory" xml:space="preserve">
+    <value>输出目录 *</value>
+  </data>
+  <data name="Settings_General_OutputDirectory_Tooltip" xml:space="preserve">
+    <value>日志、备份和其他不应删除的文件会存放在此目录</value>
+  </data>
+  <data name="Settings_General_CustomizeOutputFolders_Tooltip" xml:space="preserve">
+    <value>自定义更多输出目录</value>
+  </data>
+  <data name="Settings_General_ExportRawDataDirectory" xml:space="preserve">
+    <value>导出原始数据目录 *</value>
+  </data>
+  <data name="Settings_General_SavePropertiesDirectory" xml:space="preserve">
+    <value>保存属性目录 *</value>
+  </data>
+  <data name="Settings_General_SaveTextureDirectory" xml:space="preserve">
+    <value>保存贴图目录 *</value>
+  </data>
+  <data name="Settings_General_SaveAudioDirectory" xml:space="preserve">
+    <value>保存音频目录 *</value>
+  </data>
+  <data name="Settings_General_DiscordRichPresence" xml:space="preserve">
+    <value>Discord 状态显示</value>
+  </data>
+  <data name="Settings_General_ArchiveDirectory" xml:space="preserve">
+    <value>归档目录 *</value>
+  </data>
+  <data name="Settings_General_UEVersions" xml:space="preserve">
+    <value>UE 版本 *</value>
+  </data>
+  <data name="Settings_General_UEVersions_Tooltip" xml:space="preserve">
+    <value>覆盖解析资源包时使用的 UE 版本</value>
+  </data>
+  <data name="Settings_General_TexturePlatform" xml:space="preserve">
+    <value>贴图平台 *</value>
+  </data>
+  <data name="Settings_General_TexturePlatform_Tooltip" xml:space="preserve">
+    <value>覆盖游戏平台以确保贴图兼容</value>
+  </data>
+  <data name="Settings_General_CompressedAudio" xml:space="preserve">
+    <value>压缩音频</value>
+  </data>
+  <data name="Settings_General_CompressedAudio_Tooltip" xml:space="preserve">
+    <value>遇到压缩音频文件时的处理方式</value>
+  </data>
+  <data name="Settings_General_PackagesLanguage" xml:space="preserve">
+    <value>资源包语言</value>
+  </data>
+  <data name="Settings_General_PackagesLanguage_Tooltip" xml:space="preserve">
+    <value>解析资源包时显示的语言</value>
+  </data>
+  <data name="Settings_General_KeepDirectoryStructure" xml:space="preserve">
+    <value>保持目录结构</value>
+  </data>
+  <data name="Settings_General_KeepDirectoryStructure_Tooltip" xml:space="preserve">
+    <value>按游戏目录结构保存资源包</value>
+  </data>
+  <data name="Settings_General_LocalMappingFile" xml:space="preserve">
+    <value>本地 Mapping 文件（支持拖放）</value>
+  </data>
+  <data name="Settings_General_MappingFilePath" xml:space="preserve">
+    <value>Mapping 文件路径</value>
+  </data>
+  <data name="Settings_General_UnrealPakExecutable" xml:space="preserve">
+    <value>UnrealPak 可执行文件</value>
+  </data>
+  <data name="Settings_General_UnrealPakExecutable_Tooltip" xml:space="preserve">
+    <value>用于把修改后的蓝图 JSON 回写并构建补丁 .pak</value>
+  </data>
+  <data name="Settings_General_VersioningConfiguration" xml:space="preserve">
+    <value>版本配置 *</value>
+  </data>
+  <data name="Settings_General_CustomVersions" xml:space="preserve">
+    <value>自定义版本</value>
+  </data>
+  <data name="Settings_General_Options" xml:space="preserve">
+    <value>选项</value>
+  </data>
+  <data name="Settings_General_MapStructTypes" xml:space="preserve">
+    <value>MapStructTypes</value>
+  </data>
+  <data name="Settings_General_AESReloadAtLaunch" xml:space="preserve">
+    <value>启动时重载 AES</value>
+  </data>
+  <data name="Settings_General_EndpointConfiguration" xml:space="preserve">
+    <value>接口配置</value>
+  </data>
+  <data name="Settings_General_AES" xml:space="preserve">
+    <value>AES</value>
+  </data>
+  <data name="Settings_General_Mapping" xml:space="preserve">
+    <value>Mapping</value>
+  </data>
+  <data name="Settings_General_SerializeScriptBytecode" xml:space="preserve">
+    <value>序列化脚本字节码</value>
+  </data>
+  <data name="Settings_General_SerializeInlinedShaderMaps" xml:space="preserve">
+    <value>序列化内联 Shader Maps</value>
+  </data>
+  <data name="Settings_General_DecompileBlueprintToPseudoCpp" xml:space="preserve">
+    <value>反编译蓝图为伪 C++</value>
+  </data>
+  <data name="Settings_General_DecompileBlueprintToPseudoCpp_Tooltip" xml:space="preserve">
+    <value>在右键菜单中增加选项，将 UClass 资源包反编译为便于阅读的伪 C++</value>
+  </data>
+  <data name="Settings_General_ConvertAudioDuringExport" xml:space="preserve">
+    <value>导出时转换音频（.wav）</value>
+  </data>
+  <data name="Settings_General_CriwareDecryptionKey" xml:space="preserve">
+    <value>CRIWARE 解密密钥</value>
+  </data>
+  <data name="Settings_General_CriwareDecryptionKey_Tooltip" xml:space="preserve">
+    <value>输入十进制或十六进制密钥（最多 20 位数字或 8 字节）</value>
+  </data>
+  <data name="Settings_Creator_CosmeticStyle" xml:space="preserve">
+    <value>外观样式</value>
+  </data>
+  <data name="Settings_Creator_CosmeticShopIcon" xml:space="preserve">
+    <value>商店图标显示资源</value>
+  </data>
+  <data name="Settings_Models_ModelExportDirectory" xml:space="preserve">
+    <value>模型导出目录 *</value>
+  </data>
+  <data name="Settings_Models_ModelExportDirectory_Tooltip" xml:space="preserve">
+    <value>网格、材质和动画将导出到此目录</value>
+  </data>
+  <data name="Settings_Models_MeshFormat" xml:space="preserve">
+    <value>网格格式</value>
+  </data>
+  <data name="Settings_Models_ImporterBlenderUe" xml:space="preserve">
+    <value>导入器（Blender/UE）：</value>
+  </data>
+  <data name="Settings_Models_ImportersBlender" xml:space="preserve">
+    <value>导入器（Blender）：</value>
+  </data>
+  <data name="Settings_Models_SocketFormatActorX" xml:space="preserve">
+    <value>Socket 格式（ActorX）</value>
+  </data>
+  <data name="Settings_Models_CompressionFormatUEFormat" xml:space="preserve">
+    <value>压缩格式（UEFormat）</value>
+  </data>
+  <data name="Settings_Models_LevelOfDetailFormat" xml:space="preserve">
+    <value>细节层级格式</value>
+  </data>
+  <data name="Settings_Models_PreviewMaxTextureSize" xml:space="preserve">
+    <value>预览最大贴图尺寸</value>
+  </data>
+  <data name="Settings_Models_PreviewStaticMeshes" xml:space="preserve">
+    <value>预览静态网格</value>
+  </data>
+  <data name="Settings_Models_PreviewSkeletalMeshes" xml:space="preserve">
+    <value>预览骨骼网格</value>
+  </data>
+  <data name="Settings_Models_PreviewAnimations" xml:space="preserve">
+    <value>预览动画</value>
+  </data>
+  <data name="Settings_Models_PreviewMaterials" xml:space="preserve">
+    <value>预览材质</value>
+  </data>
+  <data name="Settings_Models_PreviewLevels" xml:space="preserve">
+    <value>预览关卡（.umap）</value>
+  </data>
+  <data name="Settings_Models_SaveMaterialsEmbeddedWithinMeshes" xml:space="preserve">
+    <value>保存网格内嵌材质</value>
+  </data>
+  <data name="Settings_Models_SaveMorphTargetsInMeshes" xml:space="preserve">
+    <value>保存网格 Morph Targets</value>
+  </data>
+  <data name="Settings_Models_HandleSkeletonsAsEmptyMeshes" xml:space="preserve">
+    <value>将骨架按空网格处理</value>
+  </data>
+  <data name="Settings_Models_NaniteFormat" xml:space="preserve">
+    <value>Nanite 格式</value>
+  </data>
+  <data name="Settings_Models_MaterialFormat" xml:space="preserve">
+    <value>材质格式</value>
+  </data>
+  <data name="Settings_Models_TextureFormat" xml:space="preserve">
+    <value>贴图格式</value>
+  </data>
+  <data name="Settings_Models_SaveHdrTexturesAsRadianceHdr" xml:space="preserve">
+    <value>将 HDR 贴图保存为 Radiance .hdr</value>
+  </data>
+  <data name="Settings_Keybindings_LeftSwitchOnDirectoryTab" xml:space="preserve">
+    <value>目录标签向左切换</value>
+  </data>
+  <data name="Settings_Keybindings_RightSwitchOnDirectoryTab" xml:space="preserve">
+    <value>目录标签向右切换</value>
+  </data>
+  <data name="Settings_Keybindings_SwitchAssetExplorer" xml:space="preserve">
+    <value>切换资源浏览器</value>
+  </data>
+  <data name="Settings_Keybindings_LeftSwitchOnAssetTab" xml:space="preserve">
+    <value>资源标签向左切换</value>
+  </data>
+  <data name="Settings_Keybindings_RightSwitchOnAssetTab" xml:space="preserve">
+    <value>资源标签向右切换</value>
+  </data>
+  <data name="Settings_Keybindings_AddAssetTab" xml:space="preserve">
+    <value>新增资源标签</value>
+  </data>
+  <data name="Settings_Keybindings_RemoveSelectedAssetTab" xml:space="preserve">
+    <value>关闭当前资源标签</value>
+  </data>
+  <data name="Settings_Keybindings_AddAudioFile" xml:space="preserve">
+    <value>添加音频文件</value>
+  </data>
+  <data name="Settings_Keybindings_PlayPauseCurrentAudio" xml:space="preserve">
+    <value>播放/暂停当前音频</value>
+  </data>
+  <data name="Settings_Keybindings_PreviousAudio" xml:space="preserve">
+    <value>上一首音频</value>
+  </data>
+  <data name="Settings_Keybindings_NextAudio" xml:space="preserve">
+    <value>下一首音频</value>
+  </data>
+  <data name="Settings_UiLanguage" xml:space="preserve">
+    <value>界面语言</value>
+  </data>
+  <data name="Settings_UiLanguageTooltip" xml:space="preserve">
+    <value>FModel 界面显示语言</value>
+  </data>
+  <data name="Settings_RestartHint" xml:space="preserve">
+    <value>* 部分改动需要重启后生效</value>
+  </data>
+  <data name="Common_Ok" xml:space="preserve">
+    <value>确定</value>
+  </data>
+  <data name="Updates_Disabled_Title" xml:space="preserve">
+    <value>更新已禁用</value>
+  </data>
+  <data name="Updates_Disabled_Message" xml:space="preserve">
+    <value>此自定义构建已禁用更新/发布检查，以保留本地修改。</value>
+  </data>
+  <data name="About_Title" xml:space="preserve">
+    <value>关于</value>
+  </data>
+  <data name="About_MadeBy" xml:space="preserve">
+    <value>由 Asval 用 ♥ 制作</value>
+  </data>
+  <data name="About_Description" xml:space="preserve">
+    <value>说明</value>
+  </data>
+  <data name="About_Contributors" xml:space="preserve">
+    <value>贡献者</value>
+  </data>
+  <data name="About_Donators" xml:space="preserve">
+    <value>赞助者</value>
+  </data>
+  <data name="About_PoweredBy" xml:space="preserve">
+    <value>技术支持</value>
+  </data>
+  <data name="AesManager_Title" xml:space="preserve">
+    <value>AES 管理器</value>
+  </data>
+  <data name="AesManager_Instruction" xml:space="preserve">
+    <value>说明</value>
+  </data>
+  <data name="AesManager_InstructionBody" xml:space="preserve">
+    <value>为了解密归档信息，通常需要 AES 密钥。你可以在这里为静态和动态归档设置密钥。如果不知道该游戏对应的密钥，可以自行搜索。密钥必须以 "0x" 开头，并且后续包含 64 个字符。</value>
+  </data>
+  <data name="AudioPlayer_Title" xml:space="preserve">
+    <value>音频播放器</value>
+  </data>
+  <data name="AudioPlayer_Devices" xml:space="preserve">
+    <value>设备</value>
+  </data>
+  <data name="AudioPlayer_Volume" xml:space="preserve">
+    <value>音量</value>
+  </data>
+  <data name="AudioPlayer_Encoding" xml:space="preserve">
+    <value>编码</value>
+  </data>
+  <data name="AudioPlayer_Length" xml:space="preserve">
+    <value>时长</value>
+  </data>
+  <data name="AudioPlayer_BytesPerSecond" xml:space="preserve">
+    <value>每秒字节数</value>
+  </data>
+  <data name="AudioPlayer_SearchByName" xml:space="preserve">
+    <value>按名称搜索...</value>
+  </data>
+  <data name="AudioPlayer_Play" xml:space="preserve">
+    <value>播放</value>
+  </data>
+  <data name="AudioPlayer_Remove" xml:space="preserve">
+    <value>移除</value>
+  </data>
+  <data name="AudioPlayer_Save" xml:space="preserve">
+    <value>保存</value>
+  </data>
+  <data name="AudioPlayer_SavePlaylist" xml:space="preserve">
+    <value>保存播放列表</value>
+  </data>
+  <data name="AudioPlayer_Previous" xml:space="preserve">
+    <value>上一首</value>
+  </data>
+  <data name="AudioPlayer_Next" xml:space="preserve">
+    <value>下一首</value>
+  </data>
+  <data name="Avalon_SearchUp" xml:space="preserve">
+    <value>向上搜索</value>
+  </data>
+  <data name="Avalon_MatchWholeWord" xml:space="preserve">
+    <value>全词匹配</value>
+  </data>
+  <data name="Common_Refresh" xml:space="preserve">
+    <value>刷新</value>
+  </data>
+  <data name="Common_Path" xml:space="preserve">
+    <value>路径</value>
+  </data>
+  <data name="Common_Archive" xml:space="preserve">
+    <value>归档</value>
+  </data>
+  <data name="Common_Size" xml:space="preserve">
+    <value>大小</value>
+  </data>
+  <data name="Common_GoTo" xml:space="preserve">
+    <value>跳转</value>
+  </data>
+  <data name="Common_ExtractInNewTab" xml:space="preserve">
+    <value>在新标签页中提取</value>
+  </data>
+  <data name="Common_FindReferences" xml:space="preserve">
+    <value>查找引用</value>
+  </data>
+  <data name="Common_ViewDecompiledBlueprint" xml:space="preserve">
+    <value>查看反编译蓝图（伪 C++）</value>
+  </data>
+  <data name="Common_ViewBlueprintJson" xml:space="preserve">
+    <value>查看蓝图 JSON（UAssetAPI）</value>
+  </data>
+  <data name="Common_ExportRawData" xml:space="preserve">
+    <value>导出原始数据</value>
+  </data>
+  <data name="Common_SavePropertiesJson" xml:space="preserve">
+    <value>保存属性（.json）</value>
+  </data>
+  <data name="Common_SaveTexture" xml:space="preserve">
+    <value>保存贴图</value>
+  </data>
+  <data name="Common_SaveModel" xml:space="preserve">
+    <value>保存模型</value>
+  </data>
+  <data name="Common_SaveAnimation" xml:space="preserve">
+    <value>保存动画</value>
+  </data>
+  <data name="Common_SaveAudio" xml:space="preserve">
+    <value>保存音频</value>
+  </data>
+  <data name="Common_Copy" xml:space="preserve">
+    <value>复制</value>
+  </data>
+  <data name="Common_PackagePath" xml:space="preserve">
+    <value>资源包路径</value>
+  </data>
+  <data name="Common_PackageName" xml:space="preserve">
+    <value>资源包名称</value>
+  </data>
+  <data name="Common_DirectoryPath" xml:space="preserve">
+    <value>目录路径</value>
+  </data>
+  <data name="Common_PackagePathNoExt" xml:space="preserve">
+    <value>资源包路径（无扩展名）</value>
+  </data>
+  <data name="Common_PackageNameNoExt" xml:space="preserve">
+    <value>资源包名称（无扩展名）</value>
+  </data>
+  <data name="Common_ShowMetadata" xml:space="preserve">
+    <value>显示元数据</value>
+  </data>
+  <data name="Common_Close" xml:space="preserve">
+    <value>关闭</value>
+  </data>
+  <data name="Common_CloseAllTabs" xml:space="preserve">
+    <value>关闭全部标签</value>
+  </data>
+  <data name="Common_CloseOtherTabs" xml:space="preserve">
+    <value>关闭其他标签</value>
+  </data>
+  <data name="Common_OpenProperties" xml:space="preserve">
+    <value>打开属性</value>
+  </data>
+  <data name="Common_JumpToPackageFolder" xml:space="preserve">
+    <value>跳转到资源包文件夹</value>
+  </data>
+  <data name="Common_CopyPackagePath" xml:space="preserve">
+    <value>复制资源包路径</value>
+  </data>
+  <data name="Search_Title" xml:space="preserve">
+    <value>搜索资源包</value>
+  </data>
+  <data name="Search_Tab_ByPath" xml:space="preserve">
+    <value>按路径</value>
+  </data>
+  <data name="Search_Watermark_Pattern" xml:space="preserve">
+    <value>输入模式后按回车...</value>
+  </data>
+  <data name="Search_Watermark_Regex" xml:space="preserve">
+    <value>输入正则后按回车...</value>
+  </data>
+  <data name="Search_Tooltip_MatchCase" xml:space="preserve">
+    <value>区分大小写</value>
+  </data>
+  <data name="Search_Tooltip_Regex" xml:space="preserve">
+    <value>正则</value>
+  </data>
+  <data name="Search_Tooltip_SortFileSizes" xml:space="preserve">
+    <value>按文件大小排序</value>
+  </data>
+  <data name="Search_Tooltip_ClearSearch" xml:space="preserve">
+    <value>清空搜索筛选</value>
+  </data>
+  <data name="Search_NoPackages" xml:space="preserve">
+    <value>没有找到匹配查询的资源包</value>
+  </data>
+  <data name="Search_NoReferences" xml:space="preserve">
+    <value>在其他资源包中未找到引用</value>
+  </data>
+  <data name="UpdateView_Title" xml:space="preserve">
+    <value>发布</value>
+  </data>
+  <data name="UpdateView_Description" xml:space="preserve">
+    <value>下方列出了可下载的所有发布版本。按时间排序，最新版本在最上方。我们会定期移除旧版本，保持列表精简并与最新 UE 发布同步。如需手动检查更新，可通过“帮助 &gt; 发布”打开此窗口。</value>
+  </data>
+  <data name="UpdateView_DownloadLatest" xml:space="preserve">
+    <value>下载最新发布</value>
+  </data>
+  <data name="UpdateView_RemindMeNow" xml:space="preserve">
+    <value>稍后提醒我...</value>
+  </data>
+  <data name="UpdateView_RemindIn3Days" xml:space="preserve">
+    <value>3 天后</value>
+  </data>
+  <data name="UpdateView_RemindNextWeek" xml:space="preserve">
+    <value>下周</value>
+  </data>
+  <data name="UpdateView_RemindNextMonth" xml:space="preserve">
+    <value>下个月</value>
+  </data>
+  <data name="UpdateView_RemindNever" xml:space="preserve">
+    <value>不再提醒</value>
+  </data>
+  <data name="UpdateView_History" xml:space="preserve">
+    <value>历史</value>
+  </data>
+  <data name="UpdateView_CommitsOn" xml:space="preserve">
+    <value>提交于</value>
+  </data>
+  <data name="UpdateView_NoCommitsFound" xml:space="preserve">
+    <value>未找到提交</value>
+  </data>
+  <data name="DropOverlay_Title" xml:space="preserve">
+    <value>拖入 .usmap 以导入</value>
+  </data>
+  <data name="DropOverlay_Description" xml:space="preserve">
+    <value>映射文件会立即应用</value>
+  </data>
+  <data name="FolderMenu_ExportRawData" xml:space="preserve">
+    <value>导出文件夹内资源包原始数据（.uasset）</value>
+  </data>
+  <data name="FolderMenu_SaveProperties" xml:space="preserve">
+    <value>保存文件夹内资源包属性（.json）</value>
+  </data>
+  <data name="FolderMenu_SaveTextures" xml:space="preserve">
+    <value>保存文件夹内资源包贴图</value>
+  </data>
+  <data name="FolderMenu_SaveDecompiledBlueprints" xml:space="preserve">
+    <value>保存文件夹内反编译蓝图</value>
+  </data>
+  <data name="FolderMenu_SaveModels" xml:space="preserve">
+    <value>保存文件夹内资源包模型</value>
+  </data>
+  <data name="FolderMenu_SaveAnimations" xml:space="preserve">
+    <value>保存文件夹内资源包动画</value>
+  </data>
+  <data name="FolderMenu_SaveAudio" xml:space="preserve">
+    <value>保存文件夹内资源包音频</value>
+  </data>
+  <data name="FolderMenu_FavoriteDirectory" xml:space="preserve">
+    <value>收藏目录</value>
+  </data>
+  <data name="FolderMenu_CopyDirectoryPath" xml:space="preserve">
+    <value>复制目录路径</value>
+  </data>
+  <data name="Tab_OpenLinkedBlueprintJson" xml:space="preserve">
+    <value>打开关联蓝图 JSON</value>
+  </data>
+  <data name="Tab_LocateCurrentStatementInJson" xml:space="preserve">
+    <value>在 JSON 中定位当前语句</value>
+  </data>
+  <data name="Tab_OpenLinkedDecompiledCpp" xml:space="preserve">
+    <value>打开关联反编译 C++</value>
+  </data>
+  <data name="Tab_LocateCurrentStatementInCpp" xml:space="preserve">
+    <value>在 C++ 中定位当前语句</value>
+  </data>
+  <data name="Tab_SerializeJsonAndSaveAsset" xml:space="preserve">
+    <value>序列化 JSON 并保存 .uasset/.uexp</value>
+  </data>
+  <data name="Tab_SaveBlueprintJsonAs" xml:space="preserve">
+    <value>蓝图 JSON 另存为...</value>
+  </data>
+  <data name="Tab_SaveBlueprintUassetAs" xml:space="preserve">
+    <value>蓝图 UAsset 另存为...</value>
+  </data>
+  <data name="Tab_WriteBackOrBuildPatchPak" xml:space="preserve">
+    <value>回写（Loose）/ 构建补丁 Pak</value>
+  </data>
+  <data name="TiledExplorer_NoFoldersOrPackages" xml:space="preserve">
+    <value>未找到文件夹或资源包</value>
+  </data>
+  <data name="TiledExplorer_NoPackagesInFolder" xml:space="preserve">
+    <value>文件夹中未找到资源包</value>
+  </data>
+  <data name="UpdateView_CommitsOnDateFormat" xml:space="preserve">
+    <value>提交于 {0:MMM d, yyyy}</value>
+  </data>
+  <data name="ImportManager_Title" xml:space="preserve">
+    <value>导入管理器</value>
+  </data>
+  <data name="ImportManager_Header" xml:space="preserve">
+    <value>资源导入</value>
+  </data>
+  <data name="ImportManager_Description" xml:space="preserve">
+    <value>查看和管理当前资源引用的导入项。导入项是指此资源所依赖的外部资源。</value>
+  </data>
+  <data name="ImportManager_Search" xml:space="preserve">
+    <value>搜索：</value>
+  </data>
+  <data name="ImportManager_NoImports" xml:space="preserve">
+    <value>没有找到导入项</value>
+  </data>
+  <data name="ImportManager_Total" xml:space="preserve">
+    <value>总计：</value>
+  </data>
+  <data name="Common_ViewBlueprintGraph" xml:space="preserve">
+    <value>查看蓝图节点图</value>
+  </data>
+  <data name="Common_OpenBlueprintGraph" xml:space="preserve">
+    <value>打开蓝图节点图</value>
+  </data>
+  <data name="BlueprintViewer_FilterFunctions" xml:space="preserve">
+    <value>筛选事件和函数...</value>
+  </data>
+  <data name="BlueprintViewer_SearchNodes" xml:space="preserve">
+    <value>搜索节点、引脚和值（Ctrl+F）...</value>
+  </data>
+  <data name="BlueprintViewer_Fit" xml:space="preserve">
+    <value>适应窗口</value>
+  </data>
+  <data name="BlueprintViewer_Selection" xml:space="preserve">
+    <value>选中项</value>
+  </data>
+  <data name="BlueprintViewer_NodeBytecode" xml:space="preserve">
+    <value>节点字节码</value>
+  </data>
+  <data name="BlueprintViewer_FunctionBytecode" xml:space="preserve">
+    <value>函数字节码</value>
+  </data>
+  <data name="BlueprintViewer_Problems" xml:space="preserve">
+    <value>问题</value>
+  </data>
+  <data name="BlueprintViewer_Loading" xml:space="preserve">
+    <value>正在加载蓝图...</value>
+  </data>
+  <data name="BlueprintViewer_LoadingWithSignatures" xml:space="preserve">
+    <value>正在加载蓝图和函数签名...</value>
+  </data>
+  <data name="BlueprintViewer_NotBlueprint" xml:space="preserve">
+    <value>此资源包中没有蓝图生成类。</value>
+  </data>
+  <data name="BlueprintViewer_Summary" xml:space="preserve">
+    <value>{0}：{1} 个事件，{2} 个函数</value>
+  </data>
+  <data name="BlueprintViewer_Decompiling" xml:space="preserve">
+    <value>正在反编译 {0}...</value>
+  </data>
+  <data name="BlueprintViewer_DecompileFailed" xml:space="preserve">
+    <value>反编译 {0} 失败：{1}</value>
+  </data>
+  <data name="BlueprintViewer_GraphStatus" xml:space="preserve">
+    <value>{0}：{1} 个节点</value>
+  </data>
+  <data name="BlueprintViewer_GraphInferred" xml:space="preserve">
+    <value>，其中 {0} 个为推断签名</value>
+  </data>
+  <data name="BlueprintViewer_GraphFailed" xml:space="preserve">
+    <value>（反编译失败，见问题列表）</value>
+  </data>
+  <data name="BlueprintViewer_ProblemFailed" xml:space="preserve">
+    <value>反编译失败，节点图不完整。</value>
+  </data>
+  <data name="BlueprintViewer_ProblemInferred" xml:space="preserve">
+    <value>有 {0} 个原生函数的签名是根据调用处推断的（节点右上角的橙色圆点）。将 .jmap 作为映射文件加载，或在设置中指定“蓝图函数签名 Jmap”，即可得到准确的引脚。</value>
+  </data>
+  <data name="Settings_BlueprintSignatureJmap" xml:space="preserve">
+    <value>蓝图函数签名 Jmap</value>
+  </data>
+  <data name="Settings_BlueprintSignatureJmap_Tooltip" xml:space="preserve">
+    <value>可选的 .jmap / .jmap.gz，映射文件为 .usmap 时，蓝图节点图用它获取原生函数签名</value>
+  </data>
+  <data name="BlueprintViewer_GraphTab" xml:space="preserve">
+    <value>节点图</value>
+  </data>
+  <data name="BlueprintViewer_DesignerTab" xml:space="preserve">
+    <value>设计器</value>
+  </data>
+  <data name="BlueprintViewer_Outlines" xml:space="preserve">
+    <value>显示轮廓</value>
+  </data>
+  <data name="BlueprintViewer_Bindings" xml:space="preserve">
+    <value>属性绑定</value>
+  </data>
+  <data name="BlueprintViewer_WidgetProperties" xml:space="preserve">
+    <value>控件属性</value>
+  </data>
+  <data name="BlueprintViewer_DesignSize" xml:space="preserve">
+    <value>设计尺寸</value>
+  </data>
+  <data name="BlueprintEditor_Pending" xml:space="preserve">
+    <value>类默认值修改 {0} 项，引脚值修改 {1} 项</value>
+  </data>
+  <data name="BlueprintEditor_Loading" xml:space="preserve">
+    <value>正在用 UAssetAPI 加载资源以供编辑...</value>
+  </data>
+  <data name="BlueprintEditor_NoCdo" xml:space="preserve">
+    <value>此包中没有找到类默认对象。</value>
+  </data>
+  <data name="BlueprintEditor_LoadFailed" xml:space="preserve">
+    <value>无法加载资源进行编辑：{0}</value>
+  </data>
+  <data name="BlueprintEditor_NotLoaded" xml:space="preserve">
+    <value>资源尚未加载以供编辑。</value>
+  </data>
+  <data name="BlueprintEditor_PinNotEditable" xml:space="preserve">
+    <value>此引脚的值不可编辑。</value>
+  </data>
+  <data name="BlueprintEditor_InvalidValue" xml:space="preserve">
+    <value>“{0}”不是有效的 {1} 值。</value>
+  </data>
+  <data name="BlueprintEditor_Saving" xml:space="preserve">
+    <value>正在保存并校验...</value>
+  </data>
+  <data name="BlueprintEditor_SavedAsset" xml:space="preserve">
+    <value>已导出 {0}</value>
+  </data>
+  <data name="BlueprintEditor_SavedPak" xml:space="preserve">
+    <value>补丁 pak：{0}</value>
+  </data>
+  <data name="BlueprintEditor_SaveFailed" xml:space="preserve">
+    <value>保存失败：{0}</value>
+  </data>
+  <data name="BlueprintEditor_Discarded" xml:space="preserve">
+    <value>已放弃所有修改。</value>
+  </data>
+  <data name="BlueprintEditor_Discard" xml:space="preserve">
+    <value>放弃修改</value>
+  </data>
+  <data name="BlueprintEditor_SavePak" xml:space="preserve">
+    <value>保存为补丁 pak</value>
+  </data>
+  <data name="BlueprintEditor_ExportAsset" xml:space="preserve">
+    <value>导出 .uasset</value>
+  </data>
+  <data name="BlueprintEditor_Apply" xml:space="preserve">
+    <value>应用</value>
+  </data>
+  <data name="BlueprintEditor_DefaultsTab" xml:space="preserve">
+    <value>类默认值</value>
+  </data>
+  <data name="BlueprintEditor_OverriddenOnly" xml:space="preserve">
+    <value>只显示已覆盖</value>
+  </data>
+  <data name="BlueprintEditor_FilterProperties" xml:space="preserve">
+    <value>筛选属性...</value>
+  </data>
+  <data name="BlueprintEditor_ColumnName" xml:space="preserve">
+    <value>名称</value>
+  </data>
+  <data name="BlueprintEditor_ColumnType" xml:space="preserve">
+    <value>类型</value>
+  </data>
+  <data name="BlueprintEditor_ColumnValue" xml:space="preserve">
+    <value>值</value>
+  </data>
+  <data name="BlueprintEditor_ColumnOwner" xml:space="preserve">
+    <value>声明于</value>
+  </data>
+  <data name="BlueprintEditor_Override" xml:space="preserve">
+    <value>覆盖</value>
+  </data>
+  <data name="BlueprintEditor_OverrideTip" xml:space="preserve">
+    <value>在类默认值中为此属性保存一个值</value>
+  </data>
+  <data name="BlueprintEditor_Revert" xml:space="preserve">
+    <value>恢复默认</value>
+  </data>
+  <data name="BlueprintEditor_RevertTip" xml:space="preserve">
+    <value>删除覆盖，改用父类的默认值</value>
+  </data>
+  <data name="BlueprintEditor_PinValue" xml:space="preserve">
+    <value>{0} 的值（{1}，字节码中 {2} 处常量）</value>
+  </data>
+  <data name="BlueprintEditor_Inherited" xml:space="preserve">
+    <value>继承值：未保存在此蓝图的类默认值中。点击“覆盖”来设置。</value>
+  </data>
+  <data name="BlueprintEditor_DiscardConfirm" xml:space="preserve">
+    <value>放弃所有未保存的修改？</value>
+  </data>
+  <data name="BlueprintEditor_CloseConfirm" xml:space="preserve">
+    <value>此蓝图有尚未保存的修改。仍要关闭吗？</value>
+  </data>
+  <data name="Menu_Window" xml:space="preserve">
+    <value>窗口</value>
+  </data>
+  <data name="Main_Tab_Packages" xml:space="preserve">
+    <value>资源包</value>
+  </data>
+  <data name="Main_Tab_Workspace" xml:space="preserve">
+    <value>工作区</value>
+  </data>
+  <data name="Main_Tab_Output" xml:space="preserve">
+    <value>输出</value>
+  </data>
+  <data name="Dock_Float" xml:space="preserve">
+    <value>浮动</value>
+  </data>
+  <data name="Dock_Dock" xml:space="preserve">
+    <value>停靠</value>
+  </data>
+  <data name="Dock_DockAsDocument" xml:space="preserve">
+    <value>停靠为文档</value>
+  </data>
+  <data name="Dock_AutoHide" xml:space="preserve">
+    <value>自动隐藏</value>
+  </data>
+  <data name="Dock_Hide" xml:space="preserve">
+    <value>隐藏</value>
+  </data>
+  <data name="Dock_CloseOthers" xml:space="preserve">
+    <value>关闭其他</value>
+  </data>
+  <data name="Dock_NewVerticalTabGroup" xml:space="preserve">
+    <value>新建垂直标签组</value>
+  </data>
+  <data name="Dock_NewHorizontalTabGroup" xml:space="preserve">
+    <value>新建水平标签组</value>
+  </data>
+  <data name="Dock_Pin" xml:space="preserve">
+    <value>窗口置顶（便签）</value>
+  </data>
+  <data name="Dock_Detach" xml:space="preserve">
+    <value>独立窗口（显示在任务栏）</value>
+  </data>
+  <data name="Dock_PinActive" xml:space="preserve">
+    <value>置顶当前面板</value>
+  </data>
+  <data name="Dock_DetachActive" xml:space="preserve">
+    <value>将当前面板弹出为独立窗口</value>
+  </data>
+  <data name="Dock_ResetLayout" xml:space="preserve">
+    <value>重置布局</value>
+  </data>
+  <data name="Dock_Properties" xml:space="preserve">
+    <value>属性</value>
+  </data>
+  <data name="WidgetEditor_Button" xml:space="preserve">
+    <value>编辑属性</value>
+  </data>
+  <data name="WidgetEditor_Tab" xml:space="preserve">
+    <value>编辑(预览)</value>
+  </data>
+  <data name="WidgetEditor_PreviewOnly" xml:space="preserve">
+    <value>仅预览:修改只影响当前设计器预览,不会保存到资源。</value>
+  </data>
+  <data name="WidgetEditor_ResetWidget" xml:space="preserve">
+    <value>重置此控件</value>
+  </data>
+  <data name="WidgetEditor_ResetAll" xml:space="preserve">
+    <value>全部重置</value>
+  </data>
+  <data name="WidgetEditor_ResetProperty" xml:space="preserve">
+    <value>恢复为资源中的值</value>
+  </data>
+  <data name="WidgetEditor_NoSelection" xml:space="preserve">
+    <value>选择一个控件以编辑其属性。</value>
+  </data>
+  <data name="WidgetEditor_InvalidValue" xml:space="preserve">
+    <value>无效的值</value>
+  </data>
+</root>
