@@ -11,6 +11,9 @@ namespace FModel.BlueprintGraph.Nodes
     {
         public string FunctionName;
         public string OuterName;
+
+        public override string? DefinitionOwner => OuterName;
+        public override string? DefinitionMember => FunctionName;
         public K2Node_CallFunction(string funcName, string outerName, List<GraphPin> Parms, KismetExpression Instr, bool isPure) : base(outerName == "" ? funcName : $"{funcName} ({outerName.SubstringAfterLast('.')})", Instr)
         {
             FunctionName = funcName;

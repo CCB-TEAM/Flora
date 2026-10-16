@@ -55,6 +55,7 @@ public partial class App
             UserSettings.Default = new UserSettings();
         }
 
+        UserSettings.Default.UiLanguage = LocalizationManager.Resolve(UserSettings.Default.UiLanguage);
         LocalizationManager.Instance.ApplyUiLanguage(UserSettings.Default.UiLanguage);
 
         var createMe = false;
@@ -73,7 +74,7 @@ public partial class App
             }
             catch (UnauthorizedAccessException exception)
             {
-                throw new Exception("FModel cannot create the output directory where it is currently located. Please move FModel.exe to a different location.", exception);
+                throw new Exception("Flora cannot create the output directory where it is currently located. Please move Flora.exe to a different location.", exception);
             }
         }
 

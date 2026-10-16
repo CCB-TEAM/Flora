@@ -1,0 +1,54 @@
+<UserControl x:Class="FModel.Views.Packing.LocresEditor"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="clr-namespace:FModel.Localization"
+             xmlns:adonisExtensions="clr-namespace:AdonisUI.Extensions;assembly=AdonisUI">
+    <Grid Margin="0 4 0 0" Height="300">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <DockPanel Grid.Row="0" Margin="0 0 0 4">
+            <CheckBox x:Name="OnlyChanged" DockPanel.Dock="Right" Content="{loc:Loc Pack_LocOnlyChanged}" Margin="8 0 0 0" VerticalAlignment="Center" Click="OnFilterChanged" />
+            <TextBlock x:Name="InfoText" DockPanel.Dock="Right" Opacity="0.7" Margin="8 0 0 0" VerticalAlignment="Center" />
+            <TextBox x:Name="FilterBox" adonisExtensions:WatermarkExtension.Watermark="{loc:Loc Pack_Search}" TextChanged="OnFilterChanged" />
+        </DockPanel>
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Grid Grid.Row="0" Margin="4 0 18 2" Opacity="0.7">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="110" />
+                    <ColumnDefinition Width="180" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="{loc:Loc Pack_LocNamespace}" />
+                <TextBlock Grid.Column="1" Text="{loc:Loc Pack_LocKey}" />
+                <TextBlock Grid.Column="2" Text="{loc:Loc Pack_LocOriginal}" />
+                <TextBlock Grid.Column="3" Text="{loc:Loc Pack_LocText}" />
+            </Grid>
+            <ListBox Grid.Row="1" x:Name="Grid" HorizontalContentAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                     VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling" ScrollViewer.CanContentScroll="True">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="110" />
+                                <ColumnDefinition Width="180" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="{Binding Namespace}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="1" Text="{Binding Key}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" ToolTip="{Binding Key}" />
+                            <TextBlock Grid.Column="2" Text="{Binding Original}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Opacity="0.7" Margin="0 0 6 0" ToolTip="{Binding Original}" />
+                            <TextBox Grid.Column="3" Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}" />
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
+    </Grid>
+</UserControl>

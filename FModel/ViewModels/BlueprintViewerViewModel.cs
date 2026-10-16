@@ -11,6 +11,7 @@ using CUE4Parse.UE4.Objects.UObject;
 using FModel.BlueprintGraph;
 using FModel.BlueprintGraph.Assets;
 using FModel.BlueprintGraph.Decompiler;
+using FModel.BlueprintGraph.Engine;
 using FModel.BlueprintGraph.Nodes;
 using FModel.BlueprintGraph.Widgets;
 using FModel.Framework;
@@ -32,7 +33,7 @@ public class BlueprintFunctionItem
     public EBlueprintFunctionKind Kind { get; init; }
     public UFunction Function { get; init; }
 
-    public string KindLabel => Kind == EBlueprintFunctionKind.Event ? "Event" : "Function";
+    public string KindLabel => LocalizationManager.Instance.Get(Kind == EBlueprintFunctionKind.Event ? "BlueprintViewer_KindEvent" : "BlueprintViewer_KindFunction");
 }
 
 public class BlueprintGraphResult
@@ -43,6 +44,31 @@ public class BlueprintGraphResult
 
     /// <summary>The function whose bytecode the graph was decompiled from (the ubergraph for events).</summary>
     public string FunctionName { get; init; }
+
+    /// <summary>The function's bytecode statements as decompiled (wire edits are checked against them).</summary>
+    public CUE4Parse.UE4.Kismet.KismetExpression[] Code { get; init; } = [];
+
+    /// <summary>Whether CUE4Parse read the function's bytecode to the end (otherwise the graph is partial and must not be edited).</summary>
+    public bool IsBytecodeComplete { get; init; } = true;
+}
+
+/// <summary>A place a node can lead to: a member declaration (Member set) or a game type/asset.</summary>
+public class NodeLink
+{
+    public string OwnerPath { get; init; }
+    public string Member { get; init; }
+    public string Label { get; init; }
+}
+
+/// <summary>A node found by the blueprint-wide search.</summary>
+public class BlueprintSearchHit
+{
+    public BlueprintFunctionItem Item { get; init; }
+    public BPNode Node { get; init; }
+    public string Match { get; init; }
+
+    public string Title => Node.Name;
+    public string Where => $"{Item.DisplayName}  -  {Match}";
 }
 
 public class BlueprintViewerViewModel : ViewModel
@@ -52,6 +78,8 @@ public class BlueprintViewerViewModel : ViewModel
     private readonly IFileProvider _provider;
     private readonly string _jmapPath;
     private readonly Dictionary<string, BlueprintGraphResult> _graphs = new();
+    private readonly Dictionary<string, EnumData> _enums = new(StringComparer.OrdinalIgnoreCase);
+    private readonly System.Threading.SemaphoreSlim _decompileLock = new(1, 1);
 
     private BlueprintGraphContext _context;
     private Asset _asset;
@@ -151,7 +179,7 @@ public class BlueprintViewerViewModel : ViewModel
         _jmapPath = jmapPath;
         Entry = entry;
         HasSignatureJmap = BlueprintGraphContextFactory.HasSignatureJmap(jmapPath);
-        Editor = new BlueprintEditorViewModel(owner, entry) { Verifier = VerifyEditedPackage };
+        Editor = new BlueprintEditorViewModel(owner, entry) { Verifier = VerifyEditedPackage, FormatPinValue = FormatPinValue };
     }
 
     /// <summary>Forgets the decompiled graphs, e.g. after discarding pin edits.</summary>
@@ -173,7 +201,8 @@ public class BlueprintViewerViewModel : ViewModel
             return "The saved package is not a blueprint any more.";
         asset.LoadAllProperties(_context);
 
-        foreach (var functionName in session.Constants.Select(o => o.FunctionName).Distinct())
+        var wired = session.Wires.Select(o => o.FunctionName).ToHashSet();
+        foreach (var functionName in session.Constants.Select(o => o.FunctionName).Concat(wired).Distinct())
         {
             var isUbergraph = functionName.StartsWith("ExecuteUbergraph", StringComparison.Ordinal);
             var function = isUbergraph
@@ -188,7 +217,8 @@ public class BlueprintViewerViewModel : ViewModel
                 return $"{functionName} no longer decompiles: {result.Problems.First(o => o.IsCritical).Message}";
 
             var original = _graphs.Values.FirstOrDefault(o => o.FunctionName == functionName);
-            if (original != null && Shape(original.Graph) != Shape(decompiler.Graph))
+            // wire edits legitimately add or remove nodes (e.g. a broken link drops the pure node that fed it)
+            if (original != null && !wired.Contains(functionName) && Shape(original.Graph) != Shape(decompiler.Graph))
                 return $"The graph of {functionName} changed shape after the edit ({original.Graph.Nodes.Count} -> {decompiler.Graph.Nodes.Count} nodes).";
         }
         return null;
@@ -266,30 +296,14 @@ public class BlueprintViewerViewModel : ViewModel
         if (item == null || _asset == null)
             return null;
 
-        var key = item.Kind == EBlueprintFunctionKind.Event ? UbergraphKey : item.Function.Name;
+        var key = GraphKey(item);
         if (!_graphs.TryGetValue(key, out var result))
         {
             IsBusy = true;
             StatusText = string.Format(L("BlueprintViewer_Decompiling"), item.DisplayName);
             try
             {
-                result = await Task.Run(() =>
-                {
-                    var decompiler = new FunctionDecompiler(new GlobalDecompilerContext(_asset, _context, item.Function));
-                    var decompilation = decompiler.Decompile(null);
-                    decompiler.Graph.LayoutNodesMsagl(null, _context.Options.UseMsagl);
-
-                    string json;
-                    try { json = JsonConvert.SerializeObject(decompiler.GlobalContext.CurrentFunction, Formatting.Indented); }
-                    catch (Exception e) { json = e.Message; }
-
-                    return new BlueprintGraphResult
-                    {
-                        Graph = decompiler.Graph, Result = decompilation, BytecodeJson = json,
-                        FunctionName = decompiler.GlobalContext.CurrentFunction.Name,
-                    };
-                });
-                _graphs[key] = result;
+                result = await GetGraphAsync(item);
             }
             catch (Exception e)
             {
@@ -306,9 +320,295 @@ public class BlueprintViewerViewModel : ViewModel
         var inferredCount = result.Graph.Nodes.Count(o => o.IsSignatureInferred);
         StatusText = string.Format(L("BlueprintViewer_GraphStatus"), item.DisplayName, result.Graph.Nodes.Count) +
                      (inferredCount > 0 ? string.Format(L("BlueprintViewer_GraphInferred"), inferredCount) : "") +
-                     (result.Result.HasCriticalErrors ? L("BlueprintViewer_GraphFailed") : "");
+                     (result.Result.HasCriticalErrors ? L("BlueprintViewer_GraphFailed") : "") +
+                     (result.IsBytecodeComplete ? "" : L("BlueprintViewer_GraphIncomplete"));
         return result;
     }
+
+    private static string GraphKey(BlueprintFunctionItem item) => item.Kind == EBlueprintFunctionKind.Event ? UbergraphKey : item.Function.Name;
+
+    /// <summary>The cached graph of the item, decompiled first if needed (one decompilation at a time).</summary>
+    private async Task<BlueprintGraphResult> GetGraphAsync(BlueprintFunctionItem item)
+    {
+        var key = GraphKey(item);
+        await _decompileLock.WaitAsync();
+        try
+        {
+            if (_graphs.TryGetValue(key, out var cached))
+                return cached;
+
+            var result = await Task.Run(() => Decompile(item));
+            _graphs[key] = result;
+            return result;
+        }
+        finally
+        {
+            _decompileLock.Release();
+        }
+    }
+
+    private BlueprintGraphResult Decompile(BlueprintFunctionItem item)
+    {
+        var decompiler = new FunctionDecompiler(new GlobalDecompilerContext(_asset, _context, item.Function));
+        var decompilation = decompiler.Decompile(null);
+
+        // enum literals are stored as bytes: show the enumerator name (before layout, which depends on node sizes)
+        foreach (var node in decompiler.Graph.Nodes)
+        {
+            var changed = false;
+            foreach (var pin in node.Input)
+            {
+                if (!BlueprintEditorViewModel.IsEditablePin(pin) || GetPinEnum(pin) == null)
+                    continue;
+                pin.Value = FormatPinValue(pin, EditableConstants.FormatValue(pin.SourceConstants[0]));
+                changed = true;
+            }
+            if (changed)
+                node.CalculateSize();
+        }
+        decompiler.Graph.LayoutNodesMsagl(null, _context.Options.UseMsagl);
+
+        string json;
+        try { json = JsonConvert.SerializeObject(decompiler.GlobalContext.CurrentFunction, Formatting.Indented); }
+        catch (Exception e) { json = e.Message; }
+
+        var function = decompiler.GlobalContext.CurrentFunction;
+        return new BlueprintGraphResult
+        {
+            Graph = decompiler.Graph, Result = decompilation, BytecodeJson = json,
+            FunctionName = function.Name,
+            IsBytecodeComplete = function.IsScriptBytecodeComplete,
+            Code = function.ScriptBytecode ?? [],
+        };
+    }
+
+    #region enum pins
+
+    /// <summary>The enum of a literal byte pin (from the parameter's type and the loaded mappings), or null.</summary>
+    public EnumData GetPinEnum(GraphPin pin)
+    {
+        if (_context?.Signatures == null || pin?.SourceConstants.Count is not > 0 ||
+            !EditableConstants.TryGetKind(pin.SourceConstants[0], out var kind) || kind != EditableConstantKind.Byte)
+            return null;
+
+        var name = pin.Property?.PinType.PinSubCategoryObject;
+        if (string.IsNullOrEmpty(name) || name == "None")
+            name = pin.PinType.PinSubCategoryObject;
+        if (string.IsNullOrEmpty(name) || name == "None")
+            return null;
+
+        lock (_enums)
+        {
+            if (!_enums.TryGetValue(name, out var data))
+            {
+                data = _context.Signatures.TryFindEnum(name);
+                if (data != null)
+                {
+                    if (name.Contains('/') && !name.StartsWith("/Script/", StringComparison.OrdinalIgnoreCase))
+                        ApplyUserEnumDisplayNames(data, name);
+                    // the implicit _MAX entry is not a value to pick
+                    foreach (var max in data.Elements.Keys.Where(o => ShortEnumName(o).EndsWith("_MAX", StringComparison.Ordinal)).ToList())
+                        data.Elements.Remove(max);
+                }
+                _enums[name] = data;
+            }
+            return data is { Elements.Count: > 0 } ? data : null;
+        }
+    }
+
+    /// <summary>
+    /// Blueprint enums name their entries NewEnumerator0, 1, ...; the names shown in the editor are in the enum asset's DisplayNameMap.
+    /// </summary>
+    private void ApplyUserEnumDisplayNames(EnumData data, string path)
+    {
+        try
+        {
+            if (!_provider.TryLoadPackageObject(path, out var export) ||
+                export.GetOrDefault<CUE4Parse.UE4.Assets.Objects.UScriptMap>("DisplayNameMap") is not { } map)
+                return;
+
+            var displayNames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var (key, value) in map.Properties)
+            {
+                if (key?.GenericValue is FName internalName && value?.GenericValue is CUE4Parse.UE4.Objects.Core.i18N.FText text &&
+                    !string.IsNullOrWhiteSpace(text.Text))
+                    displayNames[internalName.Text] = text.Text;
+            }
+            if (displayNames.Count == 0)
+                return;
+
+            var renamed = new Dictionary<string, long>();
+            foreach (var (element, value) in data.Elements)
+            {
+                var shortName = ShortEnumName(element);
+                var display = displayNames.TryGetValue(shortName, out var found) ? found : shortName;
+                if (!renamed.TryAdd(display, value))
+                    renamed.TryAdd($"{display} ({shortName})", value);
+            }
+            data.Elements = renamed;
+        }
+        catch (Exception e)
+        {
+            Serilog.Log.Warning(e, "Could not read the display names of {Enum}", path);
+        }
+    }
+
+    public static string ShortEnumName(string element)
+    {
+        var index = element.LastIndexOf("::", StringComparison.Ordinal);
+        return index >= 0 ? element[(index + 2)..] : element;
+    }
+
+    /// <summary>The enumerator names of an enum pin in value order.</summary>
+    public IReadOnlyList<string> GetPinEnumNames(GraphPin pin) =>
+        GetPinEnum(pin) is { } data ? data.Elements.OrderBy(o => o.Value).Select(o => ShortEnumName(o.Key)).ToList() : [];
+
+    /// <summary>How a raw constant is shown on the pin: the enumerator name for enum pins.</summary>
+    public string FormatPinValue(GraphPin pin, string raw)
+    {
+        if (GetPinEnum(pin) is not { } data || !long.TryParse(raw, out var value))
+            return raw;
+        var element = data.Elements.FirstOrDefault(o => o.Value == value).Key;
+        return element == null ? raw : ShortEnumName(element);
+    }
+
+    /// <summary>Turns typed text into a raw constant: enumerator names become their value.</summary>
+    public string ParsePinValue(GraphPin pin, string text)
+    {
+        if (GetPinEnum(pin) is not { } data)
+            return text;
+        var trimmed = text.Trim();
+        foreach (var (element, value) in data.Elements)
+        {
+            if (element.Equals(trimmed, StringComparison.OrdinalIgnoreCase) || ShortEnumName(element).Equals(trimmed, StringComparison.OrdinalIgnoreCase))
+                return value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        }
+        return text;
+    }
+
+    #endregion
+
+    #region search
+
+    /// <summary>
+    /// Finds nodes in every event and function of the blueprint (decompiling what wasn't opened yet) by node name, pin name, pin type or pin value.
+    /// </summary>
+    public async Task<List<BlueprintSearchHit>> SearchAllAsync(string term, IProgress<string> progress, System.Threading.CancellationToken cancellation)
+    {
+        var hits = new List<BlueprintSearchHit>();
+        if (string.IsNullOrWhiteSpace(term) || _asset == null)
+            return hits;
+
+        var seen = new HashSet<string>();
+        var items = Functions.ToList();
+        for (var i = 0; i < items.Count; i++)
+        {
+            cancellation.ThrowIfCancellationRequested();
+            var item = items[i];
+            if (!seen.Add(GraphKey(item)))
+                continue;
+
+            progress?.Report($"{i + 1}/{items.Count}  {item.DisplayName}");
+            BlueprintGraphResult graph;
+            try
+            {
+                graph = await GetGraphAsync(item);
+            }
+            catch (Exception e)
+            {
+                Serilog.Log.Warning(e, "Search: failed to decompile {Function}", item.DisplayName);
+                continue;
+            }
+
+            foreach (var node in graph.Graph.Nodes)
+            {
+                if (MatchNode(node, term) is { } match)
+                    hits.Add(new BlueprintSearchHit { Item = item, Node = node, Match = match });
+            }
+        }
+        return hits;
+    }
+
+    private static string MatchNode(BPNode node, string term)
+    {
+        bool Contains(string source) => source != null && source.Contains(term, StringComparison.OrdinalIgnoreCase);
+
+        if (Contains(node.Name)) return node.NodeType;
+        foreach (var pin in node.Input.Concat(node.Output))
+        {
+            if (pin.IsHidden) continue;
+            if (Contains(pin.PinFriendlyName)) return $"pin {pin.PinFriendlyName}";
+            if (pin.IsInput && Contains(pin.Value)) return $"{pin.PinFriendlyName} = {pin.Value}";
+            if (Contains(pin.PinType.PinSubCategoryObject)) return $"{pin.PinFriendlyName} : {pin.PinType.PinSubCategoryObject}";
+        }
+        return null;
+    }
+
+    #endregion
+
+
+    #region cross-blueprint navigation
+
+    public IFileProvider Provider => _provider;
+
+    /// <summary>Function to open (and Find term to run) once the window has loaded, or for an already open window.</summary>
+    public string PendingFunction { get; set; }
+    public string PendingFind { get; set; }
+
+    /// <summary>
+    /// Where a node can lead: the declaration of what it calls or reads (in this or another blueprint), and the game types its pins use.
+    /// Native (/Script) declarations and types are left out.
+    /// </summary>
+    public List<NodeLink> GetNodeLinks(BPNode node)
+    {
+        var links = new List<NodeLink>();
+        if (node == null)
+            return links;
+
+        var owner = node.DefinitionOwner;
+        var member = node.DefinitionMember;
+        if (node.NodeType == "K2Node_Event" && _asset?.GeneratedClass?.SuperStruct?.ResolvedObject?.GetPathName() is { } parent)
+        {
+            // an implemented event is declared by a parent class
+            owner = parent;
+            member = node.Name;
+        }
+        if (Framework.Blueprints.BlueprintNavigator.IsGameObjectPath(owner) && !string.IsNullOrEmpty(member) && !owner.Contains(':'))
+            links.Add(new NodeLink { OwnerPath = owner, Member = member, Label = member });
+
+        var types = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var pin in node.Input.Concat(node.Output).Where(o => !o.IsHidden))
+        {
+            foreach (var candidate in new[] { pin.PinType.PinSubCategoryObject, pin.IsInput ? pin.Value : null })
+            {
+                if (!Framework.Blueprints.BlueprintNavigator.IsGameObjectPath(candidate))
+                    continue;
+                var package = Framework.Blueprints.BlueprintNavigator.PackagePath(candidate);
+                if (types.Add(package))
+                    links.Add(new NodeLink { OwnerPath = candidate, Label = package[(package.LastIndexOf('/') + 1)..] });
+            }
+        }
+        if (Framework.Blueprints.BlueprintNavigator.IsGameObjectPath(owner) && !owner.Contains(':') &&
+            types.Add(Framework.Blueprints.BlueprintNavigator.PackagePath(owner)))
+        {
+            var package = Framework.Blueprints.BlueprintNavigator.PackagePath(owner);
+            links.Add(new NodeLink { OwnerPath = owner, Label = package[(package.LastIndexOf('/') + 1)..] });
+        }
+        return links;
+    }
+
+    public Task<(Framework.Blueprints.DefinitionTarget Target, string Reason)> ResolveAsync(NodeLink link) =>
+        Task.Run(() =>
+        {
+            var target = Framework.Blueprints.BlueprintNavigator.Resolve(_provider, link.OwnerPath, link.Member, out var reason);
+            return (target, reason);
+        });
+
+    /// <summary>The list entry of a function or event by its name.</summary>
+    public BlueprintFunctionItem FindFunctionItem(string name) =>
+        string.IsNullOrEmpty(name) ? null : Functions.FirstOrDefault(o => o.Function.Name == name) ?? Functions.FirstOrDefault(o => o.DisplayName == name);
+
+    #endregion
 
     public BPNode FindEntryNode(BlueprintFunctionItem item)
     {
@@ -333,8 +633,8 @@ public class BlueprintViewerViewModel : ViewModel
 
         var sb = new StringBuilder();
         sb.AppendLine(node.Name).AppendLine($"Type: {node.NodeType}{(node.Pure ? " (pure)" : "")}");
-        if (node.StatementIndex >= 0)
-            sb.AppendLine($"Statement index: {node.StatementIndex}");
+        if (node.NodeInstr is { } instr)
+            sb.AppendLine($"Statement index: {instr.StatementIndex}  (bytecode {instr.StatementIndex}..{instr.EndIndex}, {instr.Size} bytes)");
         if (node.IsSignatureInferred)
             sb.AppendLine("Signature inferred from call site");
         if (nodes.Count > 1)
@@ -348,6 +648,8 @@ public class BlueprintViewerViewModel : ViewModel
                 sb.AppendLine($"Type object: {pin.PinType.PinSubCategoryObject}");
             if (!string.IsNullOrEmpty(pin.Value))
                 sb.AppendLine($"Value: {pin.Value}");
+            foreach (var constant in pin.SourceConstants)
+                sb.AppendLine($"Constant: {constant.Token} at {constant.StatementIndex} ({constant.Size} bytes)");
             if (pin.Property != null)
                 sb.AppendLine($"Property: {pin.Property.Name} ({pin.Property.Owner})");
         }

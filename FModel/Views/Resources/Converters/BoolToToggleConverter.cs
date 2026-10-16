@@ -12,8 +12,8 @@ public class BoolToToggleConverter : IValueConverter
     {
         return value switch
         {
-            true => "Enabled",
-            _ => "Disabled"
+            true => FModel.Localization.LocalizationManager.Instance.Get("Common_Enabled"),
+            _ => FModel.Localization.LocalizationManager.Instance.Get("Common_Disabled")
         };
     }
 

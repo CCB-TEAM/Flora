@@ -467,6 +467,8 @@ namespace FModel.BlueprintGraph.Decompiler
 
         private void StartDecompilation(LocalVariablesStorage localVars, GraphPin entryPin, ControlFlowContext flowContext, uint? entryPoint = null)
         {
+            if (entryPoint.HasValue)
+                entryPin.EntryPoint = entryPoint;
             DecompilerContext context = new(this, GlobalContext, entryPin, localVars, flowContext, entryPoint);
             ProcessInstructions(context);
         }
@@ -738,6 +740,8 @@ namespace FModel.BlueprintGraph.Decompiler
                     if (i < parameters.Length && parameters[i] is EX_LocalVariable)
                     {
                         LocalVars.Create(VarInstrToName(parameters[i]), pin);
+                        if (IsPlainVariable(parameters[i]))
+                            pin.SourceExpression = parameters[i];
                     }
                 }
 
@@ -754,6 +758,16 @@ namespace FModel.BlueprintGraph.Decompiler
 
         // Get input parameter pin
         public GraphPin ArgToPin(KismetExpression ex, string newPinName = "")
+        {
+            var pin = ArgToPinCore(ex, newPinName);
+            pin.ArgumentExpression = ex;
+            return pin;
+        }
+
+        private static bool IsPlainVariable(KismetExpression ex) =>
+            ex is EX_LocalVariable or EX_LocalOutVariable or EX_InstanceVariable or EX_DefaultVariable;
+
+        private GraphPin ArgToPinCore(KismetExpression ex, string newPinName)
         {
             if (ParseConstExpr(ex, GlobalContext.Game, out string value, out GraphPinType pinType))
             {
@@ -842,6 +856,8 @@ namespace FModel.BlueprintGraph.Decompiler
                         }
 
                         valueVarPin = localVar.ParamPin;
+                        if (IsPlainVariable(ex))
+                            valueVarPin.SourceExpression ??= ex;
                     }
                     else if (valueVar.IsTempVar() && (valueVar.PinType.ContainerType == EPinContainerType.Array || valueVar.PinType.ContainerType == EPinContainerType.Map))
                     {
@@ -857,6 +873,8 @@ namespace FModel.BlueprintGraph.Decompiler
                         K2Node_VariableGet getNode = new K2Node_VariableGet(valueVar, valueVar.Name, null, exp);
                         Graph.AddNode(getNode);
                         valueVarPin = getNode.VarPin;
+                        if (IsPlainVariable(ex))
+                            valueVarPin.SourceExpression = ex;
                     }
                     property = valueVar;
                     break;

@@ -60,11 +60,11 @@
                           VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Auto">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="Index" Binding="{Binding Index}" Width="60"/>
-                        <DataGridTextColumn Header="Class Package" Binding="{Binding ClassPackage}" Width="200"/>
-                        <DataGridTextColumn Header="Class Name" Binding="{Binding ClassName}" Width="120"/>
-                        <DataGridTextColumn Header="Object Name" Binding="{Binding ObjectName}" Width="200"/>
-                        <DataGridTextColumn Header="Outer Index" Binding="{Binding OuterIndex}" Width="80"/>
+                        <DataGridTextColumn Header="{loc:Loc Import_Index}" Binding="{Binding Index}" Width="60"/>
+                        <DataGridTextColumn Header="{loc:Loc Import_ClassPackage}" Binding="{Binding ClassPackage}" Width="200"/>
+                        <DataGridTextColumn Header="{loc:Loc Import_ClassName}" Binding="{Binding ClassName}" Width="120"/>
+                        <DataGridTextColumn Header="{loc:Loc Import_ObjectName}" Binding="{Binding ObjectName}" Width="200"/>
+                        <DataGridTextColumn Header="{loc:Loc Import_OuterIndex}" Binding="{Binding OuterIndex}" Width="80"/>
                     </DataGrid.Columns>
                 </DataGrid>
 
@@ -92,14 +92,14 @@
                     <TextBlock Text="{loc:Loc ImportManager_Total}" VerticalAlignment="Center"/>
                     <TextBlock Text="{Binding ImportManager.Imports.Count}" FontWeight="Bold" Margin="5 0 0 0" VerticalAlignment="Center"/>
                     <TextBlock Text="  |  " VerticalAlignment="Center" Foreground="Gray" Margin="10 0 0 0"/>
-                    <TextBlock Text="Blueprint JSON modified - click Refresh" VerticalAlignment="Center"
+                    <TextBlock Text="{loc:Loc Import_BlueprintJSONModifiedClickRefresh}" VerticalAlignment="Center"
                                Foreground="Orange" FontStyle="Italic"
                                Visibility="{Binding ImportManager.NeedsRefresh, Converter={converters:BoolToVisibilityConverter}}"/>
                 </StackPanel>
 
                 <!-- Buttons -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
-                    <Button Content="Refresh" MinWidth="78" Margin="0 0 12 0" Click="OnRefresh"/>
+                    <Button Content="{loc:Loc Common_Refresh}" MinWidth="78" Margin="0 0 12 0" Click="OnRefresh"/>
                     <Button MinWidth="78" Margin="0 0 12 0" IsDefault="True" IsCancel="False"
                             Content="{loc:Loc Common_Ok}" Click="OnClick" />
                 </StackPanel>

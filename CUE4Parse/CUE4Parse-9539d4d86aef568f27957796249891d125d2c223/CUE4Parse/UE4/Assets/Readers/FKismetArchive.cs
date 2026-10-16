@@ -147,6 +147,7 @@ public class FKismetArchive : FArchive
             _ => throw new ParserException($"Unknown EExprToken {token}")
         };
         expression.StatementIndex = index;
+        expression.EndIndex = Index;
         return expression;
     }
 

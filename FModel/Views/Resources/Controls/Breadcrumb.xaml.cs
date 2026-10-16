@@ -19,8 +19,8 @@ public partial class Breadcrumb
 
     private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
-        if (e.NewValue is not string pathAtThisPoint) return;
         InMeDaddy.Children.Clear();
+        if (e.NewValue is not string pathAtThisPoint) return;
 
         var folders = pathAtThisPoint.Split('/');
         for (var i = 0; i < folders.Length; i++)

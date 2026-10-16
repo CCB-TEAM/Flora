@@ -2,6 +2,10 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
+    <AssemblyName>Flora</AssemblyName>
+    <Product>Flora</Product>
+    <AssemblyTitle>Flora</AssemblyTitle>
+    <Description>Flora - Unreal Engine archive explorer, blueprint viewer and pak packer</Description>
     <TargetFramework>net8.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
     <ApplicationIcon>FModel.ico</ApplicationIcon>
@@ -29,6 +33,13 @@
   <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Prism-main\**" />
+    <EmbeddedResource Remove="Prism-main\**" />
+    <None Remove="Prism-main\**" />
+    <Page Remove="Prism-main\**" />
+  </ItemGroup>
 
   <ItemGroup>
     <None Remove="Resources\android.png" />
@@ -178,7 +189,7 @@
   <ItemGroup>
     <ProjectReference Include="..\CUE4Parse\CUE4Parse-9539d4d86aef568f27957796249891d125d2c223\CUE4Parse-Conversion\CUE4Parse-Conversion.csproj" />
     <ProjectReference Include="..\CUE4Parse\CUE4Parse-9539d4d86aef568f27957796249891d125d2c223\CUE4Parse\CUE4Parse.csproj" />
-    <ProjectReference Include="..\..\UAssetAPI-master\UAssetAPI\UAssetAPI.csproj" />
+    <ProjectReference Include="..\UAssetAPI\UAssetAPI.csproj" />
     <ProjectReference Include="..\FModel.BlueprintGraph\FModel.BlueprintGraph.csproj" />
   </ItemGroup>
 
@@ -265,6 +276,13 @@
     <Resource Include="Resources\tl_forward.png" />
     <Resource Include="Resources\tl_previous.png" />
     <Resource Include="Resources\tl_next.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Resources\tools\*.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>tools\%(Filename)%(Extension)</Link>
+    </None>
   </ItemGroup>
 
   <ItemGroup>

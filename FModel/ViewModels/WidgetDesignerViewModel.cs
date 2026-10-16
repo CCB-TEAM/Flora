@@ -93,6 +93,9 @@ public class WidgetDesignerViewModel : ViewModel
     /// <summary>Editable properties of the selected widget; edits are preview-only and never saved.</summary>
     public ObservableCollection<WidgetPropertyRow> PropertyRows { get; } = [];
 
+    /// <summary>Game assets the selected widget (and its slot) reference.</summary>
+    public ObservableCollection<Framework.Blueprints.AssetReference> References { get; } = [];
+
     /// <summary>Raised after a preview edit or reset: the canvas has to lay out and redraw.</summary>
     public event Action PropertiesEdited;
 
@@ -104,13 +107,13 @@ public class WidgetDesignerViewModel : ViewModel
 
     public List<WidgetDesignSize> DesignSizes { get; } =
     [
-        new() { Label = "Auto" },
-        new() { Label = "Desired size", UseDesiredSize = true },
+        new() { Label = FModel.Localization.LocalizationManager.Instance.Get("BlueprintViewer_DesignAuto") },
+        new() { Label = FModel.Localization.LocalizationManager.Instance.Get("BlueprintViewer_DesignDesired"), UseDesiredSize = true },
         new() { Label = "1280 x 720", Width = 1280, Height = 720 },
         new() { Label = "1920 x 1080", Width = 1920, Height = 1080 },
         new() { Label = "2560 x 1440", Width = 2560, Height = 1440 },
         new() { Label = "3840 x 2160", Width = 3840, Height = 2160 },
-        new() { Label = "1080 x 1920 (portrait)", Width = 1080, Height = 1920 },
+        new() { Label = string.Format(FModel.Localization.LocalizationManager.Instance.Get("BlueprintViewer_DesignPortrait"), 1080, 1920), Width = 1080, Height = 1920 },
     ];
 
     private WidgetDesignSize _selectedDesignSize;
@@ -199,10 +202,24 @@ public class WidgetDesignerViewModel : ViewModel
         if (rebuildProperties)
             BuildPropertyRows(node);
 
+        References.Clear();
         if (node == null)
         {
             SelectionText = SelectionJson = string.Empty;
             return;
+        }
+
+        try
+        {
+            var references = Framework.Blueprints.BlueprintNavigator.FindReferences(node.Export);
+            if (node.UserWidgetClass?.GetPathName() is { } widgetClass && references.All(o => o.ObjectPath != widgetClass))
+                references.Insert(0, new Framework.Blueprints.AssetReference { Property = "Widget Blueprint", ObjectPath = widgetClass });
+            foreach (var reference in references)
+                References.Add(reference);
+        }
+        catch (Exception e)
+        {
+            Serilog.Log.Warning(e, "Could not list the references of {Widget}", node.Name);
         }
 
         var (x, y, w, h) = node.DesignRect();

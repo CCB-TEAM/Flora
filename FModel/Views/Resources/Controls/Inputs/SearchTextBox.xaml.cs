@@ -11,7 +11,7 @@ public partial class SearchTextBox : UserControl
 
     public static readonly DependencyProperty WatermarkProperty =
         DependencyProperty.Register(nameof(Watermark), typeof(string), typeof(SearchTextBox),
-            new PropertyMetadata("Search by name..."));
+            new PropertyMetadata(null));
 
     public static readonly RoutedEvent ClearButtonClickEvent =
         EventManager.RegisterRoutedEvent(nameof(ClearButtonClick), RoutingStrategy.Bubble,
@@ -38,6 +38,8 @@ public partial class SearchTextBox : UserControl
     public SearchTextBox()
     {
         InitializeComponent();
+        // default watermark in the interface language; a Watermark set in XAML replaces this binding
+        SetBinding(WatermarkProperty, new System.Windows.Data.Binding("[AudioPlayer_SearchByName]") { Source = FModel.Localization.LocalizationManager.Instance });
     }
 
     private void OnClearButtonClick(object sender, RoutedEventArgs e)

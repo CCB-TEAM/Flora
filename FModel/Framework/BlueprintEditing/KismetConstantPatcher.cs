@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Reflection;
 using UAssetAPI;
 using UAssetAPI.ExportTypes;
+using UAssetAPI.Kismet;
 using UAssetAPI.Kismet.Bytecode;
 using UAssetAPI.Kismet.Bytecode.Expressions;
 using UAssetAPI.UnrealTypes;
@@ -26,77 +26,149 @@ public sealed class ConstantEdit
 }
 
 /// <summary>
-/// Rewrites literal constants in UAssetAPI bytecode and relocates every code offset that depends on the size change:
-/// absolute targets (jumps, execution flow pushes, switch cases, latent resume points, ubergraph entry points of event stubs)
-/// and relative skips (context/skip expressions containing an edited constant).
+/// Rewrites literal constants in UAssetAPI bytecode. The code offsets that depend on the size change (jumps, execution flow pushes,
+/// switch cases, latent resume points, ubergraph entry points, context skips) are laid out again by UAssetAPI's <see cref="KismetCodeLayout"/>.
 /// </summary>
 public static class KismetConstantPatcher
 {
-    private sealed record AppliedEdit(uint Offset, uint OldSize, uint NewSize)
-    {
-        public long Delta => (long) NewSize - OldSize;
-        public uint End => Offset + OldSize;
-    }
+    public static void Apply(UAsset asset, IReadOnlyCollection<ConstantEdit> edits) => Apply(asset, edits, []);
 
-    public static void Apply(UAsset asset, IReadOnlyCollection<ConstantEdit> edits)
+    /// <summary>Applies constant and wire edits; each function is bound once, against the bytecode the graph was decompiled from.</summary>
+    public static void Apply(UAsset asset, IReadOnlyCollection<ConstantEdit> constants, IReadOnlyCollection<WireEdit> wires)
     {
-        foreach (var group in edits.GroupBy(o => o.FunctionName, StringComparer.Ordinal))
+        var functionNames = constants.Select(o => o.FunctionName).Concat(wires.Select(o => o.FunctionName)).Distinct(StringComparer.Ordinal).ToList();
+        foreach (var functionName in functionNames)
         {
-            var function = FindFunction(asset, group.Key)
-                           ?? throw new InvalidOperationException($"Function '{group.Key}' has no parsed bytecode in the asset.");
-            var applied = ApplyToFunction(asset, function, group.ToList());
-            if (applied.Count == 0 || applied.All(o => o.Delta == 0))
-                continue;
+            var function = FindFunction(asset, functionName)
+                           ?? throw new InvalidOperationException($"Function '{functionName}' has no parsed bytecode in the asset.");
 
-            // event stubs call the ubergraph with the entry point offset of their event
-            if (function.ObjectName.ToString().StartsWith("ExecuteUbergraph", StringComparison.Ordinal))
-                RelocateUbergraphEntryPoints(asset, function, applied);
+            // offsets are bound before anything changes: the edits refer to the bytecode the graph was decompiled from
+            var layout = KismetCodeLayout.Bind(asset, function);
+
+            KismetExpression Find(uint offset, string token) =>
+                (Enum.TryParse<EExprToken>(token, out var parsed) ? layout.FindOriginal(offset, parsed) : null)
+                ?? throw new InvalidOperationException($"No {token} at offset {offset} in {function.ObjectName}: the bytecode differs from the decompiled graph.");
+
+            // find every target first: replacing and inserting changes what the original offsets point at
+            var functionWires = wires.Where(o => o.FunctionName == functionName).ToList();
+            var dataTargets = functionWires.Where(o => o.Kind is WireEditKind.ConnectData or WireEditKind.LiteralData)
+                .Select(o => (Edit: o, Target: Find(o.Offset, o.Token), Source: o.Kind == WireEditKind.ConnectData ? Find(o.SourceOffset, o.SourceToken) : null))
+                .ToList();
+            var execTargets = functionWires.Where(o => o.Kind is WireEditKind.ConnectExec or WireEditKind.BreakExec)
+                .Select(o => (Edit: o, Statement: Find(o.Offset, o.Token),
+                    Target: o.Kind == WireEditKind.ConnectExec || o.EndWithReturn ? layout.FindOriginal(o.TargetOffset) : null))
+                .ToList();
+
+            // events: the stubs pass the new start of the event graph (found before anything changes)
+            var entryEdits = functionWires.Where(o => o.Kind is WireEditKind.ConnectEntry or WireEditKind.BreakEntry).ToList();
+            if (entryEdits.Count > 0)
+            {
+                var entryPoints = KismetCodeLayout.FindUbergraphEntryPoints(asset, function).ToList();
+                foreach (var edit in entryEdits)
+                {
+                    KismetExpression target;
+                    if (edit.TargetOffset == WirePlanner.NewEnd)
+                    {
+                        var code = function.ScriptBytecode;
+                        target = new EX_PopExecutionFlow();
+                        layout.InsertAfter(code.Length > 1 && code[^1] is EX_EndOfScript ? code[^2] : code[^1], target);
+                    }
+                    else
+                        target = layout.FindOriginal(edit.TargetOffset)
+                                 ?? throw new InvalidOperationException($"No statement at offset {edit.TargetOffset} in {function.ObjectName} to start the event at.");
+                    var stubs = entryPoints.Where(o => o.EntryPoint.Value == edit.Offset).ToList();
+                    if (stubs.Count == 0)
+                        throw new InvalidOperationException($"No event passes entry point {edit.Offset} to {function.ObjectName}: the bytecode differs from the decompiled graph.");
+                    foreach (var stub in stubs)
+                        layout.RedirectEntryPoint(stub.EntryPoint, target);
+                }
+            }
+
+            var replacements = new Dictionary<KismetExpression, KismetExpression>(ReferenceEqualityComparer.Instance);
+            foreach (var edit in constants.Where(o => o.FunctionName == functionName).GroupBy(o => o.Offset).Select(o => o.Last()))
+            {
+                var target = Find(edit.Offset, edit.ExpectedToken);
+                if (dataTargets.Any(o => ContainsExpression(asset, o.Target, target)))
+                    continue; // the argument holding the constant is replaced by a wire edit
+                var replacement = BuildReplacement(asset, target, edit.NewValue);
+                if (!ReferenceEquals(replacement, target))
+                    replacements[target] = replacement;
+            }
+
+            foreach (var (edit, target, source) in dataTargets)
+            {
+                replacements[target] = edit.Kind == WireEditKind.ConnectData
+                    ? CloneVariable(source!)
+                    : BuildReplacement(asset, CreateLiteral(edit.LiteralKind), edit.LiteralText);
+            }
+            layout.Replace(replacements);
+
+            foreach (var (edit, statement, target) in execTargets)
+            {
+                if (!layout.IsStatement(statement))
+                    throw new InvalidOperationException($"{edit.Token} at {edit.Offset} in {function.ObjectName} is not a statement.");
+
+                KismetExpression inserted;
+                if (edit.Kind == WireEditKind.BreakExec && !edit.EndWithReturn)
+                {
+                    inserted = new EX_PopExecutionFlow();
+                }
+                else
+                {
+                    if (target == null || !layout.IsStatement(target))
+                        throw new InvalidOperationException($"No statement at offset {edit.TargetOffset} in {function.ObjectName} to continue at.");
+                    var jump = new EX_Jump();
+                    layout.BindJump(jump, target);
+                    inserted = jump;
+                }
+                layout.InsertAfter(statement, inserted);
+            }
+
+            layout.Commit();
         }
     }
+
+    private static bool ContainsExpression(UAsset asset, KismetExpression root, KismetExpression expression)
+    {
+        var found = false;
+        uint offset = 0;
+        root.Visit(asset, ref offset, (e, _) => found |= ReferenceEquals(e, expression));
+        return found;
+    }
+
+    private static readonly System.Reflection.MethodInfo MemberwiseCloneMethod =
+        typeof(object).GetMethod("MemberwiseClone", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+
+    private static KismetExpression CloneVariable(KismetExpression source) =>
+        source is EX_LocalVariable or EX_LocalOutVariable or EX_InstanceVariable or EX_DefaultVariable
+            ? (KismetExpression) MemberwiseCloneMethod.Invoke(source, null)!
+            : throw new InvalidOperationException($"{source.Token} is not a plain variable read.");
+
+    private static KismetExpression CreateLiteral(string kind) => kind switch
+    {
+        WirePlanner.LiteralBool => new EX_False(),
+        WirePlanner.LiteralInt => new EX_IntConst(),
+        WirePlanner.LiteralInt64 => new EX_Int64Const(),
+        WirePlanner.LiteralFloat => new EX_FloatConst(),
+        WirePlanner.LiteralDouble => new EX_DoubleConst(),
+        WirePlanner.LiteralByte => new EX_ByteConst(),
+        WirePlanner.LiteralName => new EX_NameConst(),
+        WirePlanner.LiteralString => new EX_StringConst(),
+        WirePlanner.LiteralObject => new EX_NoObject(),
+        WirePlanner.LiteralInterface => new EX_NoInterface(),
+        _ => throw new InvalidOperationException($"No literal of kind {kind}."),
+    };
+
 
     public static StructExport? FindFunction(UAsset asset, string name) =>
         asset.Exports.OfType<StructExport>().FirstOrDefault(o => o.ScriptBytecode != null && o.ObjectName.ToString() == name);
 
-    private static List<AppliedEdit> ApplyToFunction(UAsset asset, StructExport function, List<ConstantEdit> edits)
-    {
-        // old in-memory offsets of every expression, before anything changes
-        var offsets = new Dictionary<KismetExpression, uint>(ReferenceEqualityComparer.Instance);
-        var byOffset = new Dictionary<uint, List<KismetExpression>>();
-        uint position = 0;
-        foreach (var statement in function.ScriptBytecode)
-        {
-            statement.Visit(asset, ref position, (expression, offset) =>
-            {
-                offsets[expression] = offset;
-                if (!byOffset.TryGetValue(offset, out var list))
-                    byOffset[offset] = list = [];
-                list.Add(expression);
-            });
-        }
-
-        var applied = new List<AppliedEdit>();
-        var replacements = new Dictionary<KismetExpression, KismetExpression>(ReferenceEqualityComparer.Instance);
-        foreach (var edit in edits.GroupBy(o => o.Offset).Select(o => o.Last()))
-        {
-            var target = byOffset.GetValueOrDefault(edit.Offset)?.FirstOrDefault(o => o.Token.ToString() == edit.ExpectedToken)
-                         ?? throw new InvalidOperationException(
-                             $"No {edit.ExpectedToken} at offset {edit.Offset} in {function.ObjectName}: the bytecode differs from the decompiled graph.");
-
-            var oldSize = target.GetSize(asset);
-            var replacement = BuildReplacement(asset, target, edit.NewValue);
-            if (!ReferenceEquals(replacement, target))
-                replacements[target] = replacement;
-            applied.Add(new AppliedEdit(edit.Offset, oldSize, replacement.GetSize(asset)));
-        }
-
-        if (replacements.Count > 0)
-            ReplaceExpressions(function, offsets.Keys, replacements);
-
-        if (applied.Any(o => o.Delta != 0))
-            RelocateFunction(asset, offsets, applied);
-
-        return applied;
-    }
+    /// <summary>Offset problems of every function with bytecode; run on the patched asset before writing it.</summary>
+    public static List<string> Validate(UAsset asset) =>
+        asset.Exports.OfType<StructExport>()
+            .Where(o => o.ScriptBytecode != null)
+            .SelectMany(o => KismetCodeLayout.Validate(asset, o))
+            .ToList();
 
     #region constants
 
@@ -152,258 +224,12 @@ public static class KismetConstantPatcher
                 return isAnsi ? new EX_StringConst { Value = text } : new EX_UnicodeStringConst { Value = text };
             }
 
+            case EX_NoObject or EX_NoInterface:
+                return target;
+
             default:
                 throw new InvalidOperationException($"{target.Token} constants can't be edited.");
         }
-    }
-
-    // swap expression objects wherever they are referenced (statement array, expression fields, arrays, switch cases)
-    private static void ReplaceExpressions(StructExport function, IEnumerable<KismetExpression> expressions,
-        Dictionary<KismetExpression, KismetExpression> replacements)
-    {
-        for (var i = 0; i < function.ScriptBytecode.Length; i++)
-        {
-            if (replacements.TryGetValue(function.ScriptBytecode[i], out var top))
-                function.ScriptBytecode[i] = top;
-        }
-
-        var visited = new HashSet<object>(ReferenceEqualityComparer.Instance);
-        foreach (var expression in expressions.ToList())
-            ReplaceInObject(expression, replacements, visited);
-    }
-
-    private static void ReplaceInObject(object holder, Dictionary<KismetExpression, KismetExpression> replacements, HashSet<object> visited)
-    {
-        if (!visited.Add(holder))
-            return;
-
-        foreach (var field in holder.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
-        {
-            var value = field.GetValue(holder);
-            switch (value)
-            {
-                case KismetExpression expression when replacements.TryGetValue(expression, out var replacement):
-                    field.SetValue(holder, replacement);
-                    break;
-                case KismetExpression[] array:
-                    for (var i = 0; i < array.Length; i++)
-                    {
-                        if (array[i] != null && replacements.TryGetValue(array[i], out var element))
-                            array[i] = element;
-                    }
-                    break;
-                case FKismetSwitchCase[] cases:
-                    for (var i = 0; i < cases.Length; i++)
-                    {
-                        var @case = cases[i];
-                        if (@case.CaseIndexValueTerm != null && replacements.TryGetValue(@case.CaseIndexValueTerm, out var index))
-                            @case.CaseIndexValueTerm = index;
-                        if (@case.CaseTerm != null && replacements.TryGetValue(@case.CaseTerm, out var term))
-                            @case.CaseTerm = term;
-                        cases[i] = @case;
-                    }
-                    break;
-                case object nested when nested.GetType().Namespace?.StartsWith("UAssetAPI.Kismet", StringComparison.Ordinal) == true &&
-                                        !nested.GetType().IsValueType && nested is not KismetExpression:
-                    ReplaceInObject(nested, replacements, visited); // e.g. text constants' FScriptText
-                    break;
-            }
-        }
-
-        // generic constants keep their value in RawValue (e.g. EX_StructConst elements)
-        if (holder is KismetExpression { RawValue: KismetExpression[] rawArray })
-        {
-            for (var i = 0; i < rawArray.Length; i++)
-            {
-                if (rawArray[i] != null && replacements.TryGetValue(rawArray[i], out var element))
-                    rawArray[i] = element;
-            }
-        }
-    }
-
-    #endregion
-
-    #region relocation
-
-    private static uint Shift(uint offset, IReadOnlyList<AppliedEdit> edits)
-    {
-        long shifted = offset;
-        foreach (var edit in edits)
-        {
-            if (edit.End <= offset)
-                shifted += edit.Delta;
-        }
-        return checked((uint) shifted);
-    }
-
-    private static long DeltaInside(uint start, uint end, IReadOnlyList<AppliedEdit> edits) =>
-        edits.Where(o => o.Offset >= start && o.End <= end).Sum(o => o.Delta);
-
-    private static void RelocateFunction(UAsset asset, Dictionary<KismetExpression, uint> oldOffsets, List<AppliedEdit> edits)
-    {
-        foreach (var (expression, _) in oldOffsets)
-        {
-            switch (expression)
-            {
-                case EX_Jump jump:
-                    jump.CodeOffset = Shift(jump.CodeOffset, edits);
-                    break;
-                case EX_JumpIfNot jumpIfNot:
-                    jumpIfNot.CodeOffset = Shift(jumpIfNot.CodeOffset, edits);
-                    break;
-                case EX_PushExecutionFlow push:
-                    push.PushingAddress = Shift(push.PushingAddress, edits);
-                    break;
-                case EX_SkipOffsetConst skipConst:
-                    skipConst.Value = Shift(skipConst.Value, edits);
-                    break;
-                case EX_SwitchValue switchValue:
-                    switchValue.EndGotoOffset = Shift(switchValue.EndGotoOffset, edits);
-                    for (var i = 0; i < switchValue.Cases.Length; i++)
-                    {
-                        var @case = switchValue.Cases[i];
-                        @case.NextOffset = Shift(@case.NextOffset, edits);
-                        switchValue.Cases[i] = @case;
-                    }
-                    break;
-                case EX_Context context when context.ContextExpression != null && oldOffsets.TryGetValue(context.ContextExpression, out var contextStart):
-                    // relative: bytes to skip over the context expression when the object is null
-                    context.Offset = checked((uint) (context.Offset + DeltaInside(contextStart, contextStart + context.Offset, edits)));
-                    break;
-                case EX_Skip skip when skip.SkipExpression != null && oldOffsets.TryGetValue(skip.SkipExpression, out var skipStart):
-                    skip.CodeOffset = checked((uint) (skip.CodeOffset + DeltaInside(skipStart, skipStart + skip.CodeOffset, edits)));
-                    break;
-                case EX_StructConst structConst when IsLatentActionInfo(asset, structConst) &&
-                                                      structConst.Value is { Length: > 0 } fields && fields[0] is EX_IntConst { Value: >= 0 } linkage:
-                    // pre-4.18 cooks store the latent resume point as a plain int
-                    linkage.Value = checked((int) Shift((uint) linkage.Value, edits));
-                    break;
-            }
-        }
-    }
-
-    private static bool IsLatentActionInfo(UAsset asset, EX_StructConst structConst)
-    {
-        var index = structConst.Struct;
-        if (index == null || index.IsNull()) return false;
-        var name = index.IsImport() ? index.ToImport(asset).ObjectName.ToString() : index.ToExport(asset).ObjectName.ToString();
-        return name == "LatentActionInfo";
-    }
-
-    private static void RelocateUbergraphEntryPoints(UAsset asset, StructExport ubergraph, List<AppliedEdit> edits)
-    {
-        var ubergraphName = ubergraph.ObjectName.ToString();
-        foreach (var function in asset.Exports.OfType<StructExport>())
-        {
-            if (function == ubergraph || function.ScriptBytecode == null)
-                continue;
-
-            uint position = 0;
-            foreach (var statement in function.ScriptBytecode)
-            {
-                statement.Visit(asset, ref position, (expression, _) =>
-                {
-                    var (calls, parameters) = expression switch
-                    {
-                        EX_FinalFunction final => (CallsExport(asset, final.StackNode, ubergraphName), final.Parameters),
-                        EX_VirtualFunction virtualCall => (virtualCall.VirtualFunctionName?.ToString() == ubergraphName, virtualCall.Parameters),
-                        _ => (false, null),
-                    };
-                    if (calls && parameters is { Length: > 0 } && parameters[0] is EX_IntConst { Value: >= 0 } entryPoint)
-                        entryPoint.Value = checked((int) Shift((uint) entryPoint.Value, edits));
-                });
-            }
-        }
-    }
-
-    private static bool CallsExport(UAsset asset, FPackageIndex? index, string name) =>
-        index is { } && index.IsExport() && index.ToExport(asset).ObjectName.ToString() == name;
-
-    #endregion
-
-    #region validation
-
-    /// <summary>
-    /// Checks that every absolute code offset of the function lands on a statement (or switch case) boundary.
-    /// Run on the patched asset before writing it.
-    /// </summary>
-    public static List<string> Validate(UAsset asset, StructExport function)
-    {
-        var problems = new List<string>();
-        var statementStarts = new HashSet<uint>();
-        var offsets = new Dictionary<KismetExpression, uint>(ReferenceEqualityComparer.Instance);
-        uint position = 0;
-        foreach (var statement in function.ScriptBytecode)
-        {
-            statementStarts.Add(position);
-            statement.Visit(asset, ref position, (expression, offset) => offsets[expression] = offset);
-        }
-        statementStarts.Add(position);
-
-        void Check(uint target, string what)
-        {
-            if (!statementStarts.Contains(target))
-                problems.Add($"{function.ObjectName}: {what} points to {target}, which is not a statement boundary");
-        }
-
-        foreach (var (expression, offset) in offsets)
-        {
-            switch (expression)
-            {
-                case EX_Jump jump: Check(jump.CodeOffset, $"jump at {offset}"); break;
-                case EX_JumpIfNot jumpIfNot: Check(jumpIfNot.CodeOffset, $"conditional jump at {offset}"); break;
-                case EX_PushExecutionFlow push: Check(push.PushingAddress, $"execution flow push at {offset}"); break;
-                case EX_SkipOffsetConst skipConst: Check(skipConst.Value, $"latent resume point at {offset}"); break;
-                case EX_SwitchValue switchValue:
-                {
-                    var end = offset + switchValue.GetSize(asset);
-                    if (switchValue.EndGotoOffset != end)
-                        problems.Add($"{function.ObjectName}: switch at {offset} ends at {end} but jumps to {switchValue.EndGotoOffset}");
-                    for (var i = 0; i < switchValue.Cases.Length; i++)
-                    {
-                        var next = i + 1 < switchValue.Cases.Length ? switchValue.Cases[i + 1].CaseIndexValueTerm : switchValue.DefaultTerm;
-                        if (next != null && offsets.TryGetValue(next, out var nextOffset) && switchValue.Cases[i].NextOffset != nextOffset)
-                            problems.Add($"{function.ObjectName}: switch case {i} at {offset} points to {switchValue.Cases[i].NextOffset} instead of {nextOffset}");
-                    }
-                    break;
-                }
-            }
-        }
-        return problems;
-    }
-
-    /// <summary>Entry point offsets passed by event stubs must be statements of the ubergraph.</summary>
-    public static List<string> ValidateUbergraphEntryPoints(UAsset asset)
-    {
-        var problems = new List<string>();
-        var ubergraph = asset.Exports.OfType<StructExport>()
-            .FirstOrDefault(o => o.ScriptBytecode != null && o.ObjectName.ToString().StartsWith("ExecuteUbergraph", StringComparison.Ordinal));
-        if (ubergraph == null)
-            return problems;
-
-        var starts = new HashSet<uint>();
-        uint position = 0;
-        foreach (var statement in ubergraph.ScriptBytecode)
-        {
-            starts.Add(position);
-            statement.Visit(asset, ref position, (_, _) => { });
-        }
-
-        var name = ubergraph.ObjectName.ToString();
-        foreach (var function in asset.Exports.OfType<StructExport>().Where(o => o != ubergraph && o.ScriptBytecode != null))
-        {
-            uint p = 0;
-            foreach (var statement in function.ScriptBytecode)
-            {
-                statement.Visit(asset, ref p, (expression, _) =>
-                {
-                    if (expression is EX_FinalFunction final && CallsExport(asset, final.StackNode, name) &&
-                        final.Parameters is { Length: > 0 } && final.Parameters[0] is EX_IntConst entry && !starts.Contains((uint) entry.Value))
-                        problems.Add($"{function.ObjectName}: ubergraph entry point {entry.Value} is not a statement boundary");
-                });
-            }
-        }
-        return problems;
     }
 
     #endregion

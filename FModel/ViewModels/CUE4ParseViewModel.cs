@@ -670,7 +670,7 @@ public class CUE4ParseViewModel : ViewModel
         }
     }
 
-    private bool IsBlueprintPackage(GameFile entry)
+    public bool IsBlueprintPackage(GameFile entry)
     {
         if (!entry.Extension.Equals("uasset", StringComparison.OrdinalIgnoreCase))
             return false;
@@ -1677,10 +1677,30 @@ public class CUE4ParseViewModel : ViewModel
     /// <summary>
     /// Opens the blueprint node graph viewer for a package. Must be called on the UI thread.
     /// </summary>
-    public void OpenBlueprintViewer(GameFile entry)
+    public void OpenBlueprintViewer(GameFile entry) => OpenBlueprintViewer(entry, null, null);
+
+    /// <summary>Opens (or brings forward) the viewer of a blueprint, optionally at a function or with a Find search.</summary>
+    public void OpenBlueprintViewer(GameFile entry, string functionName, string findTerm)
     {
         var viewModel = new BlueprintViewerViewModel(Provider, entry, JmapPath, this);
-        DockPanels.ShowBlueprintViewer(viewModel);
+        var window = DockPanels.ShowBlueprintViewer(viewModel);
+        if (functionName != null || findTerm != null)
+            window.NavigateTo(functionName, findTerm);
+    }
+
+    /// <summary>Opens a referenced asset: blueprints in the viewer, anything else in a tab like a double-click in the explorer.</summary>
+    public async void OpenReferencedAsset(GameFile entry)
+    {
+        if (IsBlueprintPackage(entry))
+        {
+            OpenBlueprintViewer(entry);
+            return;
+        }
+
+        // like opening from the explorer: the asset grid would cover the new tab, and the viewer document would stay in front
+        ApplicationService.ApplicationView.IsAssetsExplorerVisible = false;
+        DockWorkspace.Activate("Workspace");
+        await ApplicationService.ThreadWorkerView.Begin(cancellationToken => Extract(cancellationToken, entry, true));
     }
 
     /// <summary>
@@ -1718,16 +1738,20 @@ public class CUE4ParseViewModel : ViewModel
     /// <summary>Reads a package written by <paramref name="template"/>'s edit session with the same versions and mappings.</summary>
     public static UAssetApiAsset ReadBlueprintAssetLike(UAssetApiAsset template, string uassetPath) =>
         ReadBlueprintAsset(uassetPath, template.ObjectVersion, template.ObjectVersionUE5, template.CustomVersionContainer, template.Mappings,
-            ResolveMapStructTypeOverrides(), UAssetAPI.CustomSerializationFlags.None);
+            ResolveMapStructTypeOverrides(), UAssetAPI.CustomSerializationFlags.None, template.AssetResolver);
 
     /// <summary>Reads a legacy (.uasset/.uexp) package from disk with the provider's versions, e.g. to verify a written asset.</summary>
-    public IPackage ReadLegacyPackageFromDisk(GameFile entry, string uassetPath)
+    public IPackage ReadLegacyPackageFromDisk(GameFile entry, string uassetPath) => ReadLegacyPackageFromDisk(entry.PathWithoutExtension, uassetPath);
+
+    /// <inheritdoc cref="ReadLegacyPackageFromDisk(GameFile, string)"/>
+    public IPackage ReadLegacyPackageFromDisk(string name, string uassetPath)
     {
-        var name = entry.PathWithoutExtension;
         var uexpPath = Path.ChangeExtension(uassetPath, ".uexp");
         var uasset = new FByteArchive(name + ".uasset", File.ReadAllBytes(uassetPath), (VersionContainer) Provider.Versions.Clone());
         var uexp = File.Exists(uexpPath) ? new FByteArchive(name + ".uexp", File.ReadAllBytes(uexpPath), (VersionContainer) Provider.Versions.Clone()) : null;
-        return new Package(uasset, uexp, (FArchive) null, null, Provider, false);
+        var ubulkPath = Path.ChangeExtension(uassetPath, ".ubulk");
+        var ubulk = File.Exists(ubulkPath) ? new FByteArchive(name + ".ubulk", File.ReadAllBytes(ubulkPath), (VersionContainer) Provider.Versions.Clone()) : null;
+        return new Package(uasset, uexp, ubulk, null, Provider, false);
     }
 
     /// <summary>Writes an edited blueprint to the exports folder (same place as the JSON write-back). Returns the .uasset path.</summary>
@@ -1741,9 +1765,9 @@ public class CUE4ParseViewModel : ViewModel
         return path;
     }
 
-    /// <summary>Writes an edited blueprint to the exports folder and packs it into a patch pak.</summary>
-    public bool CreateEditedBlueprintPatchPak(GameFile entry, UAssetApiAsset asset, out string pakPath, out string error) =>
-        TryCreatePatchPakForBlueprint(entry, asset, out pakPath, out error);
+    /// <summary>Adds an edited blueprint to the pak packer.</summary>
+    public bool AddEditedBlueprintToPack(GameFile entry, UAssetApiAsset asset, out string addedPaths, out string error) =>
+        TryAddBlueprintToPack(entry, asset, out addedPaths, out error);
 
     public static void DeleteBlueprintEditDirectory(string directory) => TryDeleteDirectory(directory);
 
@@ -2026,6 +2050,8 @@ public class CUE4ParseViewModel : ViewModel
     {
         var mapStructOverrides = ResolveMapStructTypeOverrides();
         var stagedDependencyKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        // dependencies are read straight from the provider; staging them to disk is only the fallback for packages it can't find
+        var resolver = new ProviderAssetResolver(this);
 
         // Mimic UAssetGUI's pre-load pass with SkipLoadingExports, then do a full parse.
         for (var iteration = 0; iteration < 3; iteration++)
@@ -2041,7 +2067,8 @@ public class CUE4ParseViewModel : ViewModel
                 customVersions,
                 mappings,
                 mapStructOverrides,
-                UAssetAPI.CustomSerializationFlags.SkipLoadingExports);
+                UAssetAPI.CustomSerializationFlags.SkipLoadingExports,
+                resolver);
             var missingPackages = preloadAsset.OtherAssetsFailedToAccess?
                 .Where(x => x != null)
                 .Select(x => x.ToString())
@@ -2071,7 +2098,8 @@ public class CUE4ParseViewModel : ViewModel
             customVersions,
             mappings,
             mapStructOverrides,
-            UAssetAPI.CustomSerializationFlags.None);
+            UAssetAPI.CustomSerializationFlags.None,
+            resolver);
 
         var remaining = asset.OtherAssetsFailedToAccess?
             .Where(x => x != null)
@@ -2099,11 +2127,13 @@ public class CUE4ParseViewModel : ViewModel
         List<UAssetAPI.CustomVersion> customVersions,
         UAssetApiUsmap mappings,
         IDictionary<string, Tuple<UAssetAPI.UnrealTypes.FString, UAssetAPI.UnrealTypes.FString>> mapStructOverrides,
-        UAssetAPI.CustomSerializationFlags customFlags)
+        UAssetAPI.CustomSerializationFlags customFlags,
+        UAssetAPI.IAssetResolver resolver = null)
     {
         var asset = new UAssetApiAsset(objectVersion, objectVersionUE5, customVersions, mappings, customFlags)
         {
-            FilePath = stagedUassetPath
+            FilePath = stagedUassetPath,
+            AssetResolver = resolver
         };
 
         if (mapStructOverrides != null)
@@ -2140,6 +2170,49 @@ public class CUE4ParseViewModel : ViewModel
         }
 
         return result;
+    }
+
+    /// <summary>Hands UAssetAPI the packages a blueprint depends on, extracted from the provider on demand.</summary>
+    private sealed class ProviderAssetResolver(CUE4ParseViewModel owner) : UAssetAPI.IAssetResolver
+    {
+        private readonly ConcurrentDictionary<string, (byte[] Uasset, byte[] Uexp)?> _cache = new(StringComparer.OrdinalIgnoreCase);
+
+        public bool TryResolve(string packagePath, out byte[] uasset, out byte[] uexp)
+        {
+            var found = _cache.GetOrAdd(packagePath, owner.ExtractPackageFiles);
+            uasset = found?.Uasset;
+            uexp = found?.Uexp;
+            return found != null;
+        }
+    }
+
+    private (byte[] Uasset, byte[] Uexp)? ExtractPackageFiles(string packagePath)
+    {
+        try
+        {
+            foreach (var candidate in BuildDependencyKeyCandidates(packagePath))
+            {
+                if (!Provider.Files.TryGetValue(candidate, out var file) || !Provider.TrySavePackage(file, out var assets))
+                    continue;
+
+                byte[] uasset = null, uexp = null;
+                foreach (var (path, bytes) in assets)
+                {
+                    var extension = Path.GetExtension(path);
+                    if (extension.Equals(".uasset", StringComparison.OrdinalIgnoreCase) || extension.Equals(".umap", StringComparison.OrdinalIgnoreCase))
+                        uasset = bytes;
+                    else if (extension.Equals(".uexp", StringComparison.OrdinalIgnoreCase))
+                        uexp = bytes;
+                }
+                if (uasset != null)
+                    return (uasset, uexp);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Could not extract {Package} for UAssetAPI", packagePath);
+        }
+        return null;
     }
 
     private bool TryStageDependencyPackageFromProvider(
@@ -2794,65 +2867,6 @@ public class CUE4ParseViewModel : ViewModel
         }
     }
 
-    public void SaveBlueprintJsonWriteBackToSource(TabItem tabViewModel)
-    {
-        if (!TryDeserializeBlueprintJson(tabViewModel, out var asset))
-            return;
-
-        // Loose files can be modified in place.
-        if (tabViewModel.Entry is OsGameFile osGameFile)
-        {
-            var targetPath = osGameFile.ActualFile.FullName;
-            try
-            {
-                Directory.CreateDirectory(Path.GetDirectoryName(targetPath) ?? UserSettings.Default.GameDirectory);
-                asset.Write(targetPath);
-
-                Interlocked.Increment(ref ExportedCount);
-                Log.Information("Successfully wrote blueprint asset back to source file {FilePath}", targetPath);
-                FLogger.Append(ELog.Information, () =>
-                {
-                    FLogger.Text("Successfully wrote back to source ", Constants.WHITE);
-                    FLogger.Link(Path.GetFileName(targetPath), targetPath, true);
-                });
-            }
-            catch (Exception ex)
-            {
-                Interlocked.Increment(ref FailedExportCount);
-                Log.Error(ex, "Failed to write blueprint asset back to source for {Path}", tabViewModel.Entry?.Path);
-                FLogger.Append(ELog.Error, () => FLogger.Text($"Failed to write back to source: {ex.Message}", Constants.WHITE, true));
-            }
-            return;
-        }
-
-        // Mounted pak/utoc files are read-only at runtime, so build a patch pak with the built-in PakBuilder.
-        if (tabViewModel.Entry is VfsEntry)
-        {
-            if (TryCreatePatchPakForBlueprint(tabViewModel.Entry, asset, out var generatedPakPath, out var error))
-            {
-                Interlocked.Increment(ref ExportedCount);
-                Log.Information("Successfully generated patch pak at {FilePath}", generatedPakPath);
-                FLogger.Append(ELog.Information, () =>
-                {
-                    FLogger.Text("Successfully generated patch pak ", Constants.WHITE);
-                    FLogger.Link(Path.GetFileName(generatedPakPath), generatedPakPath, true);
-                });
-            }
-            else
-            {
-                Interlocked.Increment(ref FailedExportCount);
-                FLogger.Append(ELog.Error, () => FLogger.Text($"Failed to write back as pak patch: {error}", Constants.WHITE, true));
-            }
-
-            return;
-        }
-
-        FLogger.Append(ELog.Warning, () => FLogger.Text(
-            "Current source type is unsupported for write-back.",
-            Constants.WHITE,
-            true));
-    }
-
     public void ApplyRestrictedPseudoEditsToJson(TabItem tabViewModel)
     {
         if (!ValidateBlueprintJsonTab(tabViewModel))
@@ -3452,127 +3466,54 @@ public class CUE4ParseViewModel : ViewModel
         return dialog.ShowDialog() == true ? dialog.FileName : null;
     }
 
-    private bool TryCreatePatchPakForBlueprint(GameFile entry, UAssetApiAsset asset, out string generatedPakPath, out string error)
+    /// <summary>
+    /// Writes the edited blueprint (and its .uexp/.ubulk) and adds the files, unchanged otherwise, to the pak packer at the path of the original asset.
+    /// </summary>
+    private bool TryAddBlueprintToPack(GameFile entry, UAssetApiAsset asset, out string addedPaths, out string error)
     {
-        generatedPakPath = string.Empty;
+        addedPaths = string.Empty;
         error = string.Empty;
-        if (entry == null)
+        if (entry == null || asset == null)
         {
-            error = "Patch creation failed: current entry is null.";
-            return false;
-        }
-        if (asset == null)
-        {
-            error = "Patch creation failed: blueprint asset is null.";
-            return false;
-        }
-        if (string.IsNullOrWhiteSpace(UserSettings.Default.RawDataDirectory))
-        {
-            error = "Patch creation failed: RawDataDirectory is empty in settings.";
+            error = "Nothing to add: the entry or the blueprint asset is missing.";
             return false;
         }
 
         var stage = "init";
         try
         {
-            // New flow:
-            // 1) Serialize JSON to .uasset/.uexp under Output/Exports (RawDataDirectory)
-            // 2) Build the patch pak in-process with the bundled PakBuilder (repak binding in UAssetAPI).
-            //    No external UnrealPak.exe required.
             stage = "prepare_paths";
             var extension = string.Equals(entry.Extension, "umap", StringComparison.OrdinalIgnoreCase) ? ".umap" : ".uasset";
-            var exportedAssetPath = GetBlueprintWriteBackPath(entry, extension);
-            stage = "sanitize_asset_for_write";
-            PrepareBlueprintAssetForWriteBack(asset);
+            var directory = Path.Combine(Path.GetTempPath(), "FloraPack", "edited", Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(directory);
+            var written = Path.Combine(directory, Path.GetFileNameWithoutExtension(entry.Path) + extension);
 
             stage = "serialize_asset";
-            Directory.CreateDirectory(Path.GetDirectoryName(exportedAssetPath) ?? UserSettings.Default.RawDataDirectory);
-            asset.Write(exportedAssetPath);
-
-            stage = "prepare_patch_output";
-            var sourceBaseName = Path.GetFileNameWithoutExtension(exportedAssetPath);
-            if (string.IsNullOrWhiteSpace(sourceBaseName))
-                sourceBaseName = "blueprint";
-            var patchDir = Path.Combine(UserSettings.Default.RawDataDirectory, "Patches");
-            Directory.CreateDirectory(patchDir);
-            generatedPakPath = Path.Combine(
-                patchDir,
-                $"{sourceBaseName}_{DateTime.Now:yyyyMMdd_HHmmss}.pak");
+            PrepareBlueprintAssetForWriteBack(asset);
+            asset.Write(written);
 
             stage = "collect_written_files";
-            var assetPaths = CollectWrittenAssetPaths(exportedAssetPath);
-            if (assetPaths.Count == 0)
+            var parts = CollectWrittenAssetPaths(written);
+            if (parts.Count == 0)
             {
-                error = $"No written asset files were produced for the patch pak at '{exportedAssetPath}'.";
+                error = $"No asset files were written for {entry.Path}.";
                 return false;
             }
 
-            var rawEntryPath = entry.Path;
-            if (string.IsNullOrWhiteSpace(rawEntryPath))
-                rawEntryPath = entry.Name;
-            if (string.IsNullOrWhiteSpace(rawEntryPath))
-            {
-                error = "Patch creation failed: entry.Path and entry.Name are both empty.";
-                return false;
-            }
+            // pak paths are relative to the mount point: GameName/Content/...
+            var basePath = entry.Path.Replace('\\', '/').TrimStart('/');
+            var files = parts.Select(o => (PakPath: Path.ChangeExtension(basePath, Path.GetExtension(o)).Replace('\\', '/'), Data: File.ReadAllBytes(o))).ToList();
 
-            var normalizedMountPath = rawEntryPath.Replace('\\', '/').TrimStart('/');
-            if (string.IsNullOrWhiteSpace(Path.GetExtension(normalizedMountPath)))
-                normalizedMountPath += extension;
-
-            stage = "resolve_pak_version";
-            // PakVersion enum values equal the pak file version numbers (repak convention), so the
-            // source pak's EPakFileVersion maps directly. Zen (utoc) containers have no pak version;
-            // fall back to V11 like UAssetGUI does for utoc containers.
-            var pakVersion = UAssetAPI.PakVersion.V11;
-            if (entry is VfsEntry vfsEntry && vfsEntry.Vfs is CUE4Parse.UE4.Pak.PakFileReader pakFileReader)
-            {
-                var sourceVersion = (int)pakFileReader.Info.Version;
-                if (sourceVersion >= (int)UAssetAPI.PakVersion.V0 && sourceVersion <= (int)UAssetAPI.PakVersion.V11)
-                {
-                    pakVersion = (UAssetAPI.PakVersion)sourceVersion;
-                }
-                else
-                {
-                    Log.Warning("Source pak version {SourceVersion} is outside PakBuilder support (0-{MaxVersion}); falling back to V11 for {Path}",
-                        sourceVersion, (int)UAssetAPI.PakVersion.V11, rawEntryPath);
-                }
-            }
-
-            stage = "write_patch_pak";
-            using (var stream = new FileStream(generatedPakPath, FileMode.Create, FileAccess.Write))
-            {
-                var pakWriter = new UAssetAPI.PakBuilder().Writer(stream, pakVersion, "../../../");
-                foreach (var absPath in assetPaths)
-                {
-                    var ext = Path.GetExtension(absPath);
-                    var entryPathWithExt = Path.ChangeExtension(normalizedMountPath, ext);
-                    if (string.IsNullOrWhiteSpace(entryPathWithExt))
-                    {
-                        error = $"Patch creation failed: could not derive mount path for extension '{ext}'.";
-                        return false;
-                    }
-
-                    // PakWriter entry paths are relative to the mount point ("../../../"),
-                    // i.e. GameName/Content/...
-                    entryPathWithExt = entryPathWithExt.Replace('\\', '/').TrimStart('/');
-                    pakWriter.WriteFile(entryPathWithExt, File.ReadAllBytes(absPath));
-                }
-                pakWriter.WriteIndex();
-            }
-
-            if (!File.Exists(generatedPakPath))
-            {
-                error = "PakBuilder completed but target pak file was not created.";
-                return false;
-            }
-
-            stage = "done";
+            stage = "add_to_pack";
+            var origin = $"{FModel.Localization.LocalizationManager.Instance.Get("Pack_OriginBlueprint")}: {entry.Path}";
+            Application.Current.Dispatcher.Invoke(() => DockPanels.ShowPackWorkspace().AddEditedFiles(files, origin));
+            addedPaths = string.Join(", ", files.Select(o => o.PakPath));
+            TryDeleteDirectory(directory);
             return true;
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed to create patch pak for {Path} at stage {Stage}", entry?.Path, stage);
+            Log.Error(ex, "Failed to add blueprint to the pak packer for {Path} at stage {Stage}", entry?.Path, stage);
             error = $"Stage={stage}; {ex.GetType().Name}: {ex.Message}";
             return false;
         }
@@ -3764,6 +3705,16 @@ public class CUE4ParseViewModel : ViewModel
         if (field.GetValue(target) == null)
             field.SetValue(target, factory());
     }
+
+    /// <summary>The engine version UAssetAPI needs to read loose packages of the loaded game (the pak packer's texture editor).</summary>
+    public UAssetAPI.UnrealTypes.EngineVersion ResolvePackEngineVersion() =>
+        UAssetApiAsset.GetEngineVersion(
+            (UAssetAPI.UnrealTypes.ObjectVersion) Provider.Versions.Ver.FileVersionUE4,
+            (UAssetAPI.UnrealTypes.ObjectVersionUE5) Math.Max(Provider.Versions.Ver.FileVersionUE5, -1), null);
+
+    /// <summary>A .usmap file for the loaded game (a jmap is converted), or null.</summary>
+    public string ResolvePackUsmapPath() =>
+        ResolveUsmapPathsFromCurrentSettings().FirstOrDefault(o => !string.IsNullOrWhiteSpace(o) && File.Exists(o));
 
     private UAssetAPI.UnrealTypes.ObjectVersion ResolveObjectVersion(IPackage package)
     {

@@ -16,7 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FModel.BlueprintGraph\FModel.BlueprintGraph.csproj" />
-    <ProjectReference Include="..\..\UAssetAPI-master\UAssetAPI\UAssetAPI.csproj" />
+    <ProjectReference Include="..\UAssetAPI\UAssetAPI.csproj" />
     <!-- UsmapWriter lives in the WPF app; compiled in directly to avoid referencing the executable -->
     <Compile Include="..\FModel\Framework\Mappings\UsmapWriter.cs" Link="Linked\UsmapWriter.cs" />
   </ItemGroup>

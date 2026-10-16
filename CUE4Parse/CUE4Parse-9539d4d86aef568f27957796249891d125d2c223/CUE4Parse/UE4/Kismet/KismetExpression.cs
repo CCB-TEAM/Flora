@@ -41,7 +41,15 @@ public class FKismetPropertyPointer
 public abstract class KismetExpression
 {
     public virtual EExprToken Token => EExprToken.EX_Nothing;
+
+    /// <summary>In-memory code offset where the expression starts (the offset jumps and UAssetAPI's Visit use).</summary>
     public int StatementIndex = 0;
+
+    /// <summary>In-memory code offset right after the expression and all its operands.</summary>
+    public int EndIndex = 0;
+
+    /// <summary>In-memory size of the expression including its operands.</summary>
+    public int Size => EndIndex - StatementIndex;
 
     protected internal virtual void WriteJson(JsonWriter writer, JsonSerializer serializer, bool bAddIndex = false)
     {

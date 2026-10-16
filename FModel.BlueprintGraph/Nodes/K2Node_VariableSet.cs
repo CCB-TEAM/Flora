@@ -12,7 +12,10 @@ namespace FModel.BlueprintGraph.Nodes
         private GraphPin? ContextPin;
         
         public PropertyData Property;
-        
+
+        public override string? DefinitionOwner => Property.Owner;
+        public override string? DefinitionMember => Property.Name;
+
         public K2Node_VariableSet(PropertyData data, GraphPin ValuePin, GraphPin? ContextPin, KismetExpression Instr) : base("SET", Instr)
         {
             Property = data;

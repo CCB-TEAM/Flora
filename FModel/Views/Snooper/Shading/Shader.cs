@@ -48,7 +48,7 @@ public class Shader : IDisposable
     {
         var executingAssembly = Assembly.GetExecutingAssembly();
         var executingAssemblyName = executingAssembly.GetName().Name;
-        using var stream = executingAssembly.GetManifestResourceStream($"{executingAssemblyName}.Resources.{file}");
+        using var stream = executingAssembly.GetManifestResourceStream($"FModel.Resources.{file}");
         using var reader = new StreamReader(stream);
         var handle = GL.CreateShader(type);
 
@@ -57,7 +57,7 @@ public class Shader : IDisposable
             content = content.Replace("#define MAX_UV_COUNT 8", "#define MAX_UV_COUNT 1");
         if (type == ShaderType.VertexShader && Array.IndexOf(["default.vert", "outline.vert", "picking.vert"], file) > -1)
         {
-            using var splineStream = executingAssembly.GetManifestResourceStream($"{executingAssemblyName}.Resources.spline.vert");
+            using var splineStream = executingAssembly.GetManifestResourceStream($"FModel.Resources.spline.vert");
             using var splineReader = new StreamReader(splineStream);
             content = splineReader.ReadToEnd() + Environment.NewLine + content.Replace("#version 460 core", "");
         }

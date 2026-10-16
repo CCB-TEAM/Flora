@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="FModel.Views.Resources.Controls.AvalonEditor"
+﻿<UserControl xmlns:loc="clr-namespace:FModel.Localization" x:Class="FModel.Views.Resources.Controls.AvalonEditor"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:adonisUi="clr-namespace:AdonisUI;assembly=AdonisUI"
@@ -55,7 +55,7 @@
                 </TextBox.Style>
             </TextBox>
             <StackPanel Grid.Column="1" Orientation="Horizontal">
-                <ToggleButton ToolTip="Search Up" Padding="5" IsChecked="{Binding SearchUp}" Focusable="False"
+                <ToggleButton ToolTip="{loc:Loc Avalon_SearchUp}" Padding="5" IsChecked="{Binding SearchUp}" Focusable="False"
                               Style="{DynamicResource {x:Static adonisUi:Styles.ToolbarToggleButton}}">
                     <Viewbox Width="16" Height="16" HorizontalAlignment="Center">
                         <Canvas Width="24" Height="24">
@@ -63,7 +63,7 @@
                         </Canvas>
                     </Viewbox>
                 </ToggleButton>
-                <ToggleButton ToolTip="Match Whole Word" Padding="5" IsChecked="{Binding WholeWord}" Focusable="False"
+                <ToggleButton ToolTip="{loc:Loc Avalon_MatchWholeWord}" Padding="5" IsChecked="{Binding WholeWord}" Focusable="False"
                               Style="{DynamicResource {x:Static adonisUi:Styles.ToolbarToggleButton}}">
                     <Viewbox Width="16" Height="16" HorizontalAlignment="Center">
                         <Canvas Width="24" Height="24">
@@ -71,7 +71,7 @@
                         </Canvas>
                     </Viewbox>
                 </ToggleButton>
-                <ToggleButton ToolTip="Match Case" Padding="5" IsChecked="{Binding CaseSensitive}" Focusable="False"
+                <ToggleButton ToolTip="{loc:Loc Search_Tooltip_MatchCase}" Padding="5" IsChecked="{Binding CaseSensitive}" Focusable="False"
                               Style="{DynamicResource {x:Static adonisUi:Styles.ToolbarToggleButton}}">
                     <Viewbox Width="16" Height="16" HorizontalAlignment="Center">
                         <Canvas Width="24" Height="24">
@@ -79,7 +79,7 @@
                         </Canvas>
                     </Viewbox>
                 </ToggleButton>
-                <ToggleButton ToolTip="Regex" Padding="5" IsChecked="{Binding UseRegEx}" Focusable="False"
+                <ToggleButton ToolTip="{loc:Loc Search_Tooltip_Regex}" Padding="5" IsChecked="{Binding UseRegEx}" Focusable="False"
                               Style="{DynamicResource {x:Static adonisUi:Styles.ToolbarToggleButton}}">
                     <Viewbox Width="16" Height="16" HorizontalAlignment="Center">
                         <Canvas Width="24" Height="24">
@@ -87,7 +87,7 @@
                         </Canvas>
                     </Viewbox>
                 </ToggleButton>
-                <Button ToolTip="Clear Search Filter" Padding="5" Focusable="False" Click="OnDeleteSearchClick"
+                <Button ToolTip="{loc:Loc Search_Tooltip_ClearSearch}" Padding="5" Focusable="False" Click="OnDeleteSearchClick"
                         Style="{DynamicResource {x:Static adonisUi:Styles.ToolbarButton}}">
                     <Viewbox Width="16" Height="16" HorizontalAlignment="Center">
                         <Canvas Width="24" Height="24">
@@ -96,7 +96,7 @@
                     </Viewbox>
                 </Button>
             </StackPanel>
-            <Button Grid.Column="2" ToolTip="Close" Padding="5" Focusable="False" Click="OnCloseClick" Margin="2 0 0 0"
+            <Button Grid.Column="2" ToolTip="{loc:Loc Common_Close}" Padding="5" Focusable="False" Click="OnCloseClick" Margin="2 0 0 0"
                     Style="{DynamicResource {x:Static adonisUi:Styles.ToolbarButton}}" BorderThickness="1"
                     Background="{DynamicResource {x:Static adonisUi:Brushes.Layer3BackgroundBrush}}"
                     BorderBrush="{DynamicResource {x:Static adonisUi:Brushes.AccentBrush}}">

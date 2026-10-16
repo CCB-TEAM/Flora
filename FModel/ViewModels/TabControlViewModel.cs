@@ -511,11 +511,14 @@ public class TabControlViewModel : ViewModel
         AddTab();
     }
 
-    public void AddTab() => AddTab("New Tab");
+    /// <summary>Header of an empty tab, in the interface language.</summary>
+    public static string NewTabHeader => FModel.Localization.LocalizationManager.Instance.Get("Common_NewTab");
+
+    public void AddTab() => AddTab(NewTabHeader);
     public void AddTab(string title) => AddTab(new FakeGameFile(title));
     public void AddTab(GameFile entry, string parentExportType = null)
     {
-        if (SelectedTab?.Header == "New Tab")
+        if (SelectedTab?.Header == NewTabHeader)
         {
             SelectedTab.Entry = entry;
             return;

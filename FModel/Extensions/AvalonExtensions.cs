@@ -19,7 +19,7 @@ public static class AvalonExtensions
     private static IHighlightingDefinition LoadHighlighter(string resourceName)
     {
         var executingAssembly = Assembly.GetExecutingAssembly();
-        using var stream = executingAssembly.GetManifestResourceStream($"{executingAssembly.GetName().Name}.Resources.{resourceName}");
+        using var stream = executingAssembly.GetManifestResourceStream($"FModel.Resources.{resourceName}");
         using var reader = new XmlTextReader(stream);
         return HighlightingLoader.Load(reader, HighlightingManager.Instance);
     }

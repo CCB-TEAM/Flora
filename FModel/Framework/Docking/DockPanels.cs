@@ -22,6 +22,8 @@ public static class DockPanels
     public const string BackupManagerId = "BackupManager";
     public const string SettingsId = "Settings";
     public const string AboutId = "About";
+    public const string MappingWizardId = "MappingWizard";
+    public const string PackWorkspaceId = "PackWorkspace";
 
     private static string L(string key) => LocalizationManager.Instance.Get(key);
 
@@ -60,10 +62,17 @@ public static class DockPanels
     public static SettingsView ShowSettings() =>
         DockWorkspace.Show(SettingsId, L("Settings_Title"), () => new SettingsView(), EDockTarget.Document);
 
+    public static MappingWizard ShowMappingWizard() =>
+        DockWorkspace.Show(MappingWizardId, "Mapping Wizard", () => new MappingWizard(), EDockTarget.Document);
+
+    public static FModel.Views.Packing.PackWorkspaceView ShowPackWorkspace() =>
+        DockWorkspace.Show(PackWorkspaceId, L("Pack_Title"), () => new FModel.Views.Packing.PackWorkspaceView(), EDockTarget.Document);
+
     public static About ShowAbout() =>
         DockWorkspace.Show(AboutId, L("About_Title"), () => new About(), EDockTarget.Document);
 
-    public static void ShowBlueprintViewer(BlueprintViewerViewModel viewModel) =>
+    /// <summary>Shows the viewer of the blueprint; an already open viewer of the same asset is brought forward instead.</summary>
+    public static BlueprintViewerWindow ShowBlueprintViewer(BlueprintViewerViewModel viewModel) =>
         DockWorkspace.Show($"Blueprint:{viewModel.Title}", viewModel.Title, () => new BlueprintViewerWindow(viewModel), EDockTarget.Document);
 
     public static void ShowProperties(TabItem tab) =>

@@ -34,13 +34,24 @@ public sealed class LocalizationManager : INotifyPropertyChanged
         return ResourceManager.GetString(key, CurrentCulture) ?? key;
     }
 
+    /// <summary>The localized text of a key, or false when no resource has it.</summary>
+    public bool TryGet(string key, out string value)
+    {
+        value = string.IsNullOrWhiteSpace(key) ? null : ResourceManager.GetString(key, CurrentCulture);
+        return value != null;
+    }
+
+    /// <summary>The interface ships in English and Simplified Chinese; "System" (older settings) picks one of them.</summary>
+    public static EUiLanguage Resolve(EUiLanguage language) => language switch
+    {
+        EUiLanguage.System => CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "zh" ? EUiLanguage.SimplifiedChinese : EUiLanguage.English,
+        _ => language
+    };
+
     public void ApplyUiLanguage(EUiLanguage language)
     {
-        CurrentCulture = language switch
-        {
-            EUiLanguage.SimplifiedChinese => CultureInfo.GetCultureInfo("zh-CN"),
-            EUiLanguage.English => CultureInfo.GetCultureInfo("en"),
-            _ => CultureInfo.CurrentUICulture
-        };
+        CurrentCulture = Resolve(language) == EUiLanguage.SimplifiedChinese
+            ? CultureInfo.GetCultureInfo("zh-CN")
+            : CultureInfo.GetCultureInfo("en");
     }
 }

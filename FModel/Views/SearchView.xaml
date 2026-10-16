@@ -9,7 +9,7 @@
     <Grid Margin="5 5">
         <GroupBox adonisExtensions:LayerExtension.Layer="2" Padding="{adonisUi:Space 0}" Background="Transparent">
             <TabControl x:Name="SearchTabControl" SelectionChanged="OnTabItemChange">
-                <TabItem Style="{StaticResource TabItemFillSpace}" Header="By Path">
+                <TabItem Style="{StaticResource TabItemFillSpace}" Header="{loc:Loc Search_Tab_ByPath}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
@@ -44,28 +44,28 @@
                                 </TextBox.Style>
                             </TextBox>
                             <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                <ToggleButton ToolTip="Match Case" Padding="5" IsChecked="{Binding SearchTab.HasMatchCaseEnabled}" Style="{DynamicResource {x:Static adonisUi:Styles.ToolbarToggleButton}}">
+                                <ToggleButton ToolTip="{loc:Loc Search_Tooltip_MatchCase}" Padding="5" IsChecked="{Binding SearchTab.HasMatchCaseEnabled}" Style="{DynamicResource {x:Static adonisUi:Styles.ToolbarToggleButton}}">
                                     <Viewbox Width="16" Height="16" HorizontalAlignment="Center">
                                         <Canvas Width="24" Height="24">
                                             <Path Fill="{DynamicResource {x:Static adonisUi:Brushes.ForegroundBrush}}" Data="{StaticResource MatchCaseIcon}" />
                                         </Canvas>
                                     </Viewbox>
                                 </ToggleButton>
-                                <ToggleButton ToolTip="Regex" Padding="5" IsChecked="{Binding SearchTab.HasRegexEnabled}" Style="{DynamicResource {x:Static adonisUi:Styles.ToolbarToggleButton}}">
+                                <ToggleButton ToolTip="{loc:Loc Search_Tooltip_Regex}" Padding="5" IsChecked="{Binding SearchTab.HasRegexEnabled}" Style="{DynamicResource {x:Static adonisUi:Styles.ToolbarToggleButton}}">
                                     <Viewbox Width="16" Height="16" HorizontalAlignment="Center">
                                         <Canvas Width="24" Height="24">
                                             <Path Fill="{DynamicResource {x:Static adonisUi:Brushes.ForegroundBrush}}" Data="{StaticResource RegexIcon}" />
                                         </Canvas>
                                     </Viewbox>
                                 </ToggleButton>
-                                <Button ToolTip="Sort File Sizes" Padding="5" Style="{DynamicResource {x:Static adonisUi:Styles.ToolbarButton}}" Click="OnSearchSortClick">
+                                <Button ToolTip="{loc:Loc Search_Tooltip_SortFileSizes}" Padding="5" Style="{DynamicResource {x:Static adonisUi:Styles.ToolbarButton}}" Click="OnSearchSortClick">
                                     <Viewbox Width="16" Height="16" HorizontalAlignment="Center">
                                         <Canvas Width="24" Height="24">
                                             <Path Fill="{DynamicResource {x:Static adonisUi:Brushes.ForegroundBrush}}" Data="{StaticResource SortIcon}" />
                                         </Canvas>
                                     </Viewbox>
                                 </Button>
-                                <Button ToolTip="Clear Search Filter" Padding="5" Style="{DynamicResource {x:Static adonisUi:Styles.ToolbarButton}}" Click="OnDeleteSearchClick">
+                                <Button ToolTip="{loc:Loc Search_Tooltip_ClearSearch}" Padding="5" Style="{DynamicResource {x:Static adonisUi:Styles.ToolbarButton}}" Click="OnDeleteSearchClick">
                                     <Viewbox Width="16" Height="16" HorizontalAlignment="Center">
                                         <Canvas Width="24" Height="24">
                                             <Path Fill="{DynamicResource {x:Static adonisUi:Brushes.ForegroundBrush}}" Data="{StaticResource BackspaceIcon}"/>
@@ -92,21 +92,21 @@
                             </ListView.Resources>
                             <ListView.View>
                                 <GridView>
-                                    <GridViewColumn Width="900" Header="Path" adonisExtensions:GridViewSortExtension.PropertyName="Path">
+                                    <GridViewColumn Width="900" Header="{loc:Loc Common_Path}" adonisExtensions:GridViewSortExtension.PropertyName="Path">
                                         <GridViewColumn.CellTemplate>
                                             <DataTemplate>
                                                 <TextBlock HorizontalAlignment="Left" Text="{Binding Path}" />
                                             </DataTemplate>
                                         </GridViewColumn.CellTemplate>
                                     </GridViewColumn>
-                                    <GridViewColumn Width="225" Header="Archive" adonisExtensions:GridViewSortExtension.PropertyName="Archive">
+                                    <GridViewColumn Width="225" Header="{loc:Loc Common_Archive}" adonisExtensions:GridViewSortExtension.PropertyName="Archive">
                                         <GridViewColumn.CellTemplate>
                                             <DataTemplate>
                                                 <TextBlock HorizontalAlignment="Left" Text="{Binding Vfs.Name}" />
                                             </DataTemplate>
                                         </GridViewColumn.CellTemplate>
                                     </GridViewColumn>
-                                    <GridViewColumn Width="100" Header="Size" adonisExtensions:GridViewSortExtension.PropertyName="Size">
+                                    <GridViewColumn Width="100" Header="{loc:Loc Main_Info_Size}" adonisExtensions:GridViewSortExtension.PropertyName="Size">
                                         <GridViewColumn.CellTemplate>
                                             <DataTemplate>
                                                 <TextBlock HorizontalAlignment="Right" Text="{Binding Size, Converter={x:Static converters:SizeToStringConverter.Instance}}" Margin="0 0 30 0" />
@@ -123,7 +123,7 @@
                                                 <Setter.Value>
                                                     <ControlTemplate>
                                                         <Grid>
-                                                            <TextBlock Text="No packages found matching the query" FontWeight="SemiBold" TextAlignment="Center"
+                                                            <TextBlock Text="{loc:Loc Search_NoPackages}" FontWeight="SemiBold" TextAlignment="Center"
                                                                        Foreground="{DynamicResource {x:Static adonisUi:Brushes.ErrorBrush}}" Margin="0 10 0 0" />
                                                         </Grid>
                                                     </ControlTemplate>
@@ -135,7 +135,7 @@
                             </ListView.Style>
                             <ListView.ContextMenu>
                                 <ContextMenu DataContext="{Binding PlacementTarget, RelativeSource={RelativeSource Self}}">
-                                    <MenuItem Header="Go To" Click="OnAssetDoubleClick">
+                                    <MenuItem Header="{loc:Loc Common_GoTo}" Click="OnAssetDoubleClick">
                                         <MenuItem.Icon>
                                             <Viewbox Width="16" Height="16">
                                                 <Canvas Width="24" Height="24">
@@ -144,7 +144,7 @@
                                             </Viewbox>
                                         </MenuItem.Icon>
                                     </MenuItem>
-                                    <MenuItem Header="Extract in New Tab" Click="OnAssetExtract">
+                                    <MenuItem Header="{loc:Loc Common_ExtractInNewTab}" Click="OnAssetExtract">
                                         <MenuItem.Icon>
                                             <Viewbox Width="16" Height="16">
                                                 <Canvas Width="24" Height="24">
@@ -153,7 +153,7 @@
                                             </Viewbox>
                                         </MenuItem.Icon>
                                     </MenuItem>
-                                    <MenuItem Header="Find References" Click="OnFindRefs">
+                                    <MenuItem Header="{loc:Loc Common_FindReferences}" Click="OnFindRefs">
                                         <MenuItem.Icon>
                                             <Viewbox Width="16" Height="16">
                                                 <Canvas Width="24" Height="24">
@@ -200,7 +200,7 @@
                                             </Binding>
                                         </MenuItem.IsEnabled>
                                     </MenuItem>
-                                    <MenuItem Header="View Decompiled Blueprint (Pseudo C++)" Command="{Binding DataContext.mainApplication.RightClickMenuCommand}">
+                                    <MenuItem Header="{loc:Loc Common_ViewDecompiledBlueprint}" Command="{Binding DataContext.mainApplication.RightClickMenuCommand}">
                                         <MenuItem.CommandParameter>
                                             <MultiBinding Converter="{x:Static converters:MultiParameterConverter.Instance}">
                                                 <Binding Source="Assets_Decompile" />
@@ -226,7 +226,7 @@
                                             </Binding>
                                         </MenuItem.IsEnabled>
                                     </MenuItem>
-                                    <MenuItem Header="View Blueprint JSON (UAssetAPI)" Command="{Binding DataContext.mainApplication.RightClickMenuCommand}">
+                                    <MenuItem Header="{loc:Loc Common_ViewBlueprintJson}" Command="{Binding DataContext.mainApplication.RightClickMenuCommand}">
                                         <MenuItem.CommandParameter>
                                             <MultiBinding Converter="{x:Static converters:MultiParameterConverter.Instance}">
                                                 <Binding Source="Assets_Decompile_Json" />
@@ -256,7 +256,7 @@
                                     <MenuItem Command="{Binding DataContext.mainApplication.RightClickMenuCommand}">
                                         <MenuItem.Header>
                                             <TextBlock>
-                                                <Run Text="Export Raw Data" />
+                                                <Run Text="{loc:Loc Common_ExportRawData}" />
                                                 <Run Text="{Binding DataContext.SelectedItem.Extension, RelativeSource={RelativeSource AncestorType=ContextMenu}, StringFormat=' (.{0})', Mode=OneWay}" />
                                             </TextBlock>
                                         </MenuItem.Header>
@@ -274,7 +274,7 @@
                                             </Viewbox>
                                         </MenuItem.Icon>
                                     </MenuItem>
-                                    <MenuItem Header="Save Properties (.json)" Command="{Binding DataContext.mainApplication.RightClickMenuCommand}">
+                                    <MenuItem Header="{loc:Loc Common_SavePropertiesJson}" Command="{Binding DataContext.mainApplication.RightClickMenuCommand}">
                                         <MenuItem.CommandParameter>
                                             <MultiBinding Converter="{x:Static converters:MultiParameterConverter.Instance}">
                                                 <Binding Source="Save_Properties" />
@@ -289,7 +289,7 @@
                                             </Viewbox>
                                         </MenuItem.Icon>
                                     </MenuItem>
-                                    <MenuItem Header="Save Texture" Command="{Binding DataContext.mainApplication.RightClickMenuCommand}">
+                                    <MenuItem Header="{loc:Loc Common_SaveTexture}" Command="{Binding DataContext.mainApplication.RightClickMenuCommand}">
                                         <MenuItem.CommandParameter>
                                             <MultiBinding Converter="{x:Static converters:MultiParameterConverter.Instance}">
                                                 <Binding Source="Save_Textures" />
@@ -304,7 +304,7 @@
                                             </Viewbox>
                                         </MenuItem.Icon>
                                     </MenuItem>
-                                    <MenuItem Header="Save Model" Command="{Binding DataContext.mainApplication.RightClickMenuCommand}">
+                                    <MenuItem Header="{loc:Loc Common_SaveModel}" Command="{Binding DataContext.mainApplication.RightClickMenuCommand}">
                                         <MenuItem.CommandParameter>
                                             <MultiBinding Converter="{x:Static converters:MultiParameterConverter.Instance}">
                                                 <Binding Source="Save_Models" />
@@ -319,7 +319,7 @@
                                             </Viewbox>
                                         </MenuItem.Icon>
                                     </MenuItem>
-                                    <MenuItem Header="Save Animation" Command="{Binding DataContext.mainApplication.RightClickMenuCommand}">
+                                    <MenuItem Header="{loc:Loc Common_SaveAnimation}" Command="{Binding DataContext.mainApplication.RightClickMenuCommand}">
                                         <MenuItem.CommandParameter>
                                             <MultiBinding Converter="{x:Static converters:MultiParameterConverter.Instance}">
                                                 <Binding Source="Save_Animations" />
@@ -334,7 +334,7 @@
                                             </Viewbox>
                                         </MenuItem.Icon>
                                     </MenuItem>
-                                    <MenuItem Header="Save Audio" Command="{Binding DataContext.mainApplication.RightClickMenuCommand}">
+                                    <MenuItem Header="{loc:Loc Common_SaveAudio}" Command="{Binding DataContext.mainApplication.RightClickMenuCommand}">
                                         <MenuItem.CommandParameter>
                                             <MultiBinding Converter="{x:Static converters:MultiParameterConverter.Instance}">
                                                 <Binding Source="Save_Audio" />
@@ -350,7 +350,7 @@
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <Separator />
-                                    <MenuItem Header="Copy">
+                                    <MenuItem Header="{loc:Loc Common_Copy}">
                                         <MenuItem.Icon>
                                             <Viewbox Width="16" Height="16">
                                                 <Canvas Width="24" Height="24">
@@ -358,7 +358,7 @@
                                                 </Canvas>
                                             </Viewbox>
                                         </MenuItem.Icon>
-                                        <MenuItem Header="Package Path" Command="{Binding DataContext.mainApplication.CopyCommand}">
+                                        <MenuItem Header="{loc:Loc Common_PackagePath}" Command="{Binding DataContext.mainApplication.CopyCommand}">
                                             <MenuItem.CommandParameter>
                                                 <MultiBinding Converter="{x:Static converters:MultiParameterConverter.Instance}">
                                                     <Binding Source="File_Path" />
@@ -366,7 +366,7 @@
                                                 </MultiBinding>
                                             </MenuItem.CommandParameter>
                                         </MenuItem>
-                                        <MenuItem Header="Package Name" Command="{Binding DataContext.mainApplication.CopyCommand}">
+                                        <MenuItem Header="{loc:Loc Common_PackageName}" Command="{Binding DataContext.mainApplication.CopyCommand}">
                                             <MenuItem.CommandParameter>
                                                 <MultiBinding Converter="{x:Static converters:MultiParameterConverter.Instance}">
                                                     <Binding Source="File_Name" />
@@ -374,7 +374,7 @@
                                                 </MultiBinding>
                                             </MenuItem.CommandParameter>
                                         </MenuItem>
-                                        <MenuItem Header="Directory Path" Command="{Binding DataContext.mainApplication.CopyCommand}">
+                                        <MenuItem Header="{loc:Loc Common_DirectoryPath}" Command="{Binding DataContext.mainApplication.CopyCommand}">
                                             <MenuItem.CommandParameter>
                                                 <MultiBinding Converter="{x:Static converters:MultiParameterConverter.Instance}">
                                                     <Binding Source="Directory_Path" />
@@ -382,7 +382,7 @@
                                                 </MultiBinding>
                                             </MenuItem.CommandParameter>
                                         </MenuItem>
-                                        <MenuItem Header="Package Path w/o Extension" Command="{Binding DataContext.mainApplication.CopyCommand}">
+                                        <MenuItem Header="{loc:Loc Common_PackagePathNoExt}" Command="{Binding DataContext.mainApplication.CopyCommand}">
                                             <MenuItem.CommandParameter>
                                                 <MultiBinding Converter="{x:Static converters:MultiParameterConverter.Instance}">
                                                     <Binding Source="File_Path_No_Extension" />
@@ -390,7 +390,7 @@
                                                 </MultiBinding>
                                             </MenuItem.CommandParameter>
                                         </MenuItem>
-                                        <MenuItem Header="Package Name w/o Extension" Command="{Binding DataContext.mainApplication.CopyCommand}">
+                                        <MenuItem Header="{loc:Loc Common_PackageNameNoExt}" Command="{Binding DataContext.mainApplication.CopyCommand}">
                                             <MenuItem.CommandParameter>
                                                 <MultiBinding Converter="{x:Static converters:MultiParameterConverter.Instance}">
                                                     <Binding Source="File_Name_No_Extension" />
@@ -417,7 +417,7 @@
                     </TabItem.Header>
                     <TabItem.ContextMenu>
                         <ContextMenu DataContext="{Binding PlacementTarget, RelativeSource={RelativeSource Self}}">
-                            <MenuItem Header="Go To" Click="OnGoToRefPackage">
+                            <MenuItem Header="{loc:Loc Common_GoTo}" Click="OnGoToRefPackage">
                                 <MenuItem.Icon>
                                     <Viewbox Width="16" Height="16">
                                         <Canvas Width="24" Height="24">
@@ -462,28 +462,28 @@
                                 </TextBox.Style>
                             </TextBox>
                             <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                <ToggleButton ToolTip="Match Case" Padding="5" IsChecked="{Binding RefTab.HasMatchCaseEnabled}" Style="{DynamicResource {x:Static adonisUi:Styles.ToolbarToggleButton}}">
+                                <ToggleButton ToolTip="{loc:Loc Search_Tooltip_MatchCase}" Padding="5" IsChecked="{Binding RefTab.HasMatchCaseEnabled}" Style="{DynamicResource {x:Static adonisUi:Styles.ToolbarToggleButton}}">
                                     <Viewbox Width="16" Height="16" HorizontalAlignment="Center">
                                         <Canvas Width="24" Height="24">
                                             <Path Fill="{DynamicResource {x:Static adonisUi:Brushes.ForegroundBrush}}" Data="{StaticResource MatchCaseIcon}" />
                                         </Canvas>
                                     </Viewbox>
                                 </ToggleButton>
-                                <ToggleButton ToolTip="Regex" Padding="5" IsChecked="{Binding RefTab.HasRegexEnabled}" Style="{DynamicResource {x:Static adonisUi:Styles.ToolbarToggleButton}}">
+                                <ToggleButton ToolTip="{loc:Loc Search_Tooltip_Regex}" Padding="5" IsChecked="{Binding RefTab.HasRegexEnabled}" Style="{DynamicResource {x:Static adonisUi:Styles.ToolbarToggleButton}}">
                                     <Viewbox Width="16" Height="16" HorizontalAlignment="Center">
                                         <Canvas Width="24" Height="24">
                                             <Path Fill="{DynamicResource {x:Static adonisUi:Brushes.ForegroundBrush}}" Data="{StaticResource RegexIcon}" />
                                         </Canvas>
                                     </Viewbox>
                                 </ToggleButton>
-                                <Button ToolTip="Sort File Sizes" Padding="5" Style="{DynamicResource {x:Static adonisUi:Styles.ToolbarButton}}" Click="OnSearchSortClick">
+                                <Button ToolTip="{loc:Loc Search_Tooltip_SortFileSizes}" Padding="5" Style="{DynamicResource {x:Static adonisUi:Styles.ToolbarButton}}" Click="OnSearchSortClick">
                                     <Viewbox Width="16" Height="16" HorizontalAlignment="Center">
                                         <Canvas Width="24" Height="24">
                                             <Path Fill="{DynamicResource {x:Static adonisUi:Brushes.ForegroundBrush}}" Data="{StaticResource SortIcon}" />
                                         </Canvas>
                                     </Viewbox>
                                 </Button>
-                                <Button ToolTip="Clear Search Filter" Padding="5" Style="{DynamicResource {x:Static adonisUi:Styles.ToolbarButton}}" Click="OnDeleteSearchClick">
+                                <Button ToolTip="{loc:Loc Search_Tooltip_ClearSearch}" Padding="5" Style="{DynamicResource {x:Static adonisUi:Styles.ToolbarButton}}" Click="OnDeleteSearchClick">
                                     <Viewbox Width="16" Height="16" HorizontalAlignment="Center">
                                         <Canvas Width="24" Height="24">
                                             <Path Fill="{DynamicResource {x:Static adonisUi:Brushes.ForegroundBrush}}" Data="{StaticResource BackspaceIcon}"/>
@@ -514,21 +514,21 @@
                             </ListView.Resources>
                             <ListView.View>
                                 <GridView>
-                                    <GridViewColumn Width="900" Header="Path" adonisExtensions:GridViewSortExtension.PropertyName="Path">
+                                    <GridViewColumn Width="900" Header="{loc:Loc Common_Path}" adonisExtensions:GridViewSortExtension.PropertyName="Path">
                                         <GridViewColumn.CellTemplate>
                                             <DataTemplate>
                                                 <TextBlock HorizontalAlignment="Left" Text="{Binding Path}" />
                                             </DataTemplate>
                                         </GridViewColumn.CellTemplate>
                                     </GridViewColumn>
-                                    <GridViewColumn Width="225" Header="Archive" adonisExtensions:GridViewSortExtension.PropertyName="Archive">
+                                    <GridViewColumn Width="225" Header="{loc:Loc Common_Archive}" adonisExtensions:GridViewSortExtension.PropertyName="Archive">
                                         <GridViewColumn.CellTemplate>
                                             <DataTemplate>
                                                 <TextBlock HorizontalAlignment="Left" Text="{Binding Vfs.Name}" />
                                             </DataTemplate>
                                         </GridViewColumn.CellTemplate>
                                     </GridViewColumn>
-                                    <GridViewColumn Width="100" Header="Size" adonisExtensions:GridViewSortExtension.PropertyName="Size">
+                                    <GridViewColumn Width="100" Header="{loc:Loc Main_Info_Size}" adonisExtensions:GridViewSortExtension.PropertyName="Size">
                                         <GridViewColumn.CellTemplate>
                                             <DataTemplate>
                                                 <TextBlock HorizontalAlignment="Right" Text="{Binding Size, Converter={x:Static converters:SizeToStringConverter.Instance}}" Margin="0 0 30 0" />
@@ -545,7 +545,7 @@
                                                 <Setter.Value>
                                                     <ControlTemplate>
                                                         <Grid>
-                                                            <TextBlock Text="No references found in other packages" FontWeight="SemiBold" TextAlignment="Center"
+                                                            <TextBlock Text="{loc:Loc Search_NoReferences}" FontWeight="SemiBold" TextAlignment="Center"
                                                                        Foreground="{DynamicResource {x:Static adonisUi:Brushes.ErrorBrush}}" Margin="0 10 0 0" />
                                                         </Grid>
                                                     </ControlTemplate>
@@ -557,7 +557,7 @@
                             </ListView.Style>
                             <ListView.ContextMenu>
                                 <ContextMenu DataContext="{Binding PlacementTarget, RelativeSource={RelativeSource Self}}">
-                                    <MenuItem Header="Go To" Click="OnAssetDoubleClick">
+                                    <MenuItem Header="{loc:Loc Common_GoTo}" Click="OnAssetDoubleClick">
                                         <MenuItem.Icon>
                                             <Viewbox Width="16" Height="16">
                                                 <Canvas Width="24" Height="24">
@@ -566,7 +566,7 @@
                                             </Viewbox>
                                         </MenuItem.Icon>
                                     </MenuItem>
-                                    <MenuItem Header="Extract in New Tab" Click="OnAssetExtract">
+                                    <MenuItem Header="{loc:Loc Common_ExtractInNewTab}" Click="OnAssetExtract">
                                         <MenuItem.Icon>
                                             <Viewbox Width="16" Height="16">
                                                 <Canvas Width="24" Height="24">
@@ -575,7 +575,7 @@
                                             </Viewbox>
                                         </MenuItem.Icon>
                                     </MenuItem>
-                                    <MenuItem Header="Find References" Click="OnFindRefs">
+                                    <MenuItem Header="{loc:Loc Common_FindReferences}" Click="OnFindRefs">
                                         <MenuItem.Icon>
                                             <Viewbox Width="16" Height="16">
                                                 <Canvas Width="24" Height="24">
@@ -599,7 +599,7 @@
                                             </Viewbox>
                                         </MenuItem.Icon>
                                     </MenuItem>
-                                    <MenuItem Header="View Decompiled Blueprint (Pseudo C++)" Command="{Binding DataContext.mainApplication.RightClickMenuCommand}">
+                                    <MenuItem Header="{loc:Loc Common_ViewDecompiledBlueprint}" Command="{Binding DataContext.mainApplication.RightClickMenuCommand}">
                                         <MenuItem.CommandParameter>
                                             <MultiBinding Converter="{x:Static converters:MultiParameterConverter.Instance}">
                                                 <Binding Source="Assets_Decompile" />
@@ -614,7 +614,7 @@
                                             </Viewbox>
                                         </MenuItem.Icon>
                                     </MenuItem>
-                                    <MenuItem Header="View Blueprint JSON (UAssetAPI)" Command="{Binding DataContext.mainApplication.RightClickMenuCommand}">
+                                    <MenuItem Header="{loc:Loc Common_ViewBlueprintJson}" Command="{Binding DataContext.mainApplication.RightClickMenuCommand}">
                                         <MenuItem.CommandParameter>
                                             <MultiBinding Converter="{x:Static converters:MultiParameterConverter.Instance}">
                                                 <Binding Source="Assets_Decompile_Json" />
@@ -633,7 +633,7 @@
                                     <MenuItem Command="{Binding DataContext.mainApplication.RightClickMenuCommand}">
                                         <MenuItem.Header>
                                             <TextBlock>
-                                                <Run Text="Export Raw Data" />
+                                                <Run Text="{loc:Loc Common_ExportRawData}" />
                                                 <Run Text="{Binding DataContext.SelectedItem.Extension, RelativeSource={RelativeSource AncestorType=ContextMenu}, StringFormat=' (.{0})', Mode=OneWay}" />
                                             </TextBlock>
                                         </MenuItem.Header>
@@ -651,7 +651,7 @@
                                             </Viewbox>
                                         </MenuItem.Icon>
                                     </MenuItem>
-                                    <MenuItem Header="Save Properties (.json)" Command="{Binding DataContext.mainApplication.RightClickMenuCommand}">
+                                    <MenuItem Header="{loc:Loc Common_SavePropertiesJson}" Command="{Binding DataContext.mainApplication.RightClickMenuCommand}">
                                         <MenuItem.CommandParameter>
                                             <MultiBinding Converter="{x:Static converters:MultiParameterConverter.Instance}">
                                                 <Binding Source="Save_Properties" />
@@ -666,7 +666,7 @@
                                             </Viewbox>
                                         </MenuItem.Icon>
                                     </MenuItem>
-                                    <MenuItem Header="Save Texture" Command="{Binding DataContext.mainApplication.RightClickMenuCommand}">
+                                    <MenuItem Header="{loc:Loc Common_SaveTexture}" Command="{Binding DataContext.mainApplication.RightClickMenuCommand}">
                                         <MenuItem.CommandParameter>
                                             <MultiBinding Converter="{x:Static converters:MultiParameterConverter.Instance}">
                                                 <Binding Source="Save_Textures" />
@@ -681,7 +681,7 @@
                                             </Viewbox>
                                         </MenuItem.Icon>
                                     </MenuItem>
-                                    <MenuItem Header="Save Model" Command="{Binding DataContext.mainApplication.RightClickMenuCommand}">
+                                    <MenuItem Header="{loc:Loc Common_SaveModel}" Command="{Binding DataContext.mainApplication.RightClickMenuCommand}">
                                         <MenuItem.CommandParameter>
                                             <MultiBinding Converter="{x:Static converters:MultiParameterConverter.Instance}">
                                                 <Binding Source="Save_Models" />
@@ -696,7 +696,7 @@
                                             </Viewbox>
                                         </MenuItem.Icon>
                                     </MenuItem>
-                                    <MenuItem Header="Save Animation" Command="{Binding DataContext.mainApplication.RightClickMenuCommand}">
+                                    <MenuItem Header="{loc:Loc Common_SaveAnimation}" Command="{Binding DataContext.mainApplication.RightClickMenuCommand}">
                                         <MenuItem.CommandParameter>
                                             <MultiBinding Converter="{x:Static converters:MultiParameterConverter.Instance}">
                                                 <Binding Source="Save_Animations" />
@@ -711,7 +711,7 @@
                                             </Viewbox>
                                         </MenuItem.Icon>
                                     </MenuItem>
-                                    <MenuItem Header="Save Audio" Command="{Binding DataContext.mainApplication.RightClickMenuCommand}">
+                                    <MenuItem Header="{loc:Loc Common_SaveAudio}" Command="{Binding DataContext.mainApplication.RightClickMenuCommand}">
                                         <MenuItem.CommandParameter>
                                             <MultiBinding Converter="{x:Static converters:MultiParameterConverter.Instance}">
                                                 <Binding Source="Save_Audio" />
@@ -727,7 +727,7 @@
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <Separator />
-                                    <MenuItem Header="Copy">
+                                    <MenuItem Header="{loc:Loc Common_Copy}">
                                         <MenuItem.Icon>
                                             <Viewbox Width="16" Height="16">
                                                 <Canvas Width="24" Height="24">
@@ -735,7 +735,7 @@
                                                 </Canvas>
                                             </Viewbox>
                                         </MenuItem.Icon>
-                                        <MenuItem Header="Package Path" Command="{Binding DataContext.mainApplication.CopyCommand}">
+                                        <MenuItem Header="{loc:Loc Common_PackagePath}" Command="{Binding DataContext.mainApplication.CopyCommand}">
                                             <MenuItem.CommandParameter>
                                                 <MultiBinding Converter="{x:Static converters:MultiParameterConverter.Instance}">
                                                     <Binding Source="File_Path" />
@@ -743,7 +743,7 @@
                                                 </MultiBinding>
                                             </MenuItem.CommandParameter>
                                         </MenuItem>
-                                        <MenuItem Header="Package Name" Command="{Binding DataContext.mainApplication.CopyCommand}">
+                                        <MenuItem Header="{loc:Loc Common_PackageName}" Command="{Binding DataContext.mainApplication.CopyCommand}">
                                             <MenuItem.CommandParameter>
                                                 <MultiBinding Converter="{x:Static converters:MultiParameterConverter.Instance}">
                                                     <Binding Source="File_Name" />
@@ -751,7 +751,7 @@
                                                 </MultiBinding>
                                             </MenuItem.CommandParameter>
                                         </MenuItem>
-                                        <MenuItem Header="Directory Path" Command="{Binding DataContext.mainApplication.CopyCommand}">
+                                        <MenuItem Header="{loc:Loc Common_DirectoryPath}" Command="{Binding DataContext.mainApplication.CopyCommand}">
                                             <MenuItem.CommandParameter>
                                                 <MultiBinding Converter="{x:Static converters:MultiParameterConverter.Instance}">
                                                     <Binding Source="Directory_Path" />
@@ -759,7 +759,7 @@
                                                 </MultiBinding>
                                             </MenuItem.CommandParameter>
                                         </MenuItem>
-                                        <MenuItem Header="Package Path w/o Extension" Command="{Binding DataContext.mainApplication.CopyCommand}">
+                                        <MenuItem Header="{loc:Loc Common_PackagePathNoExt}" Command="{Binding DataContext.mainApplication.CopyCommand}">
                                             <MenuItem.CommandParameter>
                                                 <MultiBinding Converter="{x:Static converters:MultiParameterConverter.Instance}">
                                                     <Binding Source="File_Path_No_Extension" />
@@ -767,7 +767,7 @@
                                                 </MultiBinding>
                                             </MenuItem.CommandParameter>
                                         </MenuItem>
-                                        <MenuItem Header="Package Name w/o Extension" Command="{Binding DataContext.mainApplication.CopyCommand}">
+                                        <MenuItem Header="{loc:Loc Common_PackageNameNoExt}" Command="{Binding DataContext.mainApplication.CopyCommand}">
                                             <MenuItem.CommandParameter>
                                                 <MultiBinding Converter="{x:Static converters:MultiParameterConverter.Instance}">
                                                     <Binding Source="File_Name_No_Extension" />

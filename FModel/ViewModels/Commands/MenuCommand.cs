@@ -45,6 +45,9 @@ public class MenuCommand : ViewModelCommand<ApplicationViewModel>
             case "Views_AudioPlayer":
                 DockPanels.ShowAudioPlayer();
                 break;
+            case "Views_PackWorkspace":
+                DockPanels.ShowPackWorkspace();
+                break;
             case "Views_ImageMerger":
                 DockPanels.ShowImageMerger();
                 break;

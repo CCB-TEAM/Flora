@@ -164,7 +164,7 @@ public class Texture : IDisposable
 
     private void ProcessPixels(string texture, TextureTarget target)
     {
-        var info = Application.GetResourceStream(new Uri($"/FModel;component/Resources/{texture}.png", UriKind.Relative));
+        var info = Application.GetResourceStream(new Uri($"/Flora;component/Resources/{texture}.png", UriKind.Relative));
         using var img = Image.Load<Rgba32>(info.Stream);
         Width = img.Width;
         Height = img.Height;

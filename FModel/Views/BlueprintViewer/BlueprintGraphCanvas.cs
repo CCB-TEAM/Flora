@@ -31,6 +31,7 @@ public class BlueprintGraphCanvas : SKElement
     private static readonly SKPaint NodeInferredMarker = GraphStyle.Fill(255, 170, 0);
     private static readonly SKPaint NodeValue = GraphStyle.Fill(34, 34, 34);
     private static readonly SKPaint NodeValueBorder = GraphStyle.Stroke(1, 153, 153, 153);
+    private static readonly SKPaint NodeValueEditedBorder = GraphStyle.Stroke(2, 240, 198, 116);
     private static readonly SKPaint Selection = GraphStyle.Fill(30, 50, 80, 70);
     private static readonly SKPaint SelectionBorder = GraphStyle.Stroke(1, 30, 80, 150);
     private static readonly SKPaint TextPaint = GraphStyle.Fill(255, 255, 255);
@@ -50,6 +51,28 @@ public class BlueprintGraphCanvas : SKElement
     public GraphPin? SelectedPin { get; private set; }
 
     public event Action? SelectionChanged;
+
+    /// <summary>A left click landed on the value box of an unconnected input pin; the rectangle is in view coordinates.</summary>
+    public event Action<GraphPin, Rect>? PinValueClicked;
+
+    public float ViewScale => _scaling;
+
+    /// <summary>A right click (without panning) landed on a node (and maybe one of its pins); the node is selected first. The point is in view coordinates.</summary>
+    public event Action<BPNode, GraphPin?, Point>? NodeContextRequested;
+
+    /// <summary>When set, dragging from a pin to another pin asks for a connection and Alt+click on a pin asks to break its links.</summary>
+    public bool AllowWireEditing { get; set; }
+
+    /// <summary>A wire was dragged from the first pin and dropped on the second.</summary>
+    public event Action<GraphPin, GraphPin>? WireDropped;
+
+    /// <summary>Alt+click on a pin.</summary>
+    public event Action<GraphPin>? PinBreakRequested;
+
+    private GraphPin? _wireDragFrom;
+    private static readonly SKPaint EditedWire = GraphStyle.Stroke(3, 240, 198, 116);
+
+    private Point _rightPressPosition;
 
     private Vector _translation;
     private float _scaling = 1;
@@ -81,22 +104,35 @@ public class BlueprintGraphCanvas : SKElement
 
         if (graph != null)
         {
-            var seen = new HashSet<(GraphPin, GraphPin)>();
-            foreach (var node in graph.Nodes)
-            {
-                _nodes.Add(node);
-                foreach (var pin in node.Output)
-                    foreach (var target in pin.LinkedTo)
-                        if (seen.Add((pin, target))) _connections.Add((pin, target));
-                foreach (var pin in node.Input)
-                    foreach (var source in pin.LinkedTo)
-                        if (seen.Add((source, pin))) _connections.Add((source, pin));
-            }
+            _nodes.AddRange(graph.Nodes);
+            CollectConnections();
         }
 
         _translation = new Vector(0, 0);
         _scaling = 1;
         InvalidateVisual();
+    }
+
+    /// <summary>Reads the links of the nodes again (after wires were edited) and redraws.</summary>
+    public void RebuildConnections()
+    {
+        CollectConnections();
+        InvalidateVisual();
+    }
+
+    private void CollectConnections()
+    {
+        _connections.Clear();
+        var seen = new HashSet<(GraphPin, GraphPin)>();
+        foreach (var node in _nodes)
+        {
+            foreach (var pin in node.Output)
+                foreach (var target in pin.LinkedTo)
+                    if (seen.Add((pin, target))) _connections.Add((pin, target));
+            foreach (var pin in node.Input)
+                foreach (var source in pin.LinkedTo)
+                    if (seen.Add((source, pin))) _connections.Add((source, pin));
+        }
     }
 
     /// <summary>Pan so the node sits in the upper left third of the view, at 100% zoom.</summary>
@@ -137,6 +173,38 @@ public class BlueprintGraphCanvas : SKElement
         Focus();
         _mousePosOnGraphOnPress = _mousePosOnGraph;
 
+        if (e.ChangedButton == MouseButton.Left && TryHitValueBox(e.GetPosition(this), out var hitNode, out var hitPin, out var hitRect))
+        {
+            // clicking a value box selects its pin and asks to edit it, without starting a node drag
+            if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+                SelectedNodes.Clear();
+            if (!SelectedNodes.Contains(hitNode))
+                SelectedNodes.Add(hitNode);
+            SelectedPin = hitPin;
+            SelectionChanged?.Invoke();
+            InvalidateVisual();
+            PinValueClicked?.Invoke(hitPin, hitRect);
+            return;
+        }
+
+        if (e.ChangedButton == MouseButton.Left && AllowWireEditing && MouseOverPin is { } pressedPin)
+        {
+            if (Keyboard.Modifiers.HasFlag(ModifierKeys.Alt))
+            {
+                UpdateNodesSelection();
+                PinBreakRequested?.Invoke(pressedPin);
+                InvalidateVisual();
+                return;
+            }
+
+            // a press on a pin selects it and starts dragging a wire from it
+            UpdateNodesSelection();
+            _wireDragFrom = pressedPin;
+            CaptureMouse();
+            InvalidateVisual();
+            return;
+        }
+
         if (e.ChangedButton == MouseButton.Left)
         {
             UpdateNodesSelection();
@@ -147,10 +215,44 @@ public class BlueprintGraphCanvas : SKElement
         else if (e.ChangedButton is MouseButton.Right or MouseButton.Middle)
         {
             _isPanning = true;
+            if (e.ChangedButton == MouseButton.Right)
+                _rightPressPosition = e.GetPosition(this);
         }
 
         CaptureMouse();
         InvalidateVisual();
+    }
+
+    private bool TryHitValueBox(Point position, out BPNode node, out GraphPin pin, out Rect screenRect)
+    {
+        node = null!;
+        pin = null!;
+        screenRect = default;
+        if (_scaling <= 0.2f)
+            return false;
+
+        var graphX = (position.X + _translation.X) / _scaling;
+        var graphY = (position.Y + _translation.Y) / _scaling;
+        var hitNode = _nodes.LastOrDefault(o => graphX > o.X && graphY > o.Y && graphX < o.Right && graphY < o.Bottom);
+        if (hitNode == null)
+            return false;
+
+        foreach (var candidate in hitNode.Input)
+        {
+            if (!HasValueBox(candidate))
+                continue;
+
+            var local = ValueBoxLocal(candidate, hitNode, out _);
+            if (graphX < hitNode.X + local.Left || graphX > hitNode.X + local.Right || graphY < hitNode.Y + local.Top || graphY > hitNode.Y + local.Bottom)
+                continue;
+
+            node = hitNode;
+            pin = candidate;
+            screenRect = new Rect((hitNode.X + local.Left) * _scaling - _translation.X, (hitNode.Y + local.Top) * _scaling - _translation.Y,
+                local.Width * _scaling, local.Height * _scaling);
+            return true;
+        }
+        return false;
     }
 
     protected override void OnMouseUp(MouseButtonEventArgs e)
@@ -158,6 +260,38 @@ public class BlueprintGraphCanvas : SKElement
         base.OnMouseUp(e);
         if (_isSelecting)
             SelectionChanged?.Invoke();
+
+        if (_wireDragFrom is { } from && e.ChangedButton == MouseButton.Left)
+        {
+            _wireDragFrom = null;
+            ReleaseMouseCapture();
+            InvalidateVisual();
+            if (MouseOverPin is { } to && !ReferenceEquals(to, from))
+                WireDropped?.Invoke(from, to);
+            return;
+        }
+
+        var position = e.GetPosition(this);
+        if (e.ChangedButton == MouseButton.Right && (position - _rightPressPosition).Length < 4)
+        {
+            var graphX = (position.X + _translation.X) / _scaling;
+            var graphY = (position.Y + _translation.Y) / _scaling;
+            if (_nodes.LastOrDefault(o => graphX > o.X && graphY > o.Y && graphX < o.Right && graphY < o.Bottom) is { } node)
+            {
+                if (!SelectedNodes.Contains(node))
+                {
+                    SelectedNodes.Clear();
+                    SelectedNodes.Add(node);
+                    SelectedPin = null;
+                    SelectionChanged?.Invoke();
+                }
+                _isPanning = false;
+                ReleaseMouseCapture();
+                InvalidateVisual();
+                NodeContextRequested?.Invoke(node, MouseOverPin, position);
+                return;
+            }
+        }
 
         _isPanning = false;
         _isDraggingNode = false;
@@ -288,7 +422,7 @@ public class BlueprintGraphCanvas : SKElement
             if (!IsLineInView(source.X, source.Y, target.X, target.Y, width, height))
                 continue;
 
-            var paint = GraphStyle.GetPinStroke(source.PinType.PinCategory);
+            var paint = source.IsEdited || target.IsEdited ? EditedWire : GraphStyle.GetPinStroke(source.PinType.PinCategory);
             if (_scaling > 0.1)
             {
                 using var path = new SKPath();
@@ -315,6 +449,18 @@ public class BlueprintGraphCanvas : SKElement
 
         if (_mouseOverNode != null && MouseOverPin != null)
             RenderPinHighlight(canvas, MouseOverPin);
+
+        if (_wireDragFrom is { } dragged)
+        {
+            // the wire being dragged follows the mouse
+            var endX = (float) _mousePosOnGraph.X;
+            var endY = (float) _mousePosOnGraph.Y;
+            var direction = dragged.IsOutput ? 70 : -70;
+            using var path = new SKPath();
+            path.MoveTo(dragged.X, dragged.Y);
+            path.CubicTo(dragged.X + direction, dragged.Y, endX - direction, endY, endX, endY);
+            canvas.DrawPath(path, EditedWire);
+        }
 
         canvas.Restore();
 
@@ -477,15 +623,25 @@ public class BlueprintGraphCanvas : SKElement
             nameWidth = GraphStyle.TextFont.Measure(pin.PinFriendlyName ?? "") + 35;
         }
 
-        if (pin is { IsInput: true, IsConnected: false } && pin.PinType.PinCategory != PinType.exec)
+        if (HasValueBox(pin))
         {
-            var formatted = JsonConvert.SerializeObject(pin.Value ?? "").Trim('"');
-            var valueWidth = Math.Clamp(GraphStyle.TextFont.Measure(formatted), 30, 400) + 10;
-            var rect = SKRect.Create(nameWidth + 5, connectorY - 10, valueWidth, 20);
+            var rect = ValueBoxLocal(pin, node, out var formatted);
             canvas.DrawRoundRect(rect, 5, 5, NodeValue);
-            canvas.DrawRoundRect(rect, 5, 5, NodeValueBorder);
-            canvas.DrawText2(formatted.Length > 55 ? $"{formatted[..55]}..." : formatted, nameWidth + 10, textY, SKTextAlign.Left, GraphStyle.TextFont, TextPaint);
+            canvas.DrawRoundRect(rect, 5, 5, pin.IsEdited ? NodeValueEditedBorder : NodeValueBorder);
+            canvas.DrawText2(formatted.Length > 55 ? $"{formatted[..55]}..." : formatted, rect.Left + 5, textY, SKTextAlign.Left, GraphStyle.TextFont, TextPaint);
         }
+    }
+
+    private static bool HasValueBox(GraphPin pin) =>
+        pin is { IsInput: true, IsConnected: false, IsHidden: false } && pin.PinType.PinCategory != PinType.exec;
+
+    /// <summary>The rectangle of the pin's value box in node coordinates.</summary>
+    private static SKRect ValueBoxLocal(GraphPin pin, BPNode node, out string formatted)
+    {
+        var nameWidth = pin.IsNameHidden ? 35f : GraphStyle.TextFont.Measure(pin.PinFriendlyName ?? "") + 35;
+        formatted = JsonConvert.SerializeObject(pin.Value ?? "").Trim('"');
+        var valueWidth = Math.Clamp(GraphStyle.TextFont.Measure(formatted), 30, 400) + 10;
+        return SKRect.Create(nameWidth + 5, pin.Y - node.Y - 10, valueWidth, 20);
     }
 
     private void RenderGrid(SKCanvas canvas, float width, float height)

@@ -40,6 +40,7 @@ public class FStatus : ViewModel
 
     public void UpdateStatusLabel(string label, string prefix = null)
     {
-        Label = Kind == EStatusKind.Loading ? $"{prefix ?? Kind.ToString()} {label}".Trim() : Kind.ToString();
+        var kind = FModel.Localization.LocalizationManager.Instance.Get($"Status_{Kind}");
+        Label = Kind == EStatusKind.Loading ? $"{prefix ?? kind} {label}".Trim() : kind;
     }
 }

@@ -46,6 +46,12 @@ namespace FModel.BlueprintGraph.Nodes
         public bool IsSignatureInferred;
     
         public ChangeStatus ChangeStatus;
+
+        /// <summary>Path of the class (or struct/interface) that declares what the node uses, e.g. a called function or a variable.</summary>
+        public virtual string? DefinitionOwner => null;
+
+        /// <summary>Name of the declared member (function or variable) in <see cref="DefinitionOwner"/>.</summary>
+        public virtual string? DefinitionMember => null;
         
         public string NodeJson => JsonConvert.SerializeObject(NodeInstr, Formatting.Indented);
 

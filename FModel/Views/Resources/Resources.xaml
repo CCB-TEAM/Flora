@@ -14,6 +14,11 @@
                     xmlns:adonisConverters="clr-namespace:AdonisUI.Converters;assembly=AdonisUI"
                     xmlns:adonisExtensions="clr-namespace:AdonisUI.Extensions;assembly=AdonisUI"
                     xmlns:adonisControls="clr-namespace:AdonisUI.Controls;assembly=AdonisUI">
+    <!-- enum values in the interface language (Enum_<Type>_<Name> resources, else the description) -->
+    <DataTemplate x:Key="LocalizedEnumTemplate">
+        <TextBlock Text="{Binding Converter={x:Static converters:EnumToStringConverter.Instance}}" />
+    </DataTemplate>
+
     <Style x:Key="TabItemFillSpace" TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
         <Setter Property="Width">
             <Setter.Value>
@@ -124,17 +129,17 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
-                        <Image x:Name="ListImage" Source="/FModel;component/Resources/archive.png"
+                        <Image x:Name="ListImage" Source="/Flora;component/Resources/archive.png"
                                Width="16" Height="16" HorizontalAlignment="Center" Margin="0 0 3 0" />
                         <TextBlock Grid.Column="1" HorizontalAlignment="Left" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
                         <TextBlock Grid.Column="3" HorizontalAlignment="Right" Text="{Binding Length, Converter={x:Static converters:SizeToStringConverter.Instance}}" />
                     </Grid>
                     <DataTemplate.Triggers>
                         <DataTrigger Binding="{Binding IsEnabled}" Value="True">
-                            <Setter TargetName="ListImage" Property="Source" Value="/FModel;component/Resources/archive_enabled.png" />
+                            <Setter TargetName="ListImage" Property="Source" Value="/Flora;component/Resources/archive_enabled.png" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding IsEnabled}" Value="False">
-                            <Setter TargetName="ListImage" Property="Source" Value="/FModel;component/Resources/archive_disabled.png" />
+                            <Setter TargetName="ListImage" Property="Source" Value="/Flora;component/Resources/archive_disabled.png" />
                         </DataTrigger>
                     </DataTemplate.Triggers>
                 </DataTemplate>
@@ -146,7 +151,7 @@
                     <Setter.Value>
                         <ControlTemplate>
                             <Grid>
-                                <TextBlock Text="No archives found in the specified directory" FontWeight="SemiBold" TextAlignment="Center"
+                                <TextBlock Text="{loc:Loc Common_NoArchivesFoundInTheSpecifiedDirectory}" FontWeight="SemiBold" TextAlignment="Center"
                                            Foreground="{DynamicResource {x:Static adonisUi:Brushes.ErrorBrush}}" />
                             </Grid>
                         </ControlTemplate>
@@ -204,7 +209,7 @@
                     <Setter.Value>
                         <ControlTemplate>
                             <Grid>
-                                <TextBlock Text="No audio to play at the moment" FontWeight="SemiBold" TextAlignment="Center"
+                                <TextBlock Text="{loc:Loc Common_NoAudioToPlayAtTheMoment}" FontWeight="SemiBold" TextAlignment="Center"
                                            Foreground="{DynamicResource {x:Static adonisUi:Brushes.ErrorBrush}}" />
                             </Grid>
                         </ControlTemplate>
@@ -234,7 +239,7 @@
                 <HierarchicalDataTemplate ItemsSource="{Binding FoldersView, IsAsync=True}">
                     <StackPanel Orientation="Horizontal">
                         <Image x:Name="TreeImage"
-                               Source="/FModel;component/Resources/folder.png"
+                               Source="/Flora;component/Resources/folder.png"
                                Width="16"
                                Height="16"
                                HorizontalAlignment="Center"
@@ -276,7 +281,7 @@
                                      Value="0">
                             <Setter TargetName="TreeImage"
                                     Property="Source"
-                                    Value="/FModel;component/Resources/empty_folder.png" />
+                                    Value="/Flora;component/Resources/empty_folder.png" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding AssetsList.Assets.Count}"
                                      Value="0">
@@ -288,217 +293,217 @@
                                      Value="Config">
                             <Setter TargetName="TreeImage"
                                     Property="Source"
-                                    Value="/FModel;component/Resources/gear.png" />
+                                    Value="/Flora;component/Resources/gear.png" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Header}"
                                      Value="Plugins">
                             <Setter TargetName="TreeImage"
                                     Property="Source"
-                                    Value="/FModel;component/Resources/puzzle.png" />
+                                    Value="/Flora;component/Resources/puzzle.png" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Header}"
                                      Value="Windows">
                             <Setter TargetName="TreeImage"
                                     Property="Source"
-                                    Value="/FModel;component/Resources/windows.png" />
+                                    Value="/Flora;component/Resources/windows.png" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Header}"
                                      Value="Android">
                             <Setter TargetName="TreeImage"
                                     Property="Source"
-                                    Value="/FModel;component/Resources/android.png" />
+                                    Value="/Flora;component/Resources/android.png" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Header}"
                                      Value="IOS">
                             <Setter TargetName="TreeImage"
                                     Property="Source"
-                                    Value="/FModel;component/Resources/apple.png" />
+                                    Value="/Flora;component/Resources/apple.png" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Header}"
                                      Value="Mac">
                             <Setter TargetName="TreeImage"
                                     Property="Source"
-                                    Value="/FModel;component/Resources/apple.png" />
+                                    Value="/Flora;component/Resources/apple.png" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Header}"
                                      Value="Linux">
                             <Setter TargetName="TreeImage"
                                     Property="Source"
-                                    Value="/FModel;component/Resources/linux.png" />
+                                    Value="/Flora;component/Resources/linux.png" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Header}"
                                      Value="LinuxAArch64">
                             <Setter TargetName="TreeImage"
                                     Property="Source"
-                                    Value="/FModel;component/Resources/linux.png" />
+                                    Value="/Flora;component/Resources/linux.png" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Header}"
                                      Value="Unix">
                             <Setter TargetName="TreeImage"
                                     Property="Source"
-                                    Value="/FModel;component/Resources/unix.png" />
+                                    Value="/Flora;component/Resources/unix.png" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Header}"
                                      Value="Weapons">
                             <Setter TargetName="TreeImage"
                                     Property="Source"
-                                    Value="/FModel;component/Resources/weapon.png" />
+                                    Value="/Flora;component/Resources/weapon.png" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Header}"
                                      Value="Localization">
                             <Setter TargetName="TreeImage"
                                     Property="Source"
-                                    Value="/FModel;component/Resources/localization.png" />
+                                    Value="/Flora;component/Resources/localization.png" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Header}"
                                      Value="Internationalization">
                             <Setter TargetName="TreeImage"
                                     Property="Source"
-                                    Value="/FModel;component/Resources/localization.png" />
+                                    Value="/Flora;component/Resources/localization.png" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Header}"
                                      Value="UI">
                             <Setter TargetName="TreeImage"
                                     Property="Source"
-                                    Value="/FModel;component/Resources/ui.png" />
+                                    Value="/Flora;component/Resources/ui.png" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Header}"
                                      Value="Sounds">
                             <Setter TargetName="TreeImage"
                                     Property="Source"
-                                    Value="/FModel;component/Resources/sound.png" />
+                                    Value="/Flora;component/Resources/sound.png" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Header}"
                                      Value="2dAssets">
                             <Setter TargetName="TreeImage"
                                     Property="Source"
-                                    Value="/FModel;component/Resources/texture.png" />
+                                    Value="/Flora;component/Resources/texture.png" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Header}"
                                      Value="Textures">
                             <Setter TargetName="TreeImage"
                                     Property="Source"
-                                    Value="/FModel;component/Resources/texture.png" />
+                                    Value="/Flora;component/Resources/texture.png" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Header}"
                                      Value="Engine">
                             <Setter TargetName="TreeImage"
                                     Property="Source"
-                                    Value="/FModel;component/Resources/engine.png" />
+                                    Value="/Flora;component/Resources/engine.png" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Header}"
                                      Value="EngineContent">
                             <Setter TargetName="TreeImage"
                                     Property="Source"
-                                    Value="/FModel;component/Resources/engine.png" />
+                                    Value="/Flora;component/Resources/engine.png" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Header}"
                                      Value="Platforms">
                             <Setter TargetName="TreeImage"
                                     Property="Source"
-                                    Value="/FModel;component/Resources/pc.png" />
+                                    Value="/Flora;component/Resources/pc.png" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Header}"
                                      Value="Fortnite">
                             <Setter TargetName="TreeImage"
                                     Property="Source"
-                                    Value="/FModel;component/Resources/fortnite.png" />
+                                    Value="/Flora;component/Resources/fortnite.png" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Header}"
                                      Value="FortniteGame">
                             <Setter TargetName="TreeImage"
                                     Property="Source"
-                                    Value="/FModel;component/Resources/fortnitebr.png" />
+                                    Value="/Flora;component/Resources/fortnitebr.png" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Header}"
                                      Value="WorldExplorers">
                             <Setter TargetName="TreeImage"
                                     Property="Source"
-                                    Value="/FModel;component/Resources/battlebreakers.png" />
+                                    Value="/Flora;component/Resources/battlebreakers.png" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Header}"
                                      Value="OakGame">
                             <Setter TargetName="TreeImage"
                                     Property="Source"
-                                    Value="/FModel;component/Resources/borderlands.png" />
+                                    Value="/Flora;component/Resources/borderlands.png" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Header}"
                                      Value="ShooterGame">
                             <Setter TargetName="TreeImage"
                                     Property="Source"
-                                    Value="/FModel;component/Resources/valorant.png" />
+                                    Value="/Flora;component/Resources/valorant.png" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Header}"
                                      Value="RogueCompany">
                             <Setter TargetName="TreeImage"
                                     Property="Source"
-                                    Value="/FModel;component/Resources/roguecompany.png" />
+                                    Value="/Flora;component/Resources/roguecompany.png" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Header}"
                                      Value="g3">
                             <Setter TargetName="TreeImage"
                                     Property="Source"
-                                    Value="/FModel;component/Resources/spellbreak.png" />
+                                    Value="/Flora;component/Resources/spellbreak.png" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Header}"
                                      Value="SwGame">
                             <Setter TargetName="TreeImage"
                                     Property="Source"
-                                    Value="/FModel;component/Resources/fallenorder.png" />
+                                    Value="/Flora;component/Resources/fallenorder.png" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Header}"
                                      Value="Prospect">
                             <Setter TargetName="TreeImage"
                                     Property="Source"
-                                    Value="/FModel;component/Resources/thecycle.png" />
+                                    Value="/Flora;component/Resources/thecycle.png" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Header}"
                                      Value="Materials">
                             <Setter TargetName="TreeImage"
                                     Property="Source"
-                                    Value="/FModel;component/Resources/materialicon.png" />
+                                    Value="/Flora;component/Resources/materialicon.png" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Header, Converter={x:Static converters:CaseInsensitiveStringEqualsConverter.Instance}, ConverterParameter='Blueprints'}"
                                      Value="True">
                             <Setter TargetName="TreeImage"
                                     Property="Source"
-                                    Value="/FModel;component/Resources/blueprint.png" />
+                                    Value="/Flora;component/Resources/blueprint.png" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Header}"
                                      Value="Cinematics">
                             <Setter TargetName="TreeImage"
                                     Property="Source"
-                                    Value="/FModel;component/Resources/cinematics.png" />
+                                    Value="/Flora;component/Resources/cinematics.png" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Header}"
                                      Value="Movies">
                             <Setter TargetName="TreeImage"
                                     Property="Source"
-                                    Value="/FModel;component/Resources/cinematics.png" />
+                                    Value="/Flora;component/Resources/cinematics.png" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Header}"
                                      Value="Audio">
                             <Setter TargetName="TreeImage"
                                     Property="Source"
-                                    Value="/FModel;component/Resources/sound.png" />
+                                    Value="/Flora;component/Resources/sound.png" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Header}"
                                      Value="Creative">
                             <Setter TargetName="TreeImage"
                                     Property="Source"
-                                    Value="/FModel;component/Resources/creative.png" />
+                                    Value="/Flora;component/Resources/creative.png" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Header}"
                                      Value="Athena">
                             <Setter TargetName="TreeImage"
                                     Property="Source"
-                                    Value="/FModel;component/Resources/athena.png" />
+                                    Value="/Flora;component/Resources/athena.png" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Header, Converter={x:Static converters:CaseInsensitiveStringEqualsConverter.Instance}, ConverterParameter='StateOfDecay2'}"
                                      Value="True">
                             <Setter TargetName="TreeImage"
                                     Property="Source"
-                                    Value="/FModel;component/Resources/stateofdecay2.png" />
+                                    Value="/Flora;component/Resources/stateofdecay2.png" />
                         </DataTrigger>
                     </HierarchicalDataTemplate.Triggers>
                 </HierarchicalDataTemplate>
@@ -676,7 +681,7 @@
                     <Setter.Value>
                         <ControlTemplate>
                             <Grid>
-                                <TextBlock Text="No folders found in archives, make sure you loaded at least one"
+                                <TextBlock Text="{loc:Loc Common_NoFoldersFoundInArchivesMakeSureYouLoade}"
                                            FontWeight="SemiBold"
                                            TextAlignment="Center"
                                            Foreground="{DynamicResource {x:Static adonisUi:Brushes.ErrorBrush}}" />
@@ -709,7 +714,7 @@
                             </TextBlock.Width>
                         </TextBlock>
                         <Button adonisExtensions:CornerRadiusExtension.CornerRadius="5" Width="11" Height="11" Margin="10 0 -2.5 -1"
-                                DockPanel.Dock="Right" ToolTip="Close Tab" Command="{Binding TabCommand}" CommandParameter="Close_Tab" />
+                                DockPanel.Dock="Right" ToolTip="{loc:Loc Common_CloseTab}" Command="{Binding TabCommand}" CommandParameter="Close_Tab" />
                     </DockPanel>
                 </DataTemplate>
             </Setter.Value>
@@ -738,8 +743,8 @@
                                 </Image.InputBindings>
                                 <Image.ContextMenu>
                                     <ContextMenu DataContext="{Binding PlacementTarget, RelativeSource={RelativeSource Self}}">
-                                        <MenuItem Header="Disable Alpha Channel" IsCheckable="True" IsChecked="{Binding DataContext.SelectedImage.NoAlpha}" />
-                                        <MenuItem Header="Open Image" Command="{Binding DataContext.ImageCommand}" CommandParameter="Open">
+                                        <MenuItem Header="{loc:Loc Common_DisableAlphaChannel}" IsCheckable="True" IsChecked="{Binding DataContext.SelectedImage.NoAlpha}" />
+                                        <MenuItem Header="{loc:Loc Common_OpenImage}" Command="{Binding DataContext.ImageCommand}" CommandParameter="Open">
                                             <MenuItem.Icon>
                                                 <Viewbox Width="16" Height="16">
                                                     <Canvas Width="24" Height="24">
@@ -750,7 +755,7 @@
                                                 </Viewbox>
                                             </MenuItem.Icon>
                                         </MenuItem>
-                                        <MenuItem Header="Copy Image" Command="{Binding DataContext.ImageCommand}" CommandParameter="Copy">
+                                        <MenuItem Header="{loc:Loc Common_CopyImage}" Command="{Binding DataContext.ImageCommand}" CommandParameter="Copy">
                                             <MenuItem.Icon>
                                                 <Viewbox Width="16" Height="16">
                                                     <Canvas Width="24" Height="24">
@@ -759,7 +764,7 @@
                                                 </Viewbox>
                                             </MenuItem.Icon>
                                         </MenuItem>
-                                        <MenuItem Header="Save Image" Command="{Binding DataContext.ImageCommand}" CommandParameter="Save">
+                                        <MenuItem Header="{loc:Loc Common_SaveImage}" Command="{Binding DataContext.ImageCommand}" CommandParameter="Save">
                                             <MenuItem.Icon>
                                                 <Viewbox Width="16" Height="16">
                                                     <Canvas Width="24" Height="24">
@@ -810,7 +815,7 @@
 
                             <Menu Background="{DynamicResource {x:Static adonisUi:Brushes.Layer3BackgroundBrush}}"
                                   HorizontalAlignment="Right" VerticalAlignment="Bottom" Grid.Column="1">
-                                <MenuItem Command="{Binding CUE4Parse.TabControl.AddTabCommand}" ToolTip="Add New Tab" Width="30">
+                                <MenuItem Command="{Binding CUE4Parse.TabControl.AddTabCommand}" ToolTip="{loc:Loc Common_AddNewTab}" Width="30">
                                     <MenuItem.Header>
                                         <Viewbox Width="16" Height="16" HorizontalAlignment="Center">
                                             <Canvas Width="24" Height="24">
@@ -883,7 +888,7 @@
                     <Setter Property="ContextMenu">
                         <Setter.Value>
                             <ContextMenu>
-                                <MenuItem Header="Close" Command="{Binding TabCommand}" CommandParameter="Close_Tab">
+                                <MenuItem Header="{loc:Loc Common_Close}" Command="{Binding TabCommand}" CommandParameter="Close_Tab">
                                     <MenuItem.Icon>
                                         <Viewbox Width="16" Height="16">
                                             <Canvas Width="24" Height="24">
@@ -892,7 +897,7 @@
                                         </Viewbox>
                                     </MenuItem.Icon>
                                 </MenuItem>
-                                <MenuItem Header="Close All Tabs" Command="{Binding TabCommand}" CommandParameter="Close_All_Tabs">
+                                <MenuItem Header="{loc:Loc Common_CloseAllTabs}" Command="{Binding TabCommand}" CommandParameter="Close_All_Tabs">
                                     <MenuItem.Icon>
                                         <Viewbox Width="16" Height="16">
                                             <Canvas Width="24" Height="24">
@@ -901,7 +906,7 @@
                                         </Viewbox>
                                     </MenuItem.Icon>
                                 </MenuItem>
-                                <MenuItem Header="Close Other Tabs" Command="{Binding TabCommand}" CommandParameter="Close_Other_Tabs">
+                                <MenuItem Header="{loc:Loc Common_CloseOtherTabs}" Command="{Binding TabCommand}" CommandParameter="Close_Other_Tabs">
                                     <MenuItem.Icon>
                                         <Viewbox Width="16" Height="16">
                                             <Canvas Width="24" Height="24">
@@ -911,7 +916,7 @@
                                     </MenuItem.Icon>
                                 </MenuItem>
                                 <Separator />
-                                <MenuItem Header="Find References" Command="{Binding TabCommand}"  CommandParameter="Find_References">
+                                <MenuItem Header="{loc:Loc Common_FindReferences}" Command="{Binding TabCommand}"  CommandParameter="Find_References">
                                     <MenuItem.Icon>
                                         <Viewbox Width="16" Height="16">
                                             <Canvas Width="24" Height="24">
@@ -936,7 +941,7 @@
                                 <MenuItem Command="{Binding TabCommand}" CommandParameter="Save_Data">
                                     <MenuItem.Header>
                                         <TextBlock>
-                                            <Run Text="Export Raw Data" />
+                                            <Run Text="{loc:Loc Common_ExportRawData}" />
                                             <Run Text="{Binding Entry.Extension, StringFormat=' (.{0})', Mode=OneWay}" />
                                         </TextBlock>
                                     </MenuItem.Header>
@@ -948,7 +953,7 @@
                                         </Viewbox>
                                     </MenuItem.Icon>
                                 </MenuItem>
-                                <MenuItem Header="Save Properties (.json)" Command="{Binding TabCommand}" CommandParameter="Save_Properties">
+                                <MenuItem Header="{loc:Loc Common_SavePropertiesJson}" Command="{Binding TabCommand}" CommandParameter="Save_Properties">
                                     <MenuItem.Icon>
                                         <Viewbox Width="16" Height="16">
                                             <Canvas Width="24" Height="24">
@@ -957,7 +962,7 @@
                                         </Viewbox>
                                     </MenuItem.Icon>
                                 </MenuItem>
-                                <MenuItem Header="Open Linked Blueprint JSON"
+                                <MenuItem Header="{loc:Loc Tab_OpenLinkedBlueprintJson}"
                                           Command="{Binding TabCommand}"
                                           CommandParameter="Open_Linked_Blueprint_Json">
                                     <MenuItem.Icon>
@@ -978,7 +983,7 @@
                                         </Style>
                                     </MenuItem.Style>
                                 </MenuItem>
-                                <MenuItem Header="Locate Current Statement In JSON"
+                                <MenuItem Header="{loc:Loc Tab_LocateCurrentStatementInJson}"
                                           Command="{Binding TabCommand}"
                                           CommandParameter="Locate_Current_Statement_In_Linked_View">
                                     <MenuItem.Icon>
@@ -1023,7 +1028,7 @@
                                         </Style>
                                     </MenuItem.Style>
                                 </MenuItem>
-                                <MenuItem Header="Open Linked Decompiled C++"
+                                <MenuItem Header="{loc:Loc Tab_OpenLinkedDecompiledCpp}"
                                           Command="{Binding TabCommand}"
                                           CommandParameter="Open_Linked_Blueprint_Cpp">
                                     <MenuItem.Icon>
@@ -1044,7 +1049,7 @@
                                         </Style>
                                     </MenuItem.Style>
                                 </MenuItem>
-                                <MenuItem Header="Locate Current Statement In C++"
+                                <MenuItem Header="{loc:Loc Tab_LocateCurrentStatementInCpp}"
                                           Command="{Binding TabCommand}"
                                           CommandParameter="Locate_Current_Statement_In_Linked_View">
                                     <MenuItem.Icon>
@@ -1065,7 +1070,7 @@
                                         </Style>
                                     </MenuItem.Style>
                                 </MenuItem>
-                                <MenuItem Header="Serialize JSON and Save .uasset/.uexp"
+                                <MenuItem Header="{loc:Loc Tab_SerializeJsonAndSaveAsset}"
                                           Command="{Binding TabCommand}"
                                           CommandParameter="Save_Blueprint_Json_To_Asset">
                                     <MenuItem.Icon>
@@ -1086,7 +1091,7 @@
                                         </Style>
                                     </MenuItem.Style>
                                 </MenuItem>
-                                <MenuItem Header="Save Blueprint JSON As..."
+                                <MenuItem Header="{loc:Loc Tab_SaveBlueprintJsonAs}"
                                           Command="{Binding TabCommand}"
                                           CommandParameter="Save_Blueprint_Json_As_Json">
                                     <MenuItem.Icon>
@@ -1107,7 +1112,7 @@
                                         </Style>
                                     </MenuItem.Style>
                                 </MenuItem>
-                                <MenuItem Header="Save Blueprint UAsset As..."
+                                <MenuItem Header="{loc:Loc Tab_SaveBlueprintUassetAs}"
                                           Command="{Binding TabCommand}"
                                           CommandParameter="Save_Blueprint_Json_As_Uasset">
                                     <MenuItem.Icon>
@@ -1128,7 +1133,7 @@
                                         </Style>
                                     </MenuItem.Style>
                                 </MenuItem>
-                                <MenuItem Header="Apply Pseudo Edits To JSON (UAssetKismet)"
+                                <MenuItem Header="{loc:Loc Common_ApplyPseudoEditsToJSONUAssetKismet}"
                                           Command="{Binding TabCommand}"
                                           CommandParameter="Apply_Restricted_Pseudo_Edits_To_Json">
                                     <MenuItem.Icon>
@@ -1149,28 +1154,7 @@
                                         </Style>
                                     </MenuItem.Style>
                                 </MenuItem>
-                                <MenuItem Header="Write Back (Loose) / Build Patch Pak"
-                                          Command="{Binding TabCommand}"
-                                          CommandParameter="Save_Blueprint_Json_Write_Back_Source">
-                                    <MenuItem.Icon>
-                                        <Viewbox Width="16" Height="16">
-                                            <Canvas Width="24" Height="24">
-                                                <Path Fill="{DynamicResource {x:Static adonisUi:Brushes.ForegroundBrush}}" Data="{StaticResource SaveIcon}" />
-                                            </Canvas>
-                                        </Viewbox>
-                                    </MenuItem.Icon>
-                                    <MenuItem.Style>
-                                        <Style TargetType="{x:Type MenuItem}" BasedOn="{StaticResource {x:Type MenuItem}}">
-                                            <Setter Property="Visibility" Value="Collapsed" />
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding TitleExtra}" Value="Blueprint JSON">
-                                                    <Setter Property="Visibility" Value="Visible" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </MenuItem.Style>
-                                </MenuItem>
-                                <MenuItem Header="Save Texture" Command="{Binding TabCommand}" CommandParameter="Save_Textures">
+                                <MenuItem Header="{loc:Loc Common_SaveTexture}" Command="{Binding TabCommand}" CommandParameter="Save_Textures">
                                     <MenuItem.Icon>
                                         <Viewbox Width="16" Height="16">
                                             <Canvas Width="24" Height="24">
@@ -1179,7 +1163,7 @@
                                         </Viewbox>
                                     </MenuItem.Icon>
                                 </MenuItem>
-                                <MenuItem Header="Save Model" Command="{Binding TabCommand}" CommandParameter="Save_Models">
+                                <MenuItem Header="{loc:Loc Common_SaveModel}" Command="{Binding TabCommand}" CommandParameter="Save_Models">
                                     <MenuItem.Icon>
                                         <Viewbox Width="16" Height="16">
                                             <Canvas Width="24" Height="24">
@@ -1188,7 +1172,7 @@
                                         </Viewbox>
                                     </MenuItem.Icon>
                                 </MenuItem>
-                                <MenuItem Header="Save Animation" Command="{Binding TabCommand}" CommandParameter="Save_Animations">
+                                <MenuItem Header="{loc:Loc Common_SaveAnimation}" Command="{Binding TabCommand}" CommandParameter="Save_Animations">
                                     <MenuItem.Icon>
                                         <Viewbox Width="16" Height="16">
                                             <Canvas Width="24" Height="24">
@@ -1197,7 +1181,7 @@
                                         </Viewbox>
                                     </MenuItem.Icon>
                                 </MenuItem>
-                                <MenuItem Header="Save Audio" Command="{Binding TabCommand}" CommandParameter="Save_Audio">
+                                <MenuItem Header="{loc:Loc Common_SaveAudio}" Command="{Binding TabCommand}" CommandParameter="Save_Audio">
                                     <MenuItem.Icon>
                                         <Viewbox Width="16" Height="16">
                                             <Canvas Width="24" Height="24">
@@ -1207,7 +1191,7 @@
                                     </MenuItem.Icon>
                                 </MenuItem>
                                 <Separator />
-                                <MenuItem Header="Open Properties" Command="{Binding TabCommand}" CommandParameter="Open_Properties">
+                                <MenuItem Header="{loc:Loc Common_OpenProperties}" Command="{Binding TabCommand}" CommandParameter="Open_Properties">
                                     <MenuItem.Icon>
                                         <Viewbox Width="16" Height="16">
                                             <Canvas Width="24" Height="24">
@@ -1218,7 +1202,7 @@
                                         </Viewbox>
                                     </MenuItem.Icon>
                                 </MenuItem>
-                                <MenuItem Header="Jump to Package Folder" Command="{Binding GoToCommand}" CommandParameter="{Binding Entry.Directory}">
+                                <MenuItem Header="{loc:Loc Common_JumpToPackageFolder}" Command="{Binding GoToCommand}" CommandParameter="{Binding Entry.Directory}">
                                     <MenuItem.Icon>
                                         <Viewbox Width="16" Height="16">
                                             <Canvas Width="24" Height="24">
@@ -1227,7 +1211,7 @@
                                         </Viewbox>
                                     </MenuItem.Icon>
                                 </MenuItem>
-                                <MenuItem Header="Copy Package Path" Command="{Binding TabCommand}" CommandParameter="Copy_Asset_Path">
+                                <MenuItem Header="{loc:Loc Common_CopyPackagePath}" Command="{Binding TabCommand}" CommandParameter="Copy_Asset_Path">
                                     <MenuItem.Icon>
                                         <Viewbox Width="16" Height="16">
                                             <Canvas Width="24" Height="24">
@@ -1939,7 +1923,7 @@
                                             </EventTrigger>
                                         </ContentControl.Triggers>
                                     </ContentControl>
-                                    <!-- <TextBlock Text="Game-Specific Versions" -->
+                                    <!-- <TextBlock Text="{loc:Loc Common_GameSpecificVersions}" -->
                                     <!--            Foreground="{TemplateBinding Foreground}" -->
                                     <!--            FontSize="9" -->
                                     <!--            TextAlignment="Center"> -->

@@ -31,11 +31,23 @@ namespace FModel.BlueprintGraph.Nodes
 
         public string Value = "";
 
+        /// <summary>The literal was changed in the editor and is not saved yet.</summary>
+        public bool IsEdited;
+
         /// <summary>
         /// Constant expressions of the function bytecode this literal value comes from (usually one; several when
         /// the compiler copied the literal, e.g. collapsed temporaries or inlined macros). Editing the pin rewrites all of them.
         /// </summary>
         public readonly List<CUE4Parse.UE4.Kismet.KismetExpression> SourceConstants = [];
+
+        /// <summary>Event exec output pins: the in-memory ubergraph offset the event's stub starts the event graph at.</summary>
+        public uint? EntryPoint;
+
+        /// <summary>Input pins: the bytecode argument the pin was decompiled from (what rewiring the pin replaces).</summary>
+        public CUE4Parse.UE4.Kismet.KismetExpression? ArgumentExpression;
+
+        /// <summary>Output pins: a plain variable read (local, instance...) that yields the pin's value, when the value is kept in a variable.</summary>
+        public CUE4Parse.UE4.Kismet.KismetExpression? SourceExpression;
 
         public void AddSourcesFrom(GraphPin other)
         {

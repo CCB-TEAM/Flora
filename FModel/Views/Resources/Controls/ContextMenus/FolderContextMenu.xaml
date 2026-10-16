@@ -1,11 +1,11 @@
-﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿<ResourceDictionary xmlns:loc="clr-namespace:FModel.Localization" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:adonisUi="clr-namespace:AdonisUI;assembly=AdonisUI"
                     xmlns:converters="clr-namespace:FModel.Views.Resources.Converters"
                     x:Class="FModel.Views.Resources.Controls.ContextMenus.FolderContextMenuDictionary">
     <ContextMenu x:Key="FolderContextMenu" x:Shared="False"
                  Opened="FolderContextMenu_OnOpened">
-        <MenuItem Header="Export Folder's Packages Raw Data (.uasset)"
+        <MenuItem Header="{loc:Loc FolderMenu_ExportRawData}"
                   Command="{Binding RightClickMenuCommand}">
             <MenuItem.CommandParameter>
                 <MultiBinding Converter="{x:Static converters:MultiParameterConverter.Instance}">
@@ -25,7 +25,7 @@
                 </Viewbox>
             </MenuItem.Icon>
         </MenuItem>
-        <MenuItem Header="Save Folder's Packages Properties (.json)"
+        <MenuItem Header="{loc:Loc FolderMenu_SaveProperties}"
                   Command="{Binding RightClickMenuCommand}">
             <MenuItem.CommandParameter>
                 <MultiBinding Converter="{x:Static converters:MultiParameterConverter.Instance}">
@@ -45,7 +45,7 @@
                 </Viewbox>
             </MenuItem.Icon>
         </MenuItem>
-        <MenuItem Header="Save Folder's Packages Textures"
+        <MenuItem Header="{loc:Loc FolderMenu_SaveTextures}"
                   Command="{Binding RightClickMenuCommand}">
             <MenuItem.CommandParameter>
                 <MultiBinding Converter="{x:Static converters:MultiParameterConverter.Instance}">
@@ -65,7 +65,7 @@
                 </Viewbox>
             </MenuItem.Icon>
         </MenuItem>
-        <MenuItem Header="Save Folder's Decompiled Blueprints"
+        <MenuItem Header="{loc:Loc FolderMenu_SaveDecompiledBlueprints}"
                   Command="{Binding RightClickMenuCommand}">
             <MenuItem.CommandParameter>
                 <MultiBinding Converter="{x:Static converters:MultiParameterConverter.Instance}">
@@ -85,7 +85,7 @@
                 </Viewbox>
             </MenuItem.Icon>
         </MenuItem>
-        <MenuItem Header="Save Folder's Blueprint C++ + UAssetAPI JSON"
+        <MenuItem Header="{loc:Loc FolderMenu_SaveFolderSBlueprintCUAssetAPIJSON}"
                   Command="{Binding RightClickMenuCommand}">
             <MenuItem.CommandParameter>
                 <MultiBinding Converter="{x:Static converters:MultiParameterConverter.Instance}">
@@ -105,7 +105,7 @@
                 </Viewbox>
             </MenuItem.Icon>
         </MenuItem>
-        <MenuItem Header="Save Folder's Packages Models"
+        <MenuItem Header="{loc:Loc FolderMenu_SaveModels}"
                   Command="{Binding RightClickMenuCommand}">
             <MenuItem.CommandParameter>
                 <MultiBinding Converter="{x:Static converters:MultiParameterConverter.Instance}">
@@ -125,7 +125,7 @@
                 </Viewbox>
             </MenuItem.Icon>
         </MenuItem>
-        <MenuItem Header="Save Folder's Packages Animations"
+        <MenuItem Header="{loc:Loc FolderMenu_SaveAnimations}"
                   Command="{Binding RightClickMenuCommand}">
             <MenuItem.CommandParameter>
                 <MultiBinding Converter="{x:Static converters:MultiParameterConverter.Instance}">
@@ -145,7 +145,7 @@
                 </Viewbox>
             </MenuItem.Icon>
         </MenuItem>
-        <MenuItem Header="Save Folder's Packages Audio"
+        <MenuItem Header="{loc:Loc FolderMenu_SaveAudio}"
                   Command="{Binding RightClickMenuCommand}">
             <MenuItem.CommandParameter>
                 <MultiBinding Converter="{x:Static converters:MultiParameterConverter.Instance}">
@@ -166,7 +166,7 @@
             </MenuItem.Icon>
         </MenuItem>
         <Separator />
-        <MenuItem Header="Favorite Directory" Click="OnFavoriteDirectoryClick"
+        <MenuItem Header="{loc:Loc FolderMenu_FavoriteDirectory}" Click="OnFavoriteDirectoryClick"
                   CommandParameter="{Binding Tag, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
             <MenuItem.Icon>
                 <Viewbox Width="16" Height="16">
@@ -176,7 +176,7 @@
                 </Viewbox>
             </MenuItem.Icon>
         </MenuItem>
-        <MenuItem Header="Copy Directory Path" Click="OnCopyDirectoryPathClick"
+        <MenuItem Header="{loc:Loc FolderMenu_CopyDirectoryPath}" Click="OnCopyDirectoryPathClick"
                   CommandParameter="{Binding Tag, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
             <MenuItem.Icon>
                 <Viewbox Width="16" Height="16">

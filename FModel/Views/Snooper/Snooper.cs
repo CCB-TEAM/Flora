@@ -71,7 +71,7 @@ public class Snooper : GameWindow
 
     private unsafe void LoadWindowIcon()
     {
-        var info = Application.GetResourceStream(new Uri("/FModel;component/Resources/engine.png", UriKind.Relative));
+        var info = Application.GetResourceStream(new Uri("/Flora;component/Resources/engine.png", UriKind.Relative));
         using var img = SixLabors.ImageSharp.Image.Load<Rgba32>(info.Stream);
         var memoryGroup = img.GetPixelMemoryGroup();
         Memory<byte> array = new byte[memoryGroup.TotalLength * sizeof(Rgba32)];

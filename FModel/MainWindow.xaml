@@ -69,6 +69,7 @@
                             </Viewbox>
                         </MenuItem.Icon>
                     </MenuItem>
+                    <MenuItem Header="{loc:Loc Main_MappingWizard}" Click="OnMappingWizardClick" />
                     <MenuItem Header="{loc:Loc Menu_Directory_AES}" Command="{Binding MenuCommand}" CommandParameter="Directory_AES" IsEnabled="{Binding Status.IsReady}">
                         <MenuItem.Icon>
                             <Viewbox Width="16" Height="16">
@@ -145,6 +146,7 @@
                             </Viewbox>
                         </MenuItem.Icon>
                     </MenuItem>
+                    <MenuItem Header="{loc:Loc Menu_Views_PackWorkspace}" Command="{Binding MenuCommand}" CommandParameter="Views_PackWorkspace" />
                     <MenuItem Header="{loc:Loc Menu_Views_ImageMerger}" Command="{Binding MenuCommand}" CommandParameter="Views_ImageMerger">
                         <MenuItem.Icon>
                             <Viewbox Width="16" Height="16">
@@ -238,7 +240,7 @@
             <avalonDock:LayoutRoot>
                 <avalonDock:LayoutPanel Orientation="Horizontal">
                     <avalonDock:LayoutAnchorablePane DockWidth="420" DockMinWidth="300">
-                        <avalonDock:LayoutAnchorable ContentId="Archives" Title="{loc:Loc Main_Tab_Archives}" CanClose="False">
+                        <avalonDock:LayoutAnchorable ContentId="Archives" Title="{loc:Loc Main_Tab_Archives}" CanClose="False" IsSelected="True">
                             <DockPanel x:Name="ArchivesPanel" Margin="0" TextElement.Foreground="{DynamicResource {x:Static adonisUi:Brushes.ForegroundBrush}}" Background="{DynamicResource {x:Static adonisUi:Brushes.Layer1BackgroundBrush}}">
                                 <Grid DockPanel.Dock="Top">
                                     <Grid.RowDefinitions>
@@ -252,7 +254,7 @@
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
 
-                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Loading Mode" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{loc:Loc Main_LoadingMode}" VerticalAlignment="Center" />
                                     <ComboBox Grid.Row="0" Grid.Column="2" ItemsSource="{Binding LoadingModes.Modes}" IsEnabled="{Binding Status.IsReady}"
                                               SelectedItem="{Binding LoadingMode, Source={x:Static settings:UserSettings.Default}, Mode=TwoWay}">
                                         <ComboBox.ItemTemplate>
@@ -261,7 +263,7 @@
                                             </DataTemplate>
                                         </ComboBox.ItemTemplate>
                                     </ComboBox>
-                                    <Button Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Content="Load"
+                                    <Button Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Content="{loc:Loc Main_Load}"
                                             Command="{Binding LoadingModes.LoadCommand}" IsEnabled="{Binding Status.IsReady}"
                                             CommandParameter="{Binding SelectedItems, ElementName=DirectoryFilesListBox}" />
                                 </Grid>
@@ -273,9 +275,9 @@
                                         <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
 
-                                    <Separator Grid.Row="0" Style="{StaticResource CustomSeparator}" Tag="GAME ARCHIVES" />
+                                    <Separator Grid.Row="0" Style="{StaticResource CustomSeparator}" Tag="{loc:Loc Main_Section_GameArchives}" />
                                     <ListBox Grid.Row="1" x:Name="DirectoryFilesListBox" Style="{StaticResource DirectoryFilesListBox}" MouseDoubleClick="OnMouseDoubleClick" />
-                                    <Separator Grid.Row="2" Style="{StaticResource CustomSeparator}" Tag="INFORMATION" />
+                                    <Separator Grid.Row="2" Style="{StaticResource CustomSeparator}" Tag="{loc:Loc Main_Section_Information}" />
                                     <StackPanel Grid.Row="3" Orientation="Vertical" Margin="0 0 0 5">
                                         <Grid HorizontalAlignment="Stretch">
                                             <Grid.RowDefinitions>
@@ -290,13 +292,13 @@
                                             </Grid.ColumnDefinitions>
 
                                             <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding SelectedItem.MountPoint, ElementName=DirectoryFilesListBox, FallbackValue='/', Converter={x:Static converters:TrimRightToLeftConverter.Instance}, ConverterParameter=275}" VerticalAlignment="Center" HorizontalAlignment="Left" />
-                                            <TextBlock Grid.Row="0" Grid.Column="1" Text="Mount Point" VerticalAlignment="Center" HorizontalAlignment="Right" />
+                                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{loc:Loc Main_Info_MountPoint}" VerticalAlignment="Center" HorizontalAlignment="Right" />
                                             <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding SelectedItem.FileCount, ElementName=DirectoryFilesListBox, FallbackValue='0', StringFormat={}{0} Files}" VerticalAlignment="Center" HorizontalAlignment="Left" />
-                                            <TextBlock Grid.Row="1" Grid.Column="1" Text="File Count" VerticalAlignment="Center" HorizontalAlignment="Right" />
+                                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{loc:Loc Main_Info_FileCount}" VerticalAlignment="Center" HorizontalAlignment="Right" />
                                             <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding SelectedItem.IsEncrypted, ElementName=DirectoryFilesListBox, FallbackValue='False'}" VerticalAlignment="Center" HorizontalAlignment="Left" />
-                                            <TextBlock Grid.Row="2" Grid.Column="1" Text="Is Encrypted" VerticalAlignment="Center" HorizontalAlignment="Right" />
+                                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{loc:Loc Main_Info_IsEncrypted}" VerticalAlignment="Center" HorizontalAlignment="Right" />
                                             <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding SelectedItem.Guid, ElementName=DirectoryFilesListBox, FallbackValue='00000000000000000000000000000000'}" VerticalAlignment="Center" HorizontalAlignment="Left" />
-                                            <TextBlock Grid.Row="3" Grid.Column="1" Text="Global Unique Identifier" VerticalAlignment="Center" HorizontalAlignment="Right" />
+                                            <TextBlock Grid.Row="3" Grid.Column="1" Text="{loc:Loc Main_Info_GlobalUniqueIdentifier}" VerticalAlignment="Center" HorizontalAlignment="Right" />
                                         </Grid>
                                     </StackPanel>
                                 </Grid>
@@ -320,7 +322,7 @@
                                     </Grid.ColumnDefinitions>
 
                                     <StackPanel Grid.Column="0" Orientation="Horizontal">
-                                        <Image Source="/FModel;component/Resources/label.png"
+                                        <Image Source="/Flora;component/Resources/label.png"
                                                Width="16" Height="16" HorizontalAlignment="Center" Margin="0 0 3.5 0" />
                                         <TextBlock HorizontalAlignment="Left" VerticalAlignment="Center" TextTrimming="CharacterEllipsis">
                                             <TextBlock.Text>
@@ -333,7 +335,7 @@
                                         </TextBlock>
                                     </StackPanel>
                                     <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
-                                    <Button Style="{DynamicResource {x:Static adonisUi:Styles.ToolbarButton}}" ToolTip="Bring Selected Folder To View" Padding="4"
+                                    <Button Style="{DynamicResource {x:Static adonisUi:Styles.ToolbarButton}}" ToolTip="{loc:Loc Main_Tooltip_BringSelectedFolderToView}" Padding="4"
                                                 Command="{Binding MenuCommand}" CommandParameter="{Binding SelectedItem, ElementName=AssetsFolderName}">
                                             <Viewbox Width="16" Height="16" HorizontalAlignment="Center">
                                                 <Canvas Width="24" Height="24">
@@ -341,7 +343,7 @@
                                                 </Canvas>
                                             </Viewbox>
                                         </Button>
-                                        <!-- <Button Style="{DynamicResource {x:Static adonisUi:Styles.ToolbarButton}}" ToolTip="Expand All (not appropriate for huge amount of folders)" Padding="4" -->
+                                        <!-- <Button Style="{DynamicResource {x:Static adonisUi:Styles.ToolbarButton}}" ToolTip="{loc:Loc Main_ExpandAllNotAppropriateForHugeAmountOfFo}" Padding="4" -->
                                         <!--         Command="{Binding MenuCommand}" CommandParameter="ToolBox_Expand_All"> -->
                                         <!--     <Viewbox Width="16" Height="16" HorizontalAlignment="Center"> -->
                                         <!--         <Canvas Width="24" Height="24"> -->
@@ -349,7 +351,7 @@
                                         <!--         </Canvas> -->
                                         <!--     </Viewbox> -->
                                         <!-- </Button> -->
-                                    <Button Style="{DynamicResource {x:Static adonisUi:Styles.ToolbarButton}}" ToolTip="Collapse All" Padding="4"
+                                    <Button Style="{DynamicResource {x:Static adonisUi:Styles.ToolbarButton}}" ToolTip="{loc:Loc Main_Tooltip_CollapseAll}" Padding="4"
                                                 Command="{Binding MenuCommand}" CommandParameter="ToolBox_Collapse_All">
                                             <Viewbox Width="16" Height="16" HorizontalAlignment="Center">
                                                 <Canvas Width="24" Height="24">
@@ -367,7 +369,7 @@
                                           PreviewKeyDown="OnFoldersPreviewKeyDown"
                                           PreviewMouseDoubleClick="OnAssetsTreeMouseDoubleClick">
                                 </TreeView>
-                                    <Separator Grid.Row="3" Style="{StaticResource CustomSeparator}" Tag="INFORMATION" />
+                                    <Separator Grid.Row="3" Style="{StaticResource CustomSeparator}" Tag="{loc:Loc Main_Section_Information}" />
                                 <StackPanel Grid.Row="4" Orientation="Vertical" Margin="0 0 0 5">
                                     <Grid HorizontalAlignment="Stretch">
                                         <Grid.RowDefinitions>
@@ -383,15 +385,15 @@
                                         </Grid.ColumnDefinitions>
 
                                         <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding SelectedItem.AssetsList.Assets.Count, ElementName=AssetsFolderName, FallbackValue=0}" VerticalAlignment="Center" HorizontalAlignment="Left" />
-                                            <TextBlock Grid.Row="0" Grid.Column="1" Text="Packages Count" VerticalAlignment="Center" HorizontalAlignment="Right" />
+                                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{loc:Loc Main_Info_PackagesCount}" VerticalAlignment="Center" HorizontalAlignment="Right" />
                                         <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding SelectedItem.FoldersView.Count, ElementName=AssetsFolderName, FallbackValue=0}" VerticalAlignment="Center" HorizontalAlignment="Left" />
-                                            <TextBlock Grid.Row="1" Grid.Column="1" Text="Folders Count" VerticalAlignment="Center" HorizontalAlignment="Right" />
+                                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{loc:Loc Main_Info_FoldersCount}" VerticalAlignment="Center" HorizontalAlignment="Right" />
                                         <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding SelectedItem.Archive, ElementName=AssetsFolderName, FallbackValue='None'}" VerticalAlignment="Center" HorizontalAlignment="Left" />
-                                            <TextBlock Grid.Row="2" Grid.Column="1" Text="Included In Archive" VerticalAlignment="Center" HorizontalAlignment="Right" />
+                                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{loc:Loc Main_Info_IncludedInArchive}" VerticalAlignment="Center" HorizontalAlignment="Right" />
                                         <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding SelectedItem.MountPoint, ElementName=AssetsFolderName, FallbackValue='/', Converter={x:Static converters:TrimRightToLeftConverter.Instance}, ConverterParameter=275}" VerticalAlignment="Center" HorizontalAlignment="Left" />
-                                            <TextBlock Grid.Row="3" Grid.Column="1" Text="Archive Mount Point" VerticalAlignment="Center" HorizontalAlignment="Right" />
+                                            <TextBlock Grid.Row="3" Grid.Column="1" Text="{loc:Loc Main_Info_ArchiveMountPoint}" VerticalAlignment="Center" HorizontalAlignment="Right" />
                                         <TextBlock Grid.Row="4" Grid.Column="0" Text="{Binding SelectedItem.Version, ElementName=AssetsFolderName, FallbackValue='VER_UE4_LATEST', Converter={x:Static converters:TrimRightToLeftConverter.Instance}, ConverterParameter=275}" VerticalAlignment="Center" HorizontalAlignment="Left" />
-                                            <TextBlock Grid.Row="4" Grid.Column="1" Text="Archive Version" VerticalAlignment="Center" HorizontalAlignment="Right" />
+                                            <TextBlock Grid.Row="4" Grid.Column="1" Text="{loc:Loc Main_Info_ArchiveVersion}" VerticalAlignment="Center" HorizontalAlignment="Right" />
                                     </Grid>
                                 </StackPanel>
                             </Grid>
@@ -413,14 +415,14 @@
 
                                     <controls:Breadcrumb Grid.Row="0" HorizontalAlignment="Left" Margin="0 5 0 5"
                                                          MaxWidth="{Binding ActualWidth, ElementName=AssetsSearchTextBox}"
-                                                         DataContext="{Binding SelectedItem.PathAtThisPoint, ElementName=AssetsFolderName, FallbackValue='No/Directory/Detected/In/Folder'}"/>
+                                                         DataContext="{Binding SelectedItem.PathAtThisPoint, ElementName=AssetsFolderName, FallbackValue={x:Null}}"/>
 
                                     <ListBox Grid.Row="1" x:Name="AssetsListName"
                                              Style="{StaticResource AssetsListBox}"
                                              PreviewMouseDoubleClick="OnAssetsListMouseDoubleClick"
                                              PreviewKeyDown="OnPreviewKeyDown" />
 
-                                    <Separator Grid.Row="2" Style="{StaticResource CustomSeparator}" Tag="INFORMATION" />
+                                    <Separator Grid.Row="2" Style="{StaticResource CustomSeparator}" Tag="{loc:Loc Main_Section_Information}" />
                                     <StackPanel Grid.Row="3" Orientation="Vertical" Margin="0 0 0 5">
                                         <Grid HorizontalAlignment="Stretch">
                                             <Grid.RowDefinitions>
@@ -436,15 +438,15 @@
                                             </Grid.ColumnDefinitions>
 
                                             <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding SelectedItem.Asset.Offset, ElementName=AssetsListName, FallbackValue=0, StringFormat='{}0x{0:X}'}" VerticalAlignment="Center" HorizontalAlignment="Left" />
-                                            <TextBlock Grid.Row="0" Grid.Column="1" Text="Offset" VerticalAlignment="Center" HorizontalAlignment="Right" />
+                                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{loc:Loc Main_Info_Offset}" VerticalAlignment="Center" HorizontalAlignment="Right" />
                                             <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding SelectedItem.Asset.Size, ElementName=AssetsListName, FallbackValue=0, Converter={x:Static converters:SizeToStringConverter.Instance}}" VerticalAlignment="Center" HorizontalAlignment="Left" />
-                                            <TextBlock Grid.Row="1" Grid.Column="1" Text="Size" VerticalAlignment="Center" HorizontalAlignment="Right" />
+                                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{loc:Loc Main_Info_Size}" VerticalAlignment="Center" HorizontalAlignment="Right" />
                                             <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding SelectedItem.Asset.CompressionMethod, ElementName=AssetsListName, FallbackValue='Unknown'}" VerticalAlignment="Center" HorizontalAlignment="Left" />
-                                            <TextBlock Grid.Row="2" Grid.Column="1" Text="Compression Method" VerticalAlignment="Center" HorizontalAlignment="Right" />
+                                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{loc:Loc Main_Info_CompressionMethod}" VerticalAlignment="Center" HorizontalAlignment="Right" />
                                             <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding SelectedItem.Asset.IsEncrypted, ElementName=AssetsListName, FallbackValue='False'}" VerticalAlignment="Center" HorizontalAlignment="Left" />
-                                            <TextBlock Grid.Row="3" Grid.Column="1" Text="Is Encrypted" VerticalAlignment="Center" HorizontalAlignment="Right" />
+                                            <TextBlock Grid.Row="3" Grid.Column="1" Text="{loc:Loc Main_Info_IsEncrypted}" VerticalAlignment="Center" HorizontalAlignment="Right" />
                                             <TextBlock Grid.Row="4" Grid.Column="0" Text="{Binding SelectedItem.Asset.Vfs.Name, ElementName=AssetsListName, FallbackValue='None'}" VerticalAlignment="Center" HorizontalAlignment="Left" />
-                                            <TextBlock Grid.Row="4" Grid.Column="1" Text="Included In Archive" VerticalAlignment="Center" HorizontalAlignment="Right" />
+                                            <TextBlock Grid.Row="4" Grid.Column="1" Text="{loc:Loc Main_Info_IncludedInArchive}" VerticalAlignment="Center" HorizontalAlignment="Right" />
                                         </Grid>
                                     </StackPanel>
                                 </Grid>
@@ -479,7 +481,7 @@
                                                                           ClearButtonClick="OnClearFilterClick" />
 
                                                     <ComboBox x:Name="CategoriesSelector" Grid.Column="2"
-                                                              ItemsSource="{Binding Categories}"
+                                                              ItemsSource="{Binding Categories}" ItemTemplate="{StaticResource LocalizedEnumTemplate}"
                                                               SelectedItem="{Binding SelectedItem.SelectedCategory, ElementName=AssetsFolderName, Mode=TwoWay}" />
                                                 </Grid>
 
@@ -585,7 +587,7 @@
 
                                     <controls:CustomRichTextBox Grid.Column="0" Grid.ColumnSpan="3" x:Name="LogRtbName" Style="{StaticResource CustomRichTextBox}" Height="Auto" />
                                     <StackPanel Grid.Column="2" Orientation="Vertical" VerticalAlignment="Bottom" Margin="-5 -5 5 5">
-                                        <Button Style="{DynamicResource {x:Static adonisUi:Styles.ToolbarButton}}" ToolTip="Open Output Folder" Padding="0,4,0,4"
+                                        <Button Style="{DynamicResource {x:Static adonisUi:Styles.ToolbarButton}}" ToolTip="{loc:Loc Main_Tooltip_OpenOutputFolder}" Padding="0,4,0,4"
                                                 Command="{Binding MenuCommand}" CommandParameter="ToolBox_Open_Output_Directory" Focusable="False">
                                             <Viewbox Width="16" Height="16" HorizontalAlignment="Center">
                                                 <Canvas Width="24" Height="24">
@@ -593,7 +595,7 @@
                                                 </Canvas>
                                             </Viewbox>
                                         </Button>
-                                        <Button Style="{DynamicResource {x:Static adonisUi:Styles.ToolbarButton}}" ToolTip="Clear Logs" Padding="0,4,0,4"
+                                        <Button Style="{DynamicResource {x:Static adonisUi:Styles.ToolbarButton}}" ToolTip="{loc:Loc Main_Tooltip_ClearLogs}" Padding="0,4,0,4"
                                                 Command="{Binding MenuCommand}" CommandParameter="ToolBox_Clear_Logs" Focusable="False">
                                             <Viewbox Width="16" Height="16" HorizontalAlignment="Center">
                                                 <Canvas Width="24" Height="24">
@@ -712,7 +714,7 @@
                     </StatusBarItem>
 
                     <StatusBarItem Margin="10 0 0 0">
-                        <TextBlock Text="Updates Disabled (Custom Build)" />
+                        <TextBlock Text="{loc:Loc Main_UpdatesDisabledCustomBuild}" />
                     </StatusBarItem>
                 </StackPanel>
             </StatusBarItem>

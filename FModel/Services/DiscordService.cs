@@ -27,7 +27,7 @@ namespace FModel.Services
 
         private readonly Button[] _buttons =
         {
-            new() {Label = "Join FModel", Url = Constants.DISCORD_LINK},
+            new() {Label = "Join the FModel Discord", Url = Constants.DISCORD_LINK},
             new() {Label = "Support us", Url = Constants.DONATE_LINK}
         };
 

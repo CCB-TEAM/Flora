@@ -16,7 +16,7 @@ public class EnumToStringConverter : IValueConverter
             case null:
                 return null;
             case Enum e:
-                return e.GetDescription();
+                return FModel.Localization.LocalizationManager.Instance.TryGet($"Enum_{e.GetType().Name}_{e}", out var text) ? text : e.GetDescription();
             default:
                 var t = value.GetType();
                 return t.IsValueType ? ((Enum) Activator.CreateInstance(t)).GetDescription() : value;

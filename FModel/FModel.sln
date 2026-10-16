@@ -13,7 +13,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FModel.BlueprintGraph", "..
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FModel.BlueprintGraph.Tests", "..\FModel.BlueprintGraph.Tests\FModel.BlueprintGraph.Tests.csproj", "{A811459E-A40B-4042-A4AB-3D37E81EB35B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UAssetAPI", "..\..\UAssetAPI-master\UAssetAPI\UAssetAPI.csproj", "{178417EC-1177-413E-BE85-C83AECD64279}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UAssetAPI", "..\UAssetAPI\UAssetAPI.csproj", "{178417EC-1177-413E-BE85-C83AECD64279}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

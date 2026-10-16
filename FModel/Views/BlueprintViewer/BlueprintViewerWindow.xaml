@@ -82,6 +82,8 @@
         <DockPanel>
             <Button DockPanel.Dock="Right" Margin="5 0 0 0" MinWidth="80" Content="{loc:Loc BlueprintEditor_Discard}" Click="OnDiscardClick"
                     IsEnabled="{Binding IsDirty}" />
+            <Button DockPanel.Dock="Left" Margin="0 0 5 0" MinWidth="60" Content="{loc:Loc BlueprintEditor_Undo}" Click="OnUndoClick" IsEnabled="{Binding CanUndo}" ToolTip="{loc:Loc BlueprintEditor_UndoTip}" />
+            <Button DockPanel.Dock="Left" Margin="0 0 10 0" MinWidth="60" Content="{loc:Loc BlueprintEditor_Redo}" Click="OnRedoClick" IsEnabled="{Binding CanRedo}" ToolTip="{loc:Loc BlueprintEditor_RedoTip}" />
             <Button DockPanel.Dock="Right" Margin="5 0 0 0" MinWidth="120" Content="{loc:Loc BlueprintEditor_SavePak}" Click="OnSavePakClick"
                     IsEnabled="{Binding CanEdit}" />
             <Button DockPanel.Dock="Right" Margin="5 0 0 0" MinWidth="120" Content="{loc:Loc BlueprintEditor_ExportAsset}" Click="OnExportAssetClick"
@@ -134,9 +136,9 @@
                 <!-- graph -->
                 <DockPanel Grid.Column="2" Margin="0 5">
                     <DockPanel DockPanel.Dock="Top" Margin="0 0 0 5">
-                        <Button DockPanel.Dock="Right" Content="{loc:Loc BlueprintViewer_Fit}" MinWidth="50" Margin="5 0 0 0" Click="OnFitClick" ToolTip="Zoom to fit the whole graph" />
-                        <Button DockPanel.Dock="Right" Content="▼" Width="30" Margin="5 0 0 0" Click="OnSearchNextClick" ToolTip="Next result (Enter)" />
-                        <Button DockPanel.Dock="Right" Content="▲" Width="30" Margin="5 0 0 0" Click="OnSearchPreviousClick" ToolTip="Previous result (Shift+Enter)" />
+                        <Button DockPanel.Dock="Right" Content="{loc:Loc BlueprintViewer_Fit}" MinWidth="50" Margin="5 0 0 0" Click="OnFitClick" ToolTip="{loc:Loc BlueprintViewer_FitTip}" />
+                        <Button DockPanel.Dock="Right" Content="▼" Width="30" Margin="5 0 0 0" Click="OnSearchNextClick" ToolTip="{loc:Loc BlueprintViewer_SearchNextTip}" />
+                        <Button DockPanel.Dock="Right" Content="▲" Width="30" Margin="5 0 0 0" Click="OnSearchPreviousClick" ToolTip="{loc:Loc BlueprintViewer_SearchPreviousTip}" />
                         <TextBlock x:Name="SearchCount" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="5 0 0 0" MinWidth="50" TextAlignment="Right" />
                         <TextBox x:Name="SearchBox" TextChanged="OnSearchChanged" KeyDown="OnSearchKeyDown"
                                  adonisExtensions:WatermarkExtension.Watermark="{loc:Loc BlueprintViewer_SearchNodes}" />
@@ -144,6 +146,12 @@
                     <TextBlock DockPanel.Dock="Bottom" Margin="0 5 0 0" Text="{Binding StatusText}" TextTrimming="CharacterEllipsis" />
                     <Grid>
                         <bp:BlueprintGraphCanvas x:Name="GraphCanvas" />
+                        <TextBox x:Name="InlinePinEditor" Visibility="Collapsed" HorizontalAlignment="Left" VerticalAlignment="Top"
+                                 Padding="3 0" VerticalContentAlignment="Center" BorderBrush="#F0C674" BorderThickness="2"
+                                 PreviewKeyDown="OnInlinePinKeyDown" LostKeyboardFocus="OnInlinePinLostFocus" />
+                        <ComboBox x:Name="InlinePinEnumBox" Visibility="Collapsed" HorizontalAlignment="Left" VerticalAlignment="Top"
+                                  BorderBrush="#F0C674" BorderThickness="2" MaxDropDownHeight="400"
+                                  SelectionChanged="OnInlinePinEnumSelected" DropDownClosed="OnInlinePinEnumClosed" />
                         <Border Background="#80000000" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}">
                             <TextBlock Text="{Binding StatusText}" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontSize="16" />
                         </Border>
@@ -169,12 +177,48 @@
                     <StackPanel x:Name="PinEditPanel" Grid.Row="2" Margin="0 5 0 0" Visibility="Collapsed">
                         <TextBlock x:Name="PinEditLabel" FontWeight="SemiBold" Margin="0 0 0 3" TextWrapping="Wrap" />
                         <DockPanel>
+                            <Button DockPanel.Dock="Right" Margin="5 0 0 0" MinWidth="60" Content="{loc:Loc BlueprintEditor_Revert}" Click="OnPinRevertClick" ToolTip="{loc:Loc BlueprintEditor_RevertTip}" />
                             <Button DockPanel.Dock="Right" Margin="5 0 0 0" MinWidth="60" Content="{loc:Loc BlueprintEditor_Apply}" Click="OnPinApplyClick" />
-                            <TextBox x:Name="PinEditBox" KeyDown="OnPinEditKeyDown" AcceptsReturn="False" />
+                            <ComboBox x:Name="PinEditBox" IsEditable="True" IsTextSearchEnabled="True" KeyDown="OnPinEditKeyDown"
+                                      SelectionChanged="OnPinEditPicked" MaxDropDownHeight="400" />
                         </DockPanel>
                         <TextBlock x:Name="PinEditError" Foreground="#E05050" TextWrapping="Wrap" Margin="0 3 0 0" Visibility="Collapsed" />
                     </StackPanel>
-                    <TabControl Grid.Row="3" Margin="0 5 0 0">
+                    <TabControl x:Name="DetailTabs" Grid.Row="3" Margin="0 5 0 0">
+                        <TabItem Header="{loc:Loc BlueprintEditor_ChangesTab}">
+                            <ListBox x:Name="PinEditList" ItemsSource="{Binding Editor.PinEdits}" MouseDoubleClick="OnPinEditListDoubleClick"
+                                     HorizontalContentAlignment="Stretch">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Margin="0 2" ToolTip="{loc:Loc BlueprintEditor_JumpTip}">
+                                            <TextBlock Text="{Binding Summary}" TextTrimming="CharacterEllipsis" Foreground="#F0C674" />
+                                            <TextBlock Text="{Binding Where}" TextTrimming="CharacterEllipsis" Opacity="0.6" FontSize="11" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </TabItem>
+                        <TabItem x:Name="FindTab" Header="{loc:Loc BlueprintViewer_FindTab}">
+                            <DockPanel>
+                                <DockPanel DockPanel.Dock="Top" Margin="0 3 0 3">
+                                    <Button DockPanel.Dock="Right" Margin="5 0 0 0" MinWidth="50" Content="{loc:Loc BlueprintViewer_FindButton}" Click="OnFindClick" />
+                                    <TextBox x:Name="FindBox" KeyDown="OnFindKeyDown"
+                                             adonisExtensions:WatermarkExtension.Watermark="{loc:Loc BlueprintViewer_FindWatermark}" />
+                                </DockPanel>
+                                <TextBlock x:Name="FindStatus" DockPanel.Dock="Top" Margin="0 0 0 3" Opacity="0.7" TextTrimming="CharacterEllipsis" />
+                                <ListBox x:Name="FindResults" MouseDoubleClick="OnFindResultDoubleClick" HorizontalContentAlignment="Stretch"
+                                         VirtualizingPanel.IsVirtualizing="True">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Margin="0 2" ToolTip="{loc:Loc BlueprintEditor_JumpTip}">
+                                                <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Text="{Binding Where}" TextTrimming="CharacterEllipsis" Opacity="0.6" FontSize="11" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </DockPanel>
+                        </TabItem>
                         <TabItem Header="{loc:Loc BlueprintViewer_NodeBytecode}">
                             <avalonEdit:TextEditor x:Name="NodeJsonEditor" IsReadOnly="True" FontFamily="Consolas" FontSize="12"
                                                    ShowLineNumbers="False" WordWrap="False" Background="Transparent" />
@@ -262,6 +306,22 @@
                             <TabItem Header="{loc:Loc BlueprintViewer_WidgetProperties}">
                                 <avalonEdit:TextEditor x:Name="WidgetJsonEditor" IsReadOnly="True" FontFamily="Consolas" FontSize="12"
                                                        ShowLineNumbers="False" WordWrap="False" Background="Transparent" />
+                            </TabItem>
+                            <TabItem Header="{loc:Loc BlueprintViewer_WidgetReferences}">
+                                <DockPanel>
+                                    <TextBlock DockPanel.Dock="Top" Opacity="0.6" TextWrapping="Wrap" Margin="0 0 0 3" Text="{loc:Loc BlueprintViewer_ReferencesHint}" />
+                                    <ListBox x:Name="WidgetReferenceList" ItemsSource="{Binding References}" MouseDoubleClick="OnWidgetReferenceDoubleClick" KeyDown="OnWidgetReferenceKeyDown"
+                                             HorizontalContentAlignment="Stretch">
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Margin="0 2" ToolTip="{Binding ObjectPath}">
+                                                    <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock Text="{Binding Property}" TextTrimming="CharacterEllipsis" Opacity="0.6" FontSize="11" />
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                </DockPanel>
                             </TabItem>
                             <TabItem x:Name="DesignerEditTab" Header="{loc:Loc WidgetEditor_Tab}">
                                 <DockPanel>

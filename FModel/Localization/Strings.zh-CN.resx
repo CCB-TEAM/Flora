@@ -70,7 +70,7 @@
     <value>Discord 社区</value>
   </data>
   <data name="Menu_Help_AboutFModel" xml:space="preserve">
-    <value>关于 FModel</value>
+    <value>关于 Flora</value>
   </data>
   <data name="Main_PreviewNewExplorerSystem" xml:space="preserve">
     <value>预览新版资源浏览器</value>
@@ -223,10 +223,10 @@
     <value>按游戏目录结构保存资源包</value>
   </data>
   <data name="Settings_General_LocalMappingFile" xml:space="preserve">
-    <value>本地 Mapping 文件（支持拖放）</value>
+    <value>本地映射文件（支持拖放）</value>
   </data>
   <data name="Settings_General_MappingFilePath" xml:space="preserve">
-    <value>Mapping 文件路径</value>
+    <value>映射文件路径</value>
   </data>
   <data name="Settings_General_UnrealPakExecutable" xml:space="preserve">
     <value>UnrealPak 可执行文件</value>
@@ -256,7 +256,7 @@
     <value>AES</value>
   </data>
   <data name="Settings_General_Mapping" xml:space="preserve">
-    <value>Mapping</value>
+    <value>映射</value>
   </data>
   <data name="Settings_General_SerializeScriptBytecode" xml:space="preserve">
     <value>序列化脚本字节码</value>
@@ -349,25 +349,25 @@
     <value>将 HDR 贴图保存为 Radiance .hdr</value>
   </data>
   <data name="Settings_Keybindings_LeftSwitchOnDirectoryTab" xml:space="preserve">
-    <value>目录标签向左切换</value>
+    <value>目录标签页向左切换</value>
   </data>
   <data name="Settings_Keybindings_RightSwitchOnDirectoryTab" xml:space="preserve">
-    <value>目录标签向右切换</value>
+    <value>目录标签页向右切换</value>
   </data>
   <data name="Settings_Keybindings_SwitchAssetExplorer" xml:space="preserve">
     <value>切换资源浏览器</value>
   </data>
   <data name="Settings_Keybindings_LeftSwitchOnAssetTab" xml:space="preserve">
-    <value>资源标签向左切换</value>
+    <value>资源标签页向左切换</value>
   </data>
   <data name="Settings_Keybindings_RightSwitchOnAssetTab" xml:space="preserve">
-    <value>资源标签向右切换</value>
+    <value>资源标签页向右切换</value>
   </data>
   <data name="Settings_Keybindings_AddAssetTab" xml:space="preserve">
-    <value>新增资源标签</value>
+    <value>新建资源标签页</value>
   </data>
   <data name="Settings_Keybindings_RemoveSelectedAssetTab" xml:space="preserve">
-    <value>关闭当前资源标签</value>
+    <value>关闭当前资源标签页</value>
   </data>
   <data name="Settings_Keybindings_AddAudioFile" xml:space="preserve">
     <value>添加音频文件</value>
@@ -385,7 +385,7 @@
     <value>界面语言</value>
   </data>
   <data name="Settings_UiLanguageTooltip" xml:space="preserve">
-    <value>FModel 界面显示语言</value>
+    <value>Flora 界面显示语言</value>
   </data>
   <data name="Settings_RestartHint" xml:space="preserve">
     <value>* 部分改动需要重启后生效</value>
@@ -541,10 +541,10 @@
     <value>关闭</value>
   </data>
   <data name="Common_CloseAllTabs" xml:space="preserve">
-    <value>关闭全部标签</value>
+    <value>关闭全部标签页</value>
   </data>
   <data name="Common_CloseOtherTabs" xml:space="preserve">
-    <value>关闭其他标签</value>
+    <value>关闭其他标签页</value>
   </data>
   <data name="Common_OpenProperties" xml:space="preserve">
     <value>打开属性</value>
@@ -672,9 +672,6 @@
   <data name="Tab_SaveBlueprintUassetAs" xml:space="preserve">
     <value>蓝图 UAsset 另存为...</value>
   </data>
-  <data name="Tab_WriteBackOrBuildPatchPak" xml:space="preserve">
-    <value>回写（Loose）/ 构建补丁 Pak</value>
-  </data>
   <data name="TiledExplorer_NoFoldersOrPackages" xml:space="preserve">
     <value>未找到文件夹或资源包</value>
   </data>
@@ -766,7 +763,7 @@
     <value>蓝图函数签名 Jmap</value>
   </data>
   <data name="Settings_BlueprintSignatureJmap_Tooltip" xml:space="preserve">
-    <value>可选的 .jmap / .jmap.gz，映射文件为 .usmap 时，蓝图节点图用它获取原生函数签名</value>
+    <value>可选的 .jmap / .jmap.gz。映射文件为 .usmap 时，蓝图查看器用它获取原生函数签名</value>
   </data>
   <data name="BlueprintViewer_GraphTab" xml:space="preserve">
     <value>节点图</value>
@@ -814,7 +811,7 @@
     <value>已导出 {0}</value>
   </data>
   <data name="BlueprintEditor_SavedPak" xml:space="preserve">
-    <value>补丁 pak：{0}</value>
+    <value>已加入打包工具：{0}</value>
   </data>
   <data name="BlueprintEditor_SaveFailed" xml:space="preserve">
     <value>保存失败：{0}</value>
@@ -826,7 +823,7 @@
     <value>放弃修改</value>
   </data>
   <data name="BlueprintEditor_SavePak" xml:space="preserve">
-    <value>保存为补丁 pak</value>
+    <value>加入打包工具</value>
   </data>
   <data name="BlueprintEditor_ExportAsset" xml:space="preserve">
     <value>导出 .uasset</value>
@@ -956,5 +953,771 @@
   </data>
   <data name="WidgetEditor_InvalidValue" xml:space="preserve">
     <value>无效的值</value>
+  </data>
+  <data name="BlueprintEditor_Undo" xml:space="preserve">
+    <value>撤销</value>
+  </data>
+  <data name="BlueprintEditor_UndoTip" xml:space="preserve">
+    <value>撤销上一次引脚修改（Ctrl+Z）</value>
+  </data>
+  <data name="BlueprintEditor_Redo" xml:space="preserve">
+    <value>重做</value>
+  </data>
+  <data name="BlueprintEditor_RedoTip" xml:space="preserve">
+    <value>重做上一次撤销的引脚修改（Ctrl+Y）</value>
+  </data>
+  <data name="BlueprintEditor_ChangesTab" xml:space="preserve">
+    <value>修改</value>
+  </data>
+  <data name="BlueprintEditor_JumpTip" xml:space="preserve">
+    <value>双击跳转到节点</value>
+  </data>
+  <data name="BlueprintEditor_BytecodeIncomplete" xml:space="preserve">
+    <value>此函数的字节码未能完整读取，已禁止编辑。</value>
+  </data>
+  <data name="BlueprintEditor_EnumHint" xml:space="preserve">
+    <value>选择一个枚举项，或输入其名称或数值。</value>
+  </data>
+  <data name="BlueprintViewer_GraphIncomplete" xml:space="preserve">
+    <value> - 字节码未完整读取，图中可能缺少节点</value>
+  </data>
+  <data name="BlueprintViewer_FindTab" xml:space="preserve">
+    <value>查找</value>
+  </data>
+  <data name="BlueprintViewer_FindWatermark" xml:space="preserve">
+    <value>搜索所有事件和函数（Ctrl+Shift+F）</value>
+  </data>
+  <data name="BlueprintViewer_FindButton" xml:space="preserve">
+    <value>查找</value>
+  </data>
+  <data name="BlueprintViewer_FindResults" xml:space="preserve">
+    <value>{0} 个结果</value>
+  </data>
+  <data name="BlueprintViewer_FindNone" xml:space="preserve">
+    <value>没有找到。</value>
+  </data>
+  <data name="BlueprintViewer_SearchNextTip" xml:space="preserve">
+    <value>下一个结果（Enter）</value>
+  </data>
+  <data name="BlueprintViewer_SearchPreviousTip" xml:space="preserve">
+    <value>上一个结果（Shift+Enter）</value>
+  </data>
+  <data name="BlueprintViewer_FitTip" xml:space="preserve">
+    <value>缩放以显示整个图</value>
+  </data>
+  <data name="BlueprintViewer_GoToDefinition" xml:space="preserve">
+    <value>转到定义：{0}</value>
+  </data>
+  <data name="BlueprintViewer_OpenAsset" xml:space="preserve">
+    <value>打开 {0}</value>
+  </data>
+  <data name="BlueprintViewer_FindUsages" xml:space="preserve">
+    <value>在此蓝图中查找引用</value>
+  </data>
+  <data name="BlueprintViewer_NoDefinition" xml:space="preserve">
+    <value>由引擎声明（无游戏资源）</value>
+  </data>
+  <data name="BlueprintViewer_Resolving" xml:space="preserve">
+    <value>正在查找 {0}...</value>
+  </data>
+  <data name="BlueprintViewer_DefinitionNotFound" xml:space="preserve">
+    <value>无法打开定义：{0}</value>
+  </data>
+  <data name="BlueprintViewer_WidgetReferences" xml:space="preserve">
+    <value>引用</value>
+  </data>
+  <data name="BlueprintViewer_ReferencesHint" xml:space="preserve">
+    <value>此控件引用的资源。双击打开。</value>
+  </data>
+  <data name="BlueprintViewer_ReferenceNotFound" xml:space="preserve">
+    <value>在已加载的资源包中找不到 {0}。</value>
+  </data>
+  <data name="Settings_BlueprintBatchConcurrencyAuto" xml:space="preserve">
+    <value>蓝图批量导出并发数（自动）</value>
+  </data>
+  <data name="Settings_AutomaticallyLimitsParallelTasksWhenExpo" xml:space="preserve">
+    <value>批量导出蓝图 C++ 与 UAssetAPI JSON 时自动限制并行任务数。</value>
+  </data>
+  <data name="Settings_BlueprintBatchConcurrencyManual" xml:space="preserve">
+    <value>蓝图批量导出并发数（手动）</value>
+  </data>
+  <data name="Settings_UsedWhenAutoModeIsDisabledMinimum1" xml:space="preserve">
+    <value>关闭自动模式时使用，最小为 1。</value>
+  </data>
+  <data name="Settings_OpenBlueprintsInGraphViewer" xml:space="preserve">
+    <value>在蓝图查看器中打开蓝图</value>
+  </data>
+  <data name="Settings_DoubleClickingABlueprintPackageOpensTheV" xml:space="preserve">
+    <value>双击蓝图资源包时打开可视化蓝图查看器，而不是显示 JSON（右键 &gt; 在新标签页中提取 仍显示 JSON）</value>
+  </data>
+  <data name="Common_NoArchivesFoundInTheSpecifiedDirectory" xml:space="preserve">
+    <value>指定目录中没有找到归档文件</value>
+  </data>
+  <data name="Common_NoAudioToPlayAtTheMoment" xml:space="preserve">
+    <value>当前没有可播放的音频</value>
+  </data>
+  <data name="Common_NoFoldersFoundInArchivesMakeSureYouLoade" xml:space="preserve">
+    <value>归档中没有找到文件夹，请确认至少已加载一个归档</value>
+  </data>
+  <data name="Common_CloseTab" xml:space="preserve">
+    <value>关闭标签页</value>
+  </data>
+  <data name="Common_DisableAlphaChannel" xml:space="preserve">
+    <value>禁用 Alpha 通道</value>
+  </data>
+  <data name="Common_OpenImage" xml:space="preserve">
+    <value>打开图片</value>
+  </data>
+  <data name="Common_CopyImage" xml:space="preserve">
+    <value>复制图片</value>
+  </data>
+  <data name="Common_SaveImage" xml:space="preserve">
+    <value>保存图片</value>
+  </data>
+  <data name="Common_AddNewTab" xml:space="preserve">
+    <value>新建标签页</value>
+  </data>
+  <data name="Common_ApplyPseudoEditsToJSONUAssetKismet" xml:space="preserve">
+    <value>将伪代码修改应用到 JSON（UAssetKismet）</value>
+  </data>
+  <data name="Common_GameSpecificVersions" xml:space="preserve">
+    <value>游戏专用版本</value>
+  </data>
+  <data name="Main_MappingWizard" xml:space="preserve">
+    <value>映射向导...</value>
+  </data>
+  <data name="Main_ExpandAllNotAppropriateForHugeAmountOfFo" xml:space="preserve">
+    <value>全部展开（文件夹很多时不建议使用）</value>
+  </data>
+  <data name="DirSelector_WeLikeToMakeThingsAsSimpleAsPossibleChoo" xml:space="preserve">
+    <value>我们希望尽量简化操作。请从检测到的游戏中选择，或手动添加你自己的游戏。Flora 会根据这些信息自动查找要加载的归档，并在需要时解密。请不要跳过这一步！</value>
+  </data>
+  <data name="DirSelector_DetectedGame" xml:space="preserve">
+    <value>检测到的游戏</value>
+  </data>
+  <data name="DirSelector_SearchForAGame" xml:space="preserve">
+    <value>搜索游戏...</value>
+  </data>
+  <data name="DirSelector_UEVersions" xml:space="preserve">
+    <value>UE 版本</value>
+  </data>
+  <data name="DirSelector_DeleteGame" xml:space="preserve">
+    <value>删除游戏</value>
+  </data>
+  <data name="DirSelector_DragDropFolderToQuicklyConfigureNewGame" xml:space="preserve">
+    <value>拖放文件夹即可快速配置新游戏</value>
+  </data>
+  <data name="DirSelector_AddGame" xml:space="preserve">
+    <value>添加游戏</value>
+  </data>
+  <data name="DirSelector_Cancel" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="DirSelector_ADDUNDETECTEDGAME" xml:space="preserve">
+    <value>添加未检测到的游戏</value>
+  </data>
+  <data name="MappingWizard_UnversionedGameAssetsNeedAMappingFileUsm" xml:space="preserve">
+    <value>未版本化的游戏资源需要映射文件（.usmap / .jmap）。请用 UE4SS 或 Dumper-7 从运行中的游戏生成，然后在这里选择。Flora 会搜索游戏的 Binaries 文件夹、Dumper-7 的输出文件夹以及自身的 .data 文件夹。</value>
+  </data>
+  <data name="MappingWizard_Tool" xml:space="preserve">
+    <value>工具</value>
+  </data>
+  <data name="MappingWizard_UE" xml:space="preserve">
+    <value>UE</value>
+  </data>
+  <data name="MappingWizard_File" xml:space="preserve">
+    <value>文件</value>
+  </data>
+  <data name="MappingWizard_Modified" xml:space="preserve">
+    <value>修改时间</value>
+  </data>
+  <data name="MappingWizard_Folder" xml:space="preserve">
+    <value>文件夹</value>
+  </data>
+  <data name="MappingWizard_UseSelected" xml:space="preserve">
+    <value>使用所选</value>
+  </data>
+  <data name="MappingWizard_Rescan" xml:space="preserve">
+    <value>重新扫描</value>
+  </data>
+  <data name="MappingWizard_Browse" xml:space="preserve">
+    <value>浏览...</value>
+  </data>
+  <data name="MappingWizard_OpenFolder" xml:space="preserve">
+    <value>打开文件夹</value>
+  </data>
+  <data name="MappingWizard_HowToGenerateAMappingFile" xml:space="preserve">
+    <value>如何生成映射文件</value>
+  </data>
+  <data name="Audio_PLAYLIST" xml:space="preserve">
+    <value>播放列表</value>
+  </data>
+  <data name="FolderMenu_SaveFolderSBlueprintCUAssetAPIJSON" xml:space="preserve">
+    <value>保存文件夹中蓝图的 C++ 与 UAssetAPI JSON</value>
+  </data>
+  <data name="ImageMerger_ImagesPerRow" xml:space="preserve">
+    <value>每行图片数</value>
+  </data>
+  <data name="ImageMerger_MarginBetweenImages" xml:space="preserve">
+    <value>图片间距</value>
+  </data>
+  <data name="ImageMerger_Add" xml:space="preserve">
+    <value>添加</value>
+  </data>
+  <data name="ImageMerger_Clear" xml:space="preserve">
+    <value>清空</value>
+  </data>
+  <data name="ImageMerger_COMMANDS" xml:space="preserve">
+    <value>操作</value>
+  </data>
+  <data name="Endpoint_Endpoint" xml:space="preserve">
+    <value>接口地址</value>
+  </data>
+  <data name="Endpoint_Send" xml:space="preserve">
+    <value>发送</value>
+  </data>
+  <data name="Endpoint_Expression" xml:space="preserve">
+    <value>表达式</value>
+  </data>
+  <data name="Endpoint_Test" xml:space="preserve">
+    <value>测试</value>
+  </data>
+  <data name="Endpoint_ExpressionSyntax" xml:space="preserve">
+    <value>表达式语法</value>
+  </data>
+  <data name="Endpoint_OnlineEvaluator" xml:space="preserve">
+    <value>在线求值器</value>
+  </data>
+  <data name="Import_Index" xml:space="preserve">
+    <value>索引</value>
+  </data>
+  <data name="Import_ClassPackage" xml:space="preserve">
+    <value>类所在包</value>
+  </data>
+  <data name="Import_ClassName" xml:space="preserve">
+    <value>类名</value>
+  </data>
+  <data name="Import_ObjectName" xml:space="preserve">
+    <value>对象名</value>
+  </data>
+  <data name="Import_OuterIndex" xml:space="preserve">
+    <value>外部索引</value>
+  </data>
+  <data name="Import_BlueprintJSONModifiedClickRefresh" xml:space="preserve">
+    <value>蓝图 JSON 已修改 - 请点击刷新</value>
+  </data>
+  <data name="CustomDir_WhatIsThis" xml:space="preserve">
+    <value>这是什么？</value>
+  </data>
+  <data name="CustomDir_BoredOfOpeningFoldersSaveCustomDirectori" xml:space="preserve">
+    <value>厌倦了一层层打开文件夹？保存自定义目录即可快速跳转到常用文件夹。它们按当前设置的游戏分别保存，所以不用担心。</value>
+  </data>
+  <data name="CustomDir_Header" xml:space="preserve">
+    <value>名称</value>
+  </data>
+  <data name="DictEditor_IFYOUDONTKNOWWHATTHISDOESDONTTOUCHIT" xml:space="preserve">
+    <value>如果你不知道这是做什么的，请不要修改！</value>
+  </data>
+  <data name="DictEditor_Reset" xml:space="preserve">
+    <value>重置</value>
+  </data>
+  <data name="Backup_YouCanOnlyUseBackupFilesWhenLoadingNewMo" xml:space="preserve">
+    <value>备份文件只能在加载“新增与修改的归档”时使用。Flora 会将本地归档与所选备份文件比较，筛选出资源包，只显示你需要的内容。我们为一些热门游戏提供了预先制作的备份，你也可以自己创建，它会记录游戏在某一时刻所有资源包的信息，供以后使用。</value>
+  </data>
+  <data name="Backup_Create" xml:space="preserve">
+    <value>创建</value>
+  </data>
+  <data name="Backup_Download" xml:space="preserve">
+    <value>下载</value>
+  </data>
+  <data name="Backup_PRECREATEDBACKUPFILES" xml:space="preserve">
+    <value>预制备份文件</value>
+  </data>
+  <data name="Drop_DropUsmapJmapToImport" xml:space="preserve">
+    <value>拖放 .usmap / .jmap 以导入</value>
+  </data>
+  <data name="Enum_EAesReload_Always" xml:space="preserve">
+    <value>总是</value>
+  </data>
+  <data name="Enum_EAesReload_Never" xml:space="preserve">
+    <value>从不</value>
+  </data>
+  <data name="Enum_EAesReload_OncePerDay" xml:space="preserve">
+    <value>每天一次</value>
+  </data>
+  <data name="Enum_EDiscordRpc_Always" xml:space="preserve">
+    <value>总是</value>
+  </data>
+  <data name="Enum_EDiscordRpc_Never" xml:space="preserve">
+    <value>从不</value>
+  </data>
+  <data name="Enum_ELoadingMode_Multiple" xml:space="preserve">
+    <value>多选</value>
+  </data>
+  <data name="Enum_ELoadingMode_All" xml:space="preserve">
+    <value>全部</value>
+  </data>
+  <data name="Enum_ELoadingMode_AllButNew" xml:space="preserve">
+    <value>全部（新增）</value>
+  </data>
+  <data name="Enum_ELoadingMode_AllButModified" xml:space="preserve">
+    <value>全部（已修改）</value>
+  </data>
+  <data name="Enum_ELoadingMode_AllButPatched" xml:space="preserve">
+    <value>全部（排除补丁资源）</value>
+  </data>
+  <data name="Enum_ECompressedAudio_PlayDecompressed" xml:space="preserve">
+    <value>播放解压后的数据</value>
+  </data>
+  <data name="Enum_ECompressedAudio_PlayCompressed" xml:space="preserve">
+    <value>播放压缩数据（不一定是有效的音频数据）</value>
+  </data>
+  <data name="Enum_EIconStyle_Default" xml:space="preserve">
+    <value>默认</value>
+  </data>
+  <data name="Enum_EIconStyle_NoBackground" xml:space="preserve">
+    <value>无背景</value>
+  </data>
+  <data name="Enum_EIconStyle_NoText" xml:space="preserve">
+    <value>无文字</value>
+  </data>
+  <data name="Enum_EIconStyle_Flat" xml:space="preserve">
+    <value>扁平</value>
+  </data>
+  <data name="Enum_EAssetCategory_All" xml:space="preserve">
+    <value>全部</value>
+  </data>
+  <data name="Enum_EAssetCategory_Blueprints" xml:space="preserve">
+    <value>蓝图</value>
+  </data>
+  <data name="Enum_EAssetCategory_Mesh" xml:space="preserve">
+    <value>网格</value>
+  </data>
+  <data name="Enum_EAssetCategory_Texture" xml:space="preserve">
+    <value>贴图</value>
+  </data>
+  <data name="Enum_EAssetCategory_Materials" xml:space="preserve">
+    <value>材质</value>
+  </data>
+  <data name="Enum_EAssetCategory_Animation" xml:space="preserve">
+    <value>动画</value>
+  </data>
+  <data name="Enum_EAssetCategory_Level" xml:space="preserve">
+    <value>关卡</value>
+  </data>
+  <data name="Enum_EAssetCategory_Data" xml:space="preserve">
+    <value>数据</value>
+  </data>
+  <data name="Enum_EAssetCategory_Media" xml:space="preserve">
+    <value>媒体</value>
+  </data>
+  <data name="Enum_EAssetCategory_Particle" xml:space="preserve">
+    <value>粒子</value>
+  </data>
+  <data name="Enum_EAssetCategory_GameSpecific" xml:space="preserve">
+    <value>游戏专用</value>
+  </data>
+  <data name="Status_Ready" xml:space="preserve">
+    <value>就绪</value>
+  </data>
+  <data name="Status_Configuring" xml:space="preserve">
+    <value>配置中</value>
+  </data>
+  <data name="Status_Loading" xml:space="preserve">
+    <value>加载中</value>
+  </data>
+  <data name="Status_Stopping" xml:space="preserve">
+    <value>正在停止</value>
+  </data>
+  <data name="Status_Stopped" xml:space="preserve">
+    <value>已停止</value>
+  </data>
+  <data name="Status_Failed" xml:space="preserve">
+    <value>失败</value>
+  </data>
+  <data name="Status_Completed" xml:space="preserve">
+    <value>完成</value>
+  </data>
+  <data name="Common_NewTab" xml:space="preserve">
+    <value>新标签页</value>
+  </data>
+  <data name="BlueprintViewer_KindEvent" xml:space="preserve">
+    <value>事件</value>
+  </data>
+  <data name="BlueprintViewer_KindFunction" xml:space="preserve">
+    <value>函数</value>
+  </data>
+  <data name="BlueprintViewer_DesignAuto" xml:space="preserve">
+    <value>自动</value>
+  </data>
+  <data name="BlueprintViewer_DesignDesired" xml:space="preserve">
+    <value>期望尺寸</value>
+  </data>
+  <data name="BlueprintViewer_DesignPortrait" xml:space="preserve">
+    <value>{0} x {1}（竖屏）</value>
+  </data>
+  <data name="MappingWizard_Help" xml:space="preserve">
+    <value>UE4SS：安装到游戏 exe 所在目录，启动游戏并进入主菜单后，按 Ctrl+小键盘 6（.usmap）或 Ctrl+小键盘 5（.jmap）。文件会写到 UE4SS.dll 所在的文件夹。快捷键可在 Mods/Keybinds/Scripts/main.lua 中修改；图形界面的“Dumpers”页也有相同按钮。
+
+Dumper-7：将 DLL 注入运行中的游戏，.usmap 会写到 {0}\&lt;游戏名&gt;\Mappings（或 Dumper-7.ini 中的 SDKGenerationPath）。
+
+只在你有权修改的游戏上使用这些工具。带反作弊的游戏可能会封禁注入工具，风险由你自行承担。</value>
+  </data>
+  <data name="MappingWizard_Scanning" xml:space="preserve">
+    <value>正在扫描...</value>
+  </data>
+  <data name="MappingWizard_NoneFound" xml:space="preserve">
+    <value>没有找到映射文件。</value>
+  </data>
+  <data name="MappingWizard_Found" xml:space="preserve">
+    <value>找到 {0} 个文件。</value>
+  </data>
+  <data name="MappingWizard_ActiveNone" xml:space="preserve">
+    <value>当前映射：无</value>
+  </data>
+  <data name="MappingWizard_Active" xml:space="preserve">
+    <value>当前映射：{0}</value>
+  </data>
+  <data name="MappingWizard_SelectFirst" xml:space="preserve">
+    <value>请先选择一个文件。</value>
+  </data>
+  <data name="MappingWizard_LoadFailed" xml:space="preserve">
+    <value>无法加载该文件</value>
+  </data>
+  <data name="MappingWizard_Applied" xml:space="preserve">
+    <value>已应用 {0}。</value>
+  </data>
+  <data name="MappingWizard_Failed" xml:space="preserve">
+    <value>失败：{0}</value>
+  </data>
+  <data name="MappingWizard_BrowseTitle" xml:space="preserve">
+    <value>选择映射文件</value>
+  </data>
+  <data name="MappingWizard_BrowseFilter" xml:space="preserve">
+    <value>映射文件</value>
+  </data>
+  <data name="MappingWizard_AllFiles" xml:space="preserve">
+    <value>所有文件</value>
+  </data>
+  <data name="MappingWizard_NothingToOpen" xml:space="preserve">
+    <value>没有可打开的内容。</value>
+  </data>
+  <data name="Common_Enabled" xml:space="preserve">
+    <value>已启用</value>
+  </data>
+  <data name="Common_Disabled" xml:space="preserve">
+    <value>已禁用</value>
+  </data>
+  <data name="BlueprintEditor_PendingWithWires" xml:space="preserve">
+    <value>类默认值修改 {0} 项，引脚值修改 {1} 项，连线修改 {2} 项</value>
+  </data>
+  <data name="BlueprintEditor_WireLiteral" xml:space="preserve">
+    <value>已断开，值为 {0}</value>
+  </data>
+  <data name="BlueprintEditor_WireDataFrom" xml:space="preserve">
+    <value>连接到 {0}</value>
+  </data>
+  <data name="BlueprintEditor_WireExecTo" xml:space="preserve">
+    <value>执行转到 {0}</value>
+  </data>
+  <data name="BlueprintEditor_WireExecEnd" xml:space="preserve">
+    <value>执行在此结束</value>
+  </data>
+  <data name="BlueprintEditor_WireDirection" xml:space="preserve">
+    <value>请把输出引脚连接到输入引脚。</value>
+  </data>
+  <data name="BlueprintEditor_WireExecData" xml:space="preserve">
+    <value>执行引脚只能连接执行引脚，数据引脚只能连接数据引脚。</value>
+  </data>
+  <data name="BlueprintEditor_WireExecSingle" xml:space="preserve">
+    <value>只有单个执行输出的节点可以改线。</value>
+  </data>
+  <data name="BlueprintEditor_WireRevertValueFirst" xml:space="preserve">
+    <value>此引脚有未保存的值修改，请先还原。</value>
+  </data>
+  <data name="BlueprintEditor_WireBreakExecInput" xml:space="preserve">
+    <value>请在指向这里的节点的执行输出上断开连线。</value>
+  </data>
+  <data name="BlueprintEditor_WireBreakDataOutput" xml:space="preserve">
+    <value>请在读取此输出的输入引脚上断开连线。</value>
+  </data>
+  <data name="BlueprintViewer_BreakLinks" xml:space="preserve">
+    <value>断开连线</value>
+  </data>
+  <data name="BlueprintViewer_RevertWire" xml:space="preserve">
+    <value>还原连线修改</value>
+  </data>
+  <data name="BlueprintViewer_WireHint" xml:space="preserve">
+    <value>从一个引脚拖到另一个引脚即可连线。右键引脚、Alt+单击引脚，或选中引脚后按 Delete 可断开连线。</value>
+  </data>
+  <data name="Wire_NoArgument" xml:space="preserve">
+    <value>此输入在字节码中没有可替换的参数。</value>
+  </data>
+  <data name="Wire_NoVariable" xml:space="preserve">
+    <value>此输出没有保存在变量中，其他节点无法读取。</value>
+  </data>
+  <data name="Wire_SelfFeed" xml:space="preserve">
+    <value>节点不能连接到自身。</value>
+  </data>
+  <data name="Wire_TypeMismatch" xml:space="preserve">
+    <value>类型不匹配（{0} -&gt; {1}）。</value>
+  </data>
+  <data name="Wire_VariableReused" xml:space="preserve">
+    <value>保存此输出的变量被其他节点复用，在这里读取可能得到其他节点的值。</value>
+  </data>
+  <data name="Wire_NoLiteral" xml:space="preserve">
+    <value>{0} 类型的输入不能设为字面值。</value>
+  </data>
+  <data name="Wire_TargetLiteral" xml:space="preserve">
+    <value>调用的目标对象不能替换为字面值。</value>
+  </data>
+  <data name="Wire_SwitchLiteral" xml:space="preserve">
+    <value>Switch 的选择值不能替换为字面值。</value>
+  </data>
+  <data name="Wire_InvalidLiteral" xml:space="preserve">
+    <value>“{0}”不是有效的 {1} 值。</value>
+  </data>
+  <data name="Wire_SingleExecOutput" xml:space="preserve">
+    <value>只有单个执行输出的节点可以改线（Branch、Sequence、循环等不行）。</value>
+  </data>
+  <data name="Wire_NoEntry" xml:space="preserve">
+    <value>这个事件在事件图里没有入口点。</value>
+  </data>
+  <data name="Wire_InputEventEntry" xml:space="preserve">
+    <value>输入事件在开头会初始化临时值，暂不支持改线。</value>
+  </data>
+  <data name="Wire_NoEnd" xml:space="preserve">
+    <value>事件图里没有可用来结束执行的语句。</value>
+  </data>
+  <data name="Wire_EntryShared" xml:space="preserve">
+    <value>已有另一个事件从这里开始。</value>
+  </data>
+  <data name="Wire_TargetDelegate" xml:space="preserve">
+    <value>绑定事件节点依赖它前面的“创建事件”语句，不能作为跳转目标。</value>
+  </data>
+  <data name="Wire_EventsUnsupported" xml:space="preserve">
+    <value>函数入口和宏暂不支持改线。</value>
+  </data>
+  <data name="Wire_Latent" xml:space="preserve">
+    <value>延迟节点（Delay 等）会在恢复点继续执行，而不是在语句之后，不能改线。</value>
+  </data>
+  <data name="Wire_NotStatement" xml:space="preserve">
+    <value>此节点在字节码中不是独立的语句。</value>
+  </data>
+  <data name="Wire_LastStatement" xml:space="preserve">
+    <value>此节点是最后一条语句。</value>
+  </data>
+  <data name="Wire_TrailingStatements" xml:space="preserve">
+    <value>此节点后面跟着属于它的编译器生成语句，不能改线。</value>
+  </data>
+  <data name="Wire_SelfLoop" xml:space="preserve">
+    <value>节点不能把执行转到自身。</value>
+  </data>
+  <data name="Wire_TargetNoExec" xml:space="preserve">
+    <value>目标没有可以跳转到的执行输入。</value>
+  </data>
+  <data name="Wire_TargetNotStatement" xml:space="preserve">
+    <value>目标在字节码中不是独立的语句。</value>
+  </data>
+  <data name="Wire_NoReturn" xml:space="preserve">
+    <value>函数没有可跳转的返回语句。</value>
+  </data>
+  <data name="Menu_Views_PackWorkspace" xml:space="preserve">
+    <value>打包工具</value>
+  </data>
+  <data name="Pack_Title" xml:space="preserve">
+    <value>打包工具</value>
+  </data>
+  <data name="Pack_StatusReady" xml:space="preserve">
+    <value>就绪。可将解包页或来源浏览器中的文件拖入打包区。</value>
+  </data>
+  <data name="Pack_Summary" xml:space="preserve">
+    <value>{0} 个文件，{1}</value>
+  </data>
+  <data name="Pack_SourceGame" xml:space="preserve">
+    <value>游戏</value>
+  </data>
+  <data name="Pack_StatusOpening" xml:space="preserve">
+    <value>正在打开 {0}……</value>
+  </data>
+  <data name="Pack_StatusFailed" xml:space="preserve">
+    <value>失败：{0}</value>
+  </data>
+  <data name="Pack_StatusSource" xml:space="preserve">
+    <value>{0}：{1} 个文件</value>
+  </data>
+  <data name="Pack_StatusAdding" xml:space="preserve">
+    <value>正在添加 {0} 个文件……</value>
+  </data>
+  <data name="Pack_StatusAdded" xml:space="preserve">
+    <value>已向 pak 添加 {0} 个文件。</value>
+  </data>
+  <data name="Pack_StatusRemoved" xml:space="preserve">
+    <value>已从 pak 中移除。</value>
+  </data>
+  <data name="Pack_StatusNewProject" xml:space="preserve">
+    <value>新建工程。</value>
+  </data>
+  <data name="Pack_StatusOpened" xml:space="preserve">
+    <value>已打开 {0}。</value>
+  </data>
+  <data name="Pack_StatusSaved" xml:space="preserve">
+    <value>已保存 {0}。</value>
+  </data>
+  <data name="Pack_StatusBuilding" xml:space="preserve">
+    <value>正在生成 pak……</value>
+  </data>
+  <data name="Pack_StatusBuilt" xml:space="preserve">
+    <value>已将 {0} 个文件（{1}）打包为 {2}。</value>
+  </data>
+  <data name="Pack_Sources" xml:space="preserve">
+    <value>来源</value>
+  </data>
+  <data name="Pack_AddFolder" xml:space="preserve">
+    <value>文件夹…</value>
+  </data>
+  <data name="Pack_AddPak" xml:space="preserve">
+    <value>Pak…</value>
+  </data>
+  <data name="Pack_Search" xml:space="preserve">
+    <value>搜索</value>
+  </data>
+  <data name="Pack_AddSelected" xml:space="preserve">
+    <value>将所选加入 pak</value>
+  </data>
+  <data name="Pack_New" xml:space="preserve">
+    <value>新建</value>
+  </data>
+  <data name="Pack_Open" xml:space="preserve">
+    <value>打开</value>
+  </data>
+  <data name="Pack_Save" xml:space="preserve">
+    <value>保存</value>
+  </data>
+  <data name="Pack_SaveAs" xml:space="preserve">
+    <value>另存为</value>
+  </data>
+  <data name="Pack_Build" xml:space="preserve">
+    <value>生成 pak</value>
+  </data>
+  <data name="Pack_Remove" xml:space="preserve">
+    <value>移除</value>
+  </data>
+  <data name="Pack_AddFiles" xml:space="preserve">
+    <value>添加文件…</value>
+  </data>
+  <data name="Pack_TargetFolder" xml:space="preserve">
+    <value>pak 内的文件夹（留空为根目录）：</value>
+  </data>
+  <data name="Pack_MountPoint" xml:space="preserve">
+    <value>挂载点</value>
+  </data>
+  <data name="Pack_PakVersion" xml:space="preserve">
+    <value>Pak 版本</value>
+  </data>
+  <data name="Pack_Compress" xml:space="preserve">
+    <value>压缩</value>
+  </data>
+  <data name="Pack_ColPath" xml:space="preserve">
+    <value>pak 内路径</value>
+  </data>
+  <data name="Pack_ColSize" xml:space="preserve">
+    <value>大小</value>
+  </data>
+  <data name="Pack_ColOrigin" xml:space="preserve">
+    <value>来源</value>
+  </data>
+  <data name="Pack_ColModified" xml:space="preserve">
+    <value>已编辑</value>
+  </data>
+  <data name="Pack_DropHint" xml:space="preserve">
+    <value>将文件从解包页、来源浏览器或资源管理器拖到这里。</value>
+  </data>
+  <data name="Pack_ConfirmNew" xml:space="preserve">
+    <value>要丢弃当前工程吗？</value>
+  </data>
+  <data name="Pack_Cancel" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="Pack_OriginBlueprint" xml:space="preserve">
+    <value>蓝图编辑器</value>
+  </data>
+  <data name="Pack_ReplaceFile" xml:space="preserve">
+    <value>用文件替换…</value>
+  </data>
+  <data name="Pack_ExportFile" xml:space="preserve">
+    <value>保存到磁盘…</value>
+  </data>
+  <data name="Pack_StatusReplaced" xml:space="preserve">
+    <value>已替换 {0}。</value>
+  </data>
+  <data name="Pack_TexReplace" xml:space="preserve">
+    <value>用图片替换…</value>
+  </data>
+  <data name="Pack_TexExportPng" xml:space="preserve">
+    <value>保存为 PNG…</value>
+  </data>
+  <data name="Pack_TexHint" xml:space="preserve">
+    <value>把图片拖到这里。图片会被缩放并编码为这张贴图原有的格式，所以资源在游戏里仍然可用。</value>
+  </data>
+  <data name="Pack_TexInfo" xml:space="preserve">
+    <value>格式 {0}，{1} x {2}，{3} 级 mip</value>
+  </data>
+  <data name="Pack_TexEncoding" xml:space="preserve">
+    <value>正在编码……</value>
+  </data>
+  <data name="Pack_TexDone" xml:space="preserve">
+    <value>已用 {0} 替换。</value>
+  </data>
+  <data name="Pack_LocOnlyChanged" xml:space="preserve">
+    <value>仅显示已改</value>
+  </data>
+  <data name="Pack_LocNamespace" xml:space="preserve">
+    <value>命名空间</value>
+  </data>
+  <data name="Pack_LocKey" xml:space="preserve">
+    <value>键</value>
+  </data>
+  <data name="Pack_LocOriginal" xml:space="preserve">
+    <value>原文</value>
+  </data>
+  <data name="Pack_LocText" xml:space="preserve">
+    <value>文本（在此编辑）</value>
+  </data>
+  <data name="Pack_LocInfo" xml:space="preserve">
+    <value>格式 {0}，{1} 条，已改 {2} 条</value>
+  </data>
+  <data name="Pack_AudioPlay" xml:space="preserve">
+    <value>播放</value>
+  </data>
+  <data name="Pack_AudioReplace" xml:space="preserve">
+    <value>用另一个音频资源替换…</value>
+  </data>
+  <data name="Pack_AudioExport" xml:space="preserve">
+    <value>保存为音频文件…</value>
+  </data>
+  <data name="Pack_AudioInfo" xml:space="preserve">
+    <value>格式 {0}，{1}，{2} 字节</value>
+  </data>
+  <data name="Pack_AudioReplaced" xml:space="preserve">
+    <value>已替换为 {0}（{1} 个文件）。</value>
+  </data>
+  <data name="Pack_AudioHint" xml:space="preserve">
+    <value>替换会把整个资源（.uasset/.uexp/.ubulk）换成另一个同类音频。</value>
+  </data>
+  <data name="Pack_AudioEncode" xml:space="preserve">
+    <value>用音频文件替换（编码为 BINKA）…</value>
+  </data>
+  <data name="Pack_AudioQuality" xml:space="preserve">
+    <value>质量（0 最高）</value>
+  </data>
+  <data name="Pack_AudioEncoding" xml:space="preserve">
+    <value>正在编码……</value>
+  </data>
+  <data name="Pack_AudioEncoded" xml:space="preserve">
+    <value>已用 {0} 替换：{1:0.##} 秒，{2} 声道，{3} Hz，{4} KB。</value>
+  </data>
+  <data name="Pack_AudioNeedTool" xml:space="preserve">
+    <value>在 {1} 里没有找到 {0}。请从 github.com/595554963github/binkaenc 自行编译后选择该文件，它会被复制到那里（Flora 不随附它）。</value>
   </data>
 </root>

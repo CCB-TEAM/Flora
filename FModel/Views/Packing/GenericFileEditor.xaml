@@ -1,0 +1,18 @@
+<UserControl x:Class="FModel.Views.Packing.GenericFileEditor"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="clr-namespace:FModel.Localization"
+             xmlns:converters="clr-namespace:FModel.Views.Resources.Converters">
+    <StackPanel Margin="0 4 0 0">
+        <TextBlock FontWeight="SemiBold" Text="{Binding PakPath}" TextTrimming="CharacterEllipsis" />
+        <TextBlock Opacity="0.7" Margin="0 2 0 8">
+            <Run Text="{Binding Size, Converter={x:Static converters:SizeToStringConverter.Instance}, Mode=OneWay}" />
+            <Run Text="  ·  " />
+            <Run Text="{Binding Origin, Mode=OneWay}" />
+        </TextBlock>
+        <StackPanel Orientation="Horizontal">
+            <Button Content="{loc:Loc Pack_ReplaceFile}" Padding="12 3" Click="OnReplaceClick" />
+            <Button Content="{loc:Loc Pack_ExportFile}" Padding="12 3" Margin="6 0 0 0" Click="OnExportClick" />
+        </StackPanel>
+    </StackPanel>
+</UserControl>

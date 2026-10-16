@@ -80,9 +80,6 @@ public class TabCommand : ViewModelCommand<TabItem>
             case "Save_Blueprint_Json_As_Uasset":
                 _applicationView.CUE4Parse.SaveBlueprintJsonAsAsset(tabViewModel);
                 break;
-            case "Save_Blueprint_Json_Write_Back_Source":
-                _applicationView.CUE4Parse.SaveBlueprintJsonWriteBackToSource(tabViewModel);
-                break;
             case "Apply_Restricted_Pseudo_Edits_To_Json":
                 _applicationView.CUE4Parse.ApplyRestrictedPseudoEditsToJson(tabViewModel);
                 break;
@@ -99,7 +96,7 @@ public class TabCommand : ViewModelCommand<TabItem>
                 _applicationView.CUE4Parse.LocateCurrentStatementInLinkedView(tabViewModel);
                 break;
             case "Open_Properties":
-                if (tabViewModel.Header == "New Tab" || tabViewModel.Document == null) return;
+                if (tabViewModel.Header == TabControlViewModel.NewTabHeader || tabViewModel.Document == null) return;
                 DockPanels.ShowProperties(tabViewModel);
                 break;
             case "Copy_Asset_Path":

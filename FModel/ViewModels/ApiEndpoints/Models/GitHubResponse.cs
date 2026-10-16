@@ -103,7 +103,7 @@ public class GitHubCommit : ViewModel
             MessageBox.Show(new MessageBoxModel
             {
                 Text = "You are already on the latest version.",
-                Caption = "Update FModel",
+                Caption = "Update Flora",
                 Icon = MessageBoxImage.Information,
                 Buttons = [MessageBoxButtons.Ok()],
                 IsSoundEnabled = false
@@ -114,7 +114,7 @@ public class GitHubCommit : ViewModel
         var messageBox = new MessageBoxModel
         {
             Text = $"Are you sure you want to update to version '{ShortSha}'?{(!Asset.IsLatest ? "\nThis is not the latest version." : "")}",
-            Caption = "Update FModel",
+            Caption = "Update Flora",
             Icon = MessageBoxImage.Question,
             Buttons = MessageBoxButtons.YesNo(),
             IsSoundEnabled = false

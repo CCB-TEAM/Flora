@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.UE4.Assets;
+using CUE4Parse.UE4.Assets.Exports;
+using CUE4Parse.UE4.Objects.UObject;
 using FModel.ViewModels;
 using UAssetAPI;
 using UAssetAPI.ExportTypes;
@@ -29,6 +31,7 @@ public sealed class BlueprintEditSession : IDisposable
     private readonly string _stagedUassetPath;
     private readonly string _workDirectory;
     private readonly Dictionary<(string Function, uint Offset), ConstantEdit> _constants = new();
+    private readonly Dictionary<(string Function, WireEditKind Group, uint Offset), WireEdit> _wires = new();
     private int _saveCounter;
 
     public GameFile Entry { get; }
@@ -38,7 +41,8 @@ public sealed class BlueprintEditSession : IDisposable
     /// <summary>Number of CDO properties changed, added or removed since loading (or the last discard).</summary>
     public int CdoChangeCount { get; private set; }
     public int ConstantChangeCount => _constants.Count;
-    public int PendingCount => CdoChangeCount + ConstantChangeCount;
+    public int WireChangeCount => _wires.Count;
+    public int PendingCount => CdoChangeCount + ConstantChangeCount + WireChangeCount;
     public bool IsDirty => PendingCount > 0;
 
     /// <summary>Changes made since the last successful save.</summary>
@@ -79,12 +83,35 @@ public sealed class BlueprintEditSession : IDisposable
 
     public IEnumerable<ConstantEdit> Constants => _constants.Values;
 
+    public IEnumerable<WireEdit> Wires => _wires.Values;
+
+    public void SetWire(WireEdit edit)
+    {
+        _wires[edit.Key] = edit;
+        HasUnsavedChanges = true;
+        Changed?.Invoke();
+    }
+
+    public void RemoveWire(WireEdit edit)
+    {
+        if (_wires.Remove(edit.Key))
+            Changed?.Invoke();
+    }
+
+    /// <summary>Drops a pending constant change (the bytecode keeps its original value).</summary>
+    public void RemoveConstant(string functionName, uint offset)
+    {
+        if (_constants.Remove((functionName, offset)))
+            Changed?.Invoke();
+    }
+
     /// <summary>Drops every pending change and reloads the staged original.</summary>
     public void Discard()
     {
         Working = CUE4ParseViewModel.ReadBlueprintAssetLike(Working, _stagedUassetPath);
         Cdo = CdoEditor.TryCreate(Working);
         _constants.Clear();
+        _wires.Clear();
         CdoChangeCount = 0;
         HasUnsavedChanges = false;
         Changed?.Invoke();
@@ -110,14 +137,10 @@ public sealed class BlueprintEditSession : IDisposable
 
             // 2. bytecode constants
             stage = "patch";
-            if (_constants.Count > 0)
+            if (_constants.Count > 0 || _wires.Count > 0)
             {
-                KismetConstantPatcher.Apply(edited, _constants.Values.ToList());
-                var problems = edited.Exports.OfType<StructExport>()
-                    .Where(o => o.ScriptBytecode != null)
-                    .SelectMany(o => KismetConstantPatcher.Validate(edited, o))
-                    .Concat(KismetConstantPatcher.ValidateUbergraphEntryPoints(edited))
-                    .ToList();
+                KismetConstantPatcher.Apply(edited, _constants.Values.ToList(), _wires.Values.ToList());
+                var problems = KismetConstantPatcher.Validate(edited);
                 if (problems.Count > 0)
                     return Fail(stage, string.Join(Environment.NewLine, problems.Take(10)));
             }
@@ -126,7 +149,9 @@ public sealed class BlueprintEditSession : IDisposable
             stage = "verify";
             edited.Write(path);
             var package = _owner.ReadLegacyPackageFromDisk(Entry, path);
-            _ = package.GetExports().ToList();
+            var exports = package.GetExports().ToList();
+            if (CompareBytecodeSizes(edited, exports) is { } sizeError)
+                return Fail(stage, sizeError);
             if (verify(package) is { } error)
                 return Fail(stage, error);
 
@@ -134,8 +159,8 @@ public sealed class BlueprintEditSession : IDisposable
             string? assetPath = null, pakPath = null;
             if (createPak)
             {
-                stage = "pak";
-                if (!_owner.CreateEditedBlueprintPatchPak(Entry, edited, out pakPath, out var pakError))
+                stage = "pack";
+                if (!_owner.AddEditedBlueprintToPack(Entry, edited, out pakPath, out var pakError))
                     return Fail(stage, pakError);
             }
             if (exportAsset)
@@ -152,6 +177,33 @@ public sealed class BlueprintEditSession : IDisposable
             Serilog.Log.Error(e, "Failed to save blueprint edits of {Path} at stage {Stage}", Entry.Path, stage);
             return Fail(stage, $"{e.GetType().Name}: {e.Message}");
         }
+    }
+
+    /// <summary>
+    /// UAssetAPI lays the edited bytecode out with its own size rules; CUE4Parse must read every edited function back to the same size,
+    /// or the offsets written into the code would point elsewhere in the game.
+    /// </summary>
+    private string? CompareBytecodeSizes(UAsset edited, List<UObject> exports)
+    {
+        foreach (var functionName in _constants.Values.Select(o => o.FunctionName).Concat(_wires.Values.Select(o => o.FunctionName)).Distinct(StringComparer.Ordinal))
+        {
+            var written = KismetConstantPatcher.FindFunction(edited, functionName);
+            var read = exports.OfType<UStruct>().FirstOrDefault(o => o.Name == functionName && o.ScriptBytecode != null);
+            if (written == null || read == null)
+                return $"{functionName} has no bytecode after saving.";
+
+            if (read.ScriptBytecodeError is { } readError)
+                return $"{functionName}: CUE4Parse can't read the saved bytecode ({readError.Message}).";
+
+            // the layout the offsets were computed with, the size written in the header and the size read back must agree
+            uint expected = 0;
+            foreach (var statement in written.ScriptBytecode)
+                expected += statement.GetSize(edited);
+            var actual = read.ScriptBytecode.Length == 0 ? 0 : read.ScriptBytecode[^1].EndIndex;
+            if (actual != expected || read.BytecodeBufferSize != expected)
+                return $"{functionName}: bytecode size mismatch (UAssetAPI layout {expected}, header {read.BytecodeBufferSize}, CUE4Parse {actual}).";
+        }
+        return null;
     }
 
     private static BlueprintSaveResult Fail(string stage, string message) => new() { Success = false, Message = $"[{stage}] {message}" };

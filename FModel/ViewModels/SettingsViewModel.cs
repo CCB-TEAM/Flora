@@ -257,7 +257,7 @@ public class SettingsViewModel : ViewModel
         };
 
         _assetLanguageSnapshot = UserSettings.Default.AssetLanguage;
-        _uiLanguageSnapshot = UserSettings.Default.UiLanguage;
+        _uiLanguageSnapshot = LocalizationManager.Resolve(UserSettings.Default.UiLanguage);
         _compressedAudioSnapshot = UserSettings.Default.CompressedAudioMode;
         _cosmeticStyleSnapshot = UserSettings.Default.CosmeticStyle;
         _meshExportFormatSnapshot = UserSettings.Default.MeshExportFormat;
@@ -356,7 +356,7 @@ public class SettingsViewModel : ViewModel
             .Select(group => group.First())
             .OrderBy(value => ((int)value & 0xFF) == 0);
     private IEnumerable<ELanguage> EnumerateAssetLanguages() => Enum.GetValues<ELanguage>();
-    private IEnumerable<EUiLanguage> EnumerateUiLanguages() => Enum.GetValues<EUiLanguage>();
+    private IEnumerable<EUiLanguage> EnumerateUiLanguages() => [EUiLanguage.English, EUiLanguage.SimplifiedChinese];
     private IEnumerable<EAesReload> EnumerateAesReloads() => Enum.GetValues<EAesReload>();
     private IEnumerable<EDiscordRpc> EnumerateDiscordRpcs() => Enum.GetValues<EDiscordRpc>();
     private IEnumerable<ECompressedAudio> EnumerateCompressedAudios() => Enum.GetValues<ECompressedAudio>();

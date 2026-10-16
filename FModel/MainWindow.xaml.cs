@@ -65,6 +65,10 @@ public partial class MainWindow
         AssetsExplorer.SelectionChanged += (_, e) => SyncSelection(AssetsListName, e);
         AssetsListName.SelectionChanged += (_, e) => SyncSelection(AssetsExplorer, e);
 
+        EnablePackDragSource(AssetsListName);
+        EnablePackDragSource(AssetsExplorer);
+        EnablePackDragSource(AssetsFolderName);
+
         FLogger.Logger = LogRtbName;
         YesWeCats = this;
 
@@ -102,6 +106,7 @@ public partial class MainWindow
     private async void OnLoaded(object sender, RoutedEventArgs e)
     {
         DockWorkspace.RestoreLayout();
+        DockWorkspace.Activate("Archives");
         const bool newOrUpdated = false;
 
         switch (UserSettings.Default.AesReload)
@@ -295,6 +300,8 @@ public partial class MainWindow
             DockWorkspace.SetDetached(active, DetachActivePanelMenuItem.IsChecked);
     }
 
+    private void OnMappingWizardClick(object sender, RoutedEventArgs e) => DockPanels.ShowMappingWizard();
+
     private void OnResetLayoutClick(object sender, RoutedEventArgs e) => DockWorkspace.ResetLayout();
 
     private async void OnMappingsReload(object sender, ExecutedRoutedEventArgs e)
@@ -356,6 +363,48 @@ public partial class MainWindow
 
         _applicationView.IsAssetsExplorerVisible = true;
         _applicationView.SelectedLeftTabIndex = 1;
+    }
+
+    private Point _packDragStart;
+
+    /// <summary>Lets files and folders of the asset explorer be dragged into the packing workspace.</summary>
+    private void EnablePackDragSource(Control control)
+    {
+        control.PreviewMouseLeftButtonDown += (_, e) => _packDragStart = e.GetPosition(null);
+        control.PreviewMouseMove += (_, e) =>
+        {
+            if (e.LeftButton != MouseButtonState.Pressed) return;
+            var delta = e.GetPosition(null) - _packDragStart;
+            if (Math.Abs(delta.X) < SystemParameters.MinimumHorizontalDragDistance && Math.Abs(delta.Y) < SystemParameters.MinimumVerticalDragDistance) return;
+            if (!IsOnItem(e.OriginalSource as DependencyObject)) return;
+
+            var paths = control switch
+            {
+                ListBox list => list.SelectedItems.OfType<GameFileViewModel>().Select(o => o.Asset.Path).ToList(),
+                TreeView { SelectedItem: TreeItem folder } => CollectFolderPaths(folder).ToList(),
+                _ => [],
+            };
+            if (paths.Count == 0) return;
+            DragDrop.DoDragDrop(control, new DataObject(typeof(Framework.Packing.PackDragData), new Framework.Packing.PackDragData(null, paths)), DragDropEffects.Copy);
+        };
+    }
+
+    /// <summary>Whether the element is inside a list or tree item (not a scroll bar or empty space).</summary>
+    private static bool IsOnItem(DependencyObject element)
+    {
+        for (; element != null; element = element is System.Windows.Media.Visual ? System.Windows.Media.VisualTreeHelper.GetParent(element) : LogicalTreeHelper.GetParent(element))
+            if (element is ListBoxItem or TreeViewItem)
+                return true;
+        return false;
+    }
+
+    private static System.Collections.Generic.IEnumerable<string> CollectFolderPaths(TreeItem folder)
+    {
+        foreach (var asset in folder.AssetsList.Assets)
+            yield return asset.Asset.Path;
+        foreach (var child in folder.Folders)
+            foreach (var path in CollectFolderPaths(child))
+                yield return path;
     }
 
     private async void OnAssetsListMouseDoubleClick(object sender, MouseButtonEventArgs e)

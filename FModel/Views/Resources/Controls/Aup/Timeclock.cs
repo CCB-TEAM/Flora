@@ -312,6 +312,7 @@ public sealed class Timeclock : UserControl
             var length = _source.PlayedFile.Duration;
             Dispatcher.BeginInvoke((Action) delegate
             {
+                if (_timeText == null) return; // the template is not applied yet (the player panel was just opened)
                 _timeText.Text = ClockType switch
                 {
                     EClockType.TimeElapsed => position.ToString(TimeFormat),
@@ -330,7 +331,7 @@ public sealed class Timeclock : UserControl
     {
         Dispatcher.BeginInvoke((Action) delegate
         {
-            _timeText.Text = TimeSpan.Zero.ToString(TimeFormat);
+            if (_timeText != null) _timeText.Text = TimeSpan.Zero.ToString(TimeFormat);
         });
     }
 }

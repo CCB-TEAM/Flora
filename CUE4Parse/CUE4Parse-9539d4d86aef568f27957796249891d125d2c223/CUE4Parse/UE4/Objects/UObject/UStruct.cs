@@ -17,6 +17,20 @@ public class UStruct : UField
     public FField[] ChildProperties;
     public KismetExpression[] ScriptBytecode;
 
+    /// <summary>In-memory size of the bytecode as recorded by the engine when the package was saved.</summary>
+    public int BytecodeBufferSize;
+
+    /// <summary>
+    /// Set when the bytecode could not be read to the end; <see cref="ScriptBytecode"/> then only holds the statements before the error.
+    /// </summary>
+    [JsonIgnore]
+    public Exception? ScriptBytecodeError;
+
+    /// <summary>Whether the bytecode was read completely and its in-memory size matches the engine's.</summary>
+    public bool IsScriptBytecodeComplete =>
+        ScriptBytecode != null && ScriptBytecodeError == null &&
+        (ScriptBytecode.Length == 0 ? BytecodeBufferSize == 0 : ScriptBytecode[^1].EndIndex == BytecodeBufferSize);
+
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
@@ -37,7 +51,7 @@ public class UStruct : UField
             DeserializeProperties(Ar);
         }
 
-        var bytecodeBufferSize = Ar.Read<int>();
+        BytecodeBufferSize = Ar.Read<int>();
         var serializedScriptSize = Ar.Read<int>();
 
         if (Ar.Owner!.Provider?.ReadScriptData == true && serializedScriptSize > 0)
@@ -53,6 +67,7 @@ public class UStruct : UField
             }
             catch (Exception e)
             {
+                ScriptBytecodeError = e;
                 Log.Warning(e, $"Failed to serialize script bytecode in {Name}");
             }
             finally

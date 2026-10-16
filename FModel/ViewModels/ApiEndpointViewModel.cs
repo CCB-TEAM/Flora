@@ -11,7 +11,7 @@ public class ApiEndpointViewModel
 {
     private readonly RestClient _client = new (new RestClientOptions
     {
-        UserAgent = $"FModel/{Constants.APP_VERSION}",
+        UserAgent = $"Flora/{Constants.APP_VERSION}",
         Timeout = TimeSpan.FromSeconds(5)
     }, configureSerialization: s => s.UseSerializer<JsonNetSerializer>());
 

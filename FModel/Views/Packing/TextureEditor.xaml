@@ -1,0 +1,25 @@
+<UserControl x:Class="FModel.Views.Packing.TextureEditor"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="clr-namespace:FModel.Localization"
+             AllowDrop="True" Drop="OnImageDrop">
+    <Grid Margin="0 4 0 0">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Border Grid.Column="0" Width="220" Height="220" BorderThickness="1" BorderBrush="#40808080" Margin="0 0 10 0">
+            <Image x:Name="Preview" Stretch="Uniform" RenderOptions.BitmapScalingMode="NearestNeighbor" />
+        </Border>
+        <StackPanel Grid.Column="1">
+            <TextBlock x:Name="TitleText" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+            <TextBlock x:Name="InfoText" Opacity="0.75" Margin="0 4 0 8" TextWrapping="Wrap" />
+            <StackPanel Orientation="Horizontal">
+                <Button x:Name="ReplaceButton" Content="{loc:Loc Pack_TexReplace}" Padding="12 3" Click="OnReplaceClick" />
+                <Button Content="{loc:Loc Pack_TexExportPng}" Padding="12 3" Margin="6 0 0 0" Click="OnExportClick" />
+            </StackPanel>
+            <TextBlock Text="{loc:Loc Pack_TexHint}" Opacity="0.6" Margin="0 8 0 0" TextWrapping="Wrap" />
+            <TextBlock x:Name="ResultText" Margin="0 6 0 0" TextWrapping="Wrap" />
+        </StackPanel>
+    </Grid>
+</UserControl>
