@@ -122,6 +122,16 @@ namespace UAssetAPI.Kismet
         }
 
         /// <summary>
+        /// Makes a code offset of a new expression (a conditional jump, an execution flow push, a latent resume point...) point at
+        /// <paramref name="target"/>, a statement of the function by the time <see cref="Commit"/> runs; <paramref name="write"/> receives the offset.
+        /// </summary>
+        public void BindCodeOffset(KismetExpression target, Action<uint> write, string description)
+        {
+            if (target == null) throw new ArgumentNullException(nameof(target));
+            _bindings.Add(new Binding(GetTarget(target), write, description));
+        }
+
+        /// <summary>
         /// Makes the ubergraph entry point stored in <paramref name="entryPoint"/> (an int an event stub passes) start at <paramref name="target"/>
         /// (a statement of the ubergraph) instead; the value is written by <see cref="Commit"/>.
         /// </summary>

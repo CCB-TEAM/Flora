@@ -55,6 +55,18 @@ public static class BlueprintGraphContextFactory
 
     private static bool IsFile(string? path) => !string.IsNullOrWhiteSpace(path) && File.Exists(path);
 
+    /// <summary>The jmap dumps in use: the game's mappings (when they are a jmap) and the signature jmap of the settings.</summary>
+    public static List<JmapData> GetJmaps(string? mappingsJmapPath)
+    {
+        var result = new List<JmapData>();
+        if (LoadJmap(mappingsJmapPath) is { } mappings)
+            result.Add(mappings);
+        var settingsJmap = UserSettings.Default.BlueprintSignatureJmapPath;
+        if (!string.Equals(settingsJmap, mappingsJmapPath, StringComparison.OrdinalIgnoreCase) && LoadJmap(settingsJmap) is { } signatures)
+            result.Add(signatures);
+        return result;
+    }
+
     private static JmapData? LoadJmap(string? path)
     {
         if (!IsFile(path))

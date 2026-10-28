@@ -25,18 +25,60 @@ public sealed class ConstantEdit
     public override string ToString() => $"{FunctionName}@{Offset} ({ExpectedToken}) = {NewValue}";
 }
 
+public enum ObjectEditKind
+{
+    /// <summary>The expression (or statement) at the offset is replaced by the built object.</summary>
+    Replace,
+
+    /// <summary>The statements are inserted right after the statement at the offset.</summary>
+    InsertAfter,
+
+    /// <summary>The statement at the offset becomes EX_Nothing (offsets pointing at it stay valid).</summary>
+    Remove,
+}
+
+/// <summary>
+/// A bytecode object edit: Kismet expressions written as <see cref="KismetObjects"/> JSON, applied to the original bytecode.
+/// </summary>
+public sealed class ObjectEdit
+{
+    public string FunctionName { get; init; } = "";
+    public ObjectEditKind Kind { get; init; }
+
+    /// <summary>The original offset of the replaced expression, or of the statement to insert after / remove.</summary>
+    public uint Offset { get; init; }
+    public string Token { get; init; } = "";
+
+    /// <summary>Replace: one expression object. InsertAfter: an array of statement objects. Remove: null.</summary>
+    public Newtonsoft.Json.Linq.JToken? Payload { get; init; }
+
+    /// <summary>What the agent said the edit does (shown in the Changes list).</summary>
+    public string Description { get; init; } = "";
+
+    public (string Function, ObjectEditKind Kind, uint Offset) Key => (FunctionName, Kind == ObjectEditKind.Remove ? ObjectEditKind.Replace : Kind, Offset);
+
+    public override string ToString() => $"{FunctionName}@{Offset} {Kind}";
+}
+
 /// <summary>
 /// Rewrites literal constants in UAssetAPI bytecode. The code offsets that depend on the size change (jumps, execution flow pushes,
 /// switch cases, latent resume points, ubergraph entry points, context skips) are laid out again by UAssetAPI's <see cref="KismetCodeLayout"/>.
 /// </summary>
 public static class KismetConstantPatcher
 {
-    public static void Apply(UAsset asset, IReadOnlyCollection<ConstantEdit> edits) => Apply(asset, edits, []);
+    public static void Apply(UAsset asset, IReadOnlyCollection<ConstantEdit> edits) => Apply(asset, edits, [], []);
 
-    /// <summary>Applies constant and wire edits; each function is bound once, against the bytecode the graph was decompiled from.</summary>
-    public static void Apply(UAsset asset, IReadOnlyCollection<ConstantEdit> constants, IReadOnlyCollection<WireEdit> wires)
+    public static void Apply(UAsset asset, IReadOnlyCollection<ConstantEdit> constants, IReadOnlyCollection<WireEdit> wires) => Apply(asset, constants, wires, []);
+
+    /// <summary>
+    /// Applies constant, wire and bytecode object edits; each function is bound once, against the bytecode the graph was decompiled from.
+    /// Returns notes about what the object edits added to the package (names, imports).
+    /// </summary>
+    public static List<string> Apply(UAsset asset, IReadOnlyCollection<ConstantEdit> constants, IReadOnlyCollection<WireEdit> wires, IReadOnlyCollection<ObjectEdit> objects)
     {
-        var functionNames = constants.Select(o => o.FunctionName).Concat(wires.Select(o => o.FunctionName)).Distinct(StringComparer.Ordinal).ToList();
+        var notes = new List<string>();
+        var functionNames = constants.Select(o => o.FunctionName).Concat(wires.Select(o => o.FunctionName)).Concat(objects.Select(o => o.FunctionName))
+            .Distinct(StringComparer.Ordinal).ToList();
         foreach (var functionName in functionNames)
         {
             var function = FindFunction(asset, functionName)
@@ -84,12 +126,40 @@ public static class KismetConstantPatcher
                 }
             }
 
+            // bytecode objects: targets are found and the objects built before anything changes (building may add names and imports)
+            var builder = new KismetObjects.Builder(asset, true); // locals are declared in the package by now
+            var objectTargets = objects.Where(o => o.FunctionName == functionName)
+                .Select(o =>
+                {
+                    var target = Find(o.Offset, o.Token);
+                    if (o.Kind != ObjectEditKind.Replace && !layout.IsStatement(target))
+                        throw new InvalidOperationException($"{o.Token} at {o.Offset} in {function.ObjectName} is not a statement.");
+                    var built = o.Kind switch
+                    {
+                        ObjectEditKind.Replace => [builder.Build(o.Payload!, o.ToString())],
+                        ObjectEditKind.InsertAfter => ((Newtonsoft.Json.Linq.JArray) o.Payload!).Select((s, i) => builder.Build(s, $"{o}[{i}]")).ToArray(),
+                        _ => new KismetExpression[] { new EX_Nothing() },
+                    };
+                    return (Edit: o, Target: target, Built: built);
+                })
+                .ToList();
+            notes.AddRange(builder.Notes);
+
+            // an edit may not change what another edit of the same save rewrites
+            var rewritten = objectTargets.Where(o => o.Edit.Kind != ObjectEditKind.InsertAfter).Select(o => o.Target)
+                .Concat(dataTargets.Select(o => o.Target)).ToList();
+            for (var i = 0; i < rewritten.Count; i++)
+                for (var j = 0; j < rewritten.Count; j++)
+                    if (i != j && ContainsExpression(asset, rewritten[i], rewritten[j]))
+                        throw new InvalidOperationException($"{function.ObjectName}: two edits rewrite overlapping bytecode (the {rewritten[j].Token} inside the {rewritten[i].Token}); revert one of them.");
+
             var replacements = new Dictionary<KismetExpression, KismetExpression>(ReferenceEqualityComparer.Instance);
             foreach (var edit in constants.Where(o => o.FunctionName == functionName).GroupBy(o => o.Offset).Select(o => o.Last()))
             {
                 var target = Find(edit.Offset, edit.ExpectedToken);
-                if (dataTargets.Any(o => ContainsExpression(asset, o.Target, target)))
-                    continue; // the argument holding the constant is replaced by a wire edit
+                if (dataTargets.Any(o => ContainsExpression(asset, o.Target, target)) ||
+                    objectTargets.Any(o => o.Edit.Kind != ObjectEditKind.InsertAfter && ContainsExpression(asset, o.Target, target)))
+                    continue; // the argument holding the constant is replaced by a wire or object edit
                 var replacement = BuildReplacement(asset, target, edit.NewValue);
                 if (!ReferenceEquals(replacement, target))
                     replacements[target] = replacement;
@@ -101,6 +171,8 @@ public static class KismetConstantPatcher
                     ? CloneVariable(source!)
                     : BuildReplacement(asset, CreateLiteral(edit.LiteralKind), edit.LiteralText);
             }
+            foreach (var (_, target, built) in objectTargets.Where(o => o.Edit.Kind != ObjectEditKind.InsertAfter))
+                replacements[target] = built[0];
             layout.Replace(replacements);
 
             foreach (var (edit, statement, target) in execTargets)
@@ -124,8 +196,33 @@ public static class KismetConstantPatcher
                 layout.InsertAfter(statement, inserted);
             }
 
+            foreach (var (_, target, built) in objectTargets.Where(o => o.Edit.Kind == ObjectEditKind.InsertAfter))
+                layout.InsertAfter(replacements.TryGetValue(target, out var replaced) ? replaced : target, built);
+
+            // code offsets of the built objects: "@offset" is a statement of the original code, "#label" an inserted one
+            foreach (var pending in builder.Targets)
+            {
+                KismetExpression? statement;
+                if (pending.Reference.StartsWith('#'))
+                {
+                    statement = builder.Labels.GetValueOrDefault(pending.Reference[1..]);
+                    if (statement == null)
+                        throw new InvalidOperationException($"{pending.Description}: no inserted statement has the label '{pending.Reference[1..]}'.");
+                }
+                else
+                {
+                    if (!uint.TryParse(pending.Reference[1..], out var offset) || layout.FindOriginal(offset) is not { } original)
+                        throw new InvalidOperationException($"{pending.Description}: {pending.Reference} is not an offset of the original code.");
+                    statement = replacements.TryGetValue(original, out var replaced) ? replaced : original;
+                }
+                if (!layout.IsStatement(statement))
+                    throw new InvalidOperationException($"{pending.Description}: {pending.Reference} is not a statement ({statement.Token} is part of another statement).");
+                layout.BindCodeOffset(statement, pending.Write, pending.Description);
+            }
+
             layout.Commit();
         }
+        return notes;
     }
 
     private static bool ContainsExpression(UAsset asset, KismetExpression root, KismetExpression expression)

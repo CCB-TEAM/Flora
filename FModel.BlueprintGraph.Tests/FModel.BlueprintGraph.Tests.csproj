@@ -19,6 +19,13 @@
     <ProjectReference Include="..\UAssetAPI\UAssetAPI.csproj" />
     <!-- UsmapWriter lives in the WPF app; compiled in directly to avoid referencing the executable -->
     <Compile Include="..\FModel\Framework\Mappings\UsmapWriter.cs" Link="Linked\UsmapWriter.cs" />
+    <!-- the bytecode editing core has no WPF dependency -->
+    <Compile Include="..\FModel\Framework\BlueprintEditing\KismetObjects.cs" Link="Linked\KismetObjects.cs" />
+    <Compile Include="..\FModel\Framework\BlueprintEditing\KismetConstantPatcher.cs" Link="Linked\KismetConstantPatcher.cs" />
+    <Compile Include="..\FModel\Framework\BlueprintEditing\KismetLocals.cs" Link="Linked\KismetLocals.cs" />
+    <Compile Include="..\FModel\Framework\BlueprintEditing\DataTableEditor.cs" Link="Linked\DataTableEditor.cs" />
+    <Compile Include="..\FModel\Framework\BlueprintEditing\KismetFlowAudit.cs" Link="Linked\KismetFlowAudit.cs" />
+    <Compile Include="..\FModel\Framework\BlueprintEditing\WireEdits.cs" Link="Linked\WireEdits.cs" />
   </ItemGroup>
 
 </Project>

@@ -163,6 +163,7 @@
   <ItemGroup>
     <PackageReference Include="AdonisUI" Version="1.17.1" />
     <PackageReference Include="AdonisUI.ClassicTheme" Version="1.17.1" />
+    <PackageReference Include="Anthropic" Version="13.3.0" />
     <PackageReference Include="AvalonEdit" Version="6.3.1.120" />
     <PackageReference Include="CSCore" Version="1.2.1.2" />
     <PackageReference Include="Dirkster.AvalonDock" Version="4.74.1" />
@@ -171,6 +172,7 @@
     <PackageReference Include="EpicManifestParser" Version="2.4.1" />
     <PackageReference Include="EpicManifestParser.ZlibngDotNetDecompressor" Version="1.0.1" />
     <PackageReference Include="K4os.Compression.LZ4.Streams" Version="1.3.8" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4314.35" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="NVorbis" Version="0.10.5" />
     <PackageReference Include="Ookii.Dialogs.Wpf" Version="5.0.1" />
@@ -276,6 +278,34 @@
     <Resource Include="Resources\tl_forward.png" />
     <Resource Include="Resources\tl_previous.png" />
     <Resource Include="Resources\tl_next.png" />
+  </ItemGroup>
+
+  <!-- the agent panel's web interface (AgentUI, Vite + React): built with npm and copied next to the exe as AgentUI\ -->
+  <ItemGroup>
+    <Compile Remove="AgentUI\**" />
+    <None Remove="AgentUI\**" />
+    <EmbeddedResource Remove="AgentUI\**" />
+    <AgentUiSource Include="AgentUI\src\**\*;AgentUI\index.html;AgentUI\package.json;AgentUI\vite.config.ts;AgentUI\tsconfig.json" />
+  </ItemGroup>
+
+  <Target Name="BuildAgentUi" BeforeTargets="AssignTargetPaths" Condition="'$(SkipAgentUi)' != 'true'"
+          Inputs="@(AgentUiSource)" Outputs="AgentUI\dist\index.html">
+    <Exec Command="npm install --no-audit --no-fund" WorkingDirectory="AgentUI" Condition="!Exists('AgentUI\node_modules')" />
+    <Exec Command="npm run build" WorkingDirectory="AgentUI" />
+  </Target>
+
+  <Target Name="IncludeAgentUi" AfterTargets="BuildAgentUi" BeforeTargets="AssignTargetPaths">
+    <ItemGroup>
+      <_AgentUiFile Include="AgentUI\dist\**\*" />
+      <Content Include="@(_AgentUiFile)" Link="AgentUI\%(_AgentUiFile.RecursiveDir)%(_AgentUiFile.Filename)%(_AgentUiFile.Extension)"
+               CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    </ItemGroup>
+  </Target>
+
+  <!-- the blueprint agent's system prompt is the skill Claude Code reads -->
+  <ItemGroup>
+    <EmbeddedResource Include="..\.claude\skills\flora-blueprint-bytecode\SKILL.md" LogicalName="FModel.Agent.SKILL.md" Link="Resources\Agent\SKILL.md" />
+    <EmbeddedResource Include="..\.claude\skills\flora-blueprint-bytecode\reference\*.md" LogicalName="FModel.Agent.reference.%(Filename)%(Extension)" Link="Resources\Agent\reference\%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>

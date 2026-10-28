@@ -889,10 +889,10 @@
     <value>输出</value>
   </data>
   <data name="Dock_Float" xml:space="preserve">
-    <value>浮动</value>
+    <value>浮动为独立窗口</value>
   </data>
   <data name="Dock_Dock" xml:space="preserve">
-    <value>停靠</value>
+    <value>停靠到主窗口</value>
   </data>
   <data name="Dock_DockAsDocument" xml:space="preserve">
     <value>停靠为文档</value>
@@ -913,16 +913,10 @@
     <value>新建水平标签组</value>
   </data>
   <data name="Dock_Pin" xml:space="preserve">
-    <value>窗口置顶（便签）</value>
-  </data>
-  <data name="Dock_Detach" xml:space="preserve">
-    <value>独立窗口（显示在任务栏）</value>
+    <value>窗口置顶</value>
   </data>
   <data name="Dock_PinActive" xml:space="preserve">
-    <value>置顶当前面板</value>
-  </data>
-  <data name="Dock_DetachActive" xml:space="preserve">
-    <value>将当前面板弹出为独立窗口</value>
+    <value>当前面板窗口置顶</value>
   </data>
   <data name="Dock_ResetLayout" xml:space="preserve">
     <value>重置布局</value>
@@ -1719,5 +1713,95 @@ Dumper-7：将 DLL 注入运行中的游戏，.usmap 会写到 {0}\&lt;游戏名
   </data>
   <data name="Pack_AudioNeedTool" xml:space="preserve">
     <value>在 {1} 里没有找到 {0}。请从 github.com/595554963github/binkaenc 自行编译后选择该文件，它会被复制到那里（Flora 不随附它）。</value>
+  </data>
+  <data name="Menu_Views_Agent" xml:space="preserve">
+    <value>蓝图 Agent</value>
+  </data>
+  <data name="Agent_Title" xml:space="preserve">
+    <value>蓝图 Agent</value>
+  </data>
+  <data name="Agent_Settings" xml:space="preserve">
+    <value>模型与 MCP 设置</value>
+  </data>
+  <data name="Agent_Provider" xml:space="preserve">
+    <value>服务商</value>
+  </data>
+  <data name="Agent_Model" xml:space="preserve">
+    <value>模型</value>
+  </data>
+  <data name="Agent_BaseUrl" xml:space="preserve">
+    <value>Base URL</value>
+  </data>
+  <data name="Agent_BaseUrlHint" xml:space="preserve">
+    <value>留空使用服务商默认地址</value>
+  </data>
+  <data name="Agent_Effort" xml:space="preserve">
+    <value>推理强度</value>
+  </data>
+  <data name="Agent_EffortTip" xml:space="preserve">
+    <value>Claude 的 effort 等级；越高越仔细、消耗 token 越多（OpenAI 兼容服务商忽略此项）。</value>
+  </data>
+  <data name="Agent_ApiKey" xml:space="preserve">
+    <value>API Key</value>
+  </data>
+  <data name="Agent_ApiKeyTip" xml:space="preserve">
+    <value>以当前 Windows 账户加密保存。留空并保存即可清除。</value>
+  </data>
+  <data name="Agent_SaveKey" xml:space="preserve">
+    <value>保存</value>
+  </data>
+  <data name="Agent_AllowObjects" xml:space="preserve">
+    <value>允许字节码对象编辑（高级）</value>
+  </data>
+  <data name="Agent_AllowObjectsTip" xml:space="preserve">
+    <value>开放 kismet_* 工具：用 JSON 构建 Kismet 表达式（替换、插入、删除语句）。比图层编辑更强大，也更容易出错；所有修改仍会校验，保存前仍需你确认。</value>
+  </data>
+  <data name="Agent_McpEnable" xml:space="preserve">
+    <value>运行 MCP 服务器（供 Claude Code 等客户端使用）</value>
+  </data>
+  <data name="Agent_McpTip" xml:space="preserve">
+    <value>在 localhost 上通过 MCP（Streamable HTTP）提供同一套工具，使用 Bearer token 保护。</value>
+  </data>
+  <data name="Agent_McpPort" xml:space="preserve">
+    <value>端口</value>
+  </data>
+  <data name="Agent_McpCopy" xml:space="preserve">
+    <value>复制 claude mcp add 命令</value>
+  </data>
+  <data name="Agent_Send" xml:space="preserve">
+    <value>发送</value>
+  </data>
+  <data name="Agent_Stop" xml:space="preserve">
+    <value>停止</value>
+  </data>
+  <data name="Agent_NewChat" xml:space="preserve">
+    <value>新对话</value>
+  </data>
+  <data name="Agent_InputHint" xml:space="preserve">
+    <value>描述要做的修改，例如“把 BP_Hero 的跳跃高度改成 900，并跳过摔落伤害调用”（Enter 发送，Shift+Enter 换行）</value>
+  </data>
+  <data name="Agent_Started" xml:space="preserve">
+    <value>与 {0} 的对话</value>
+  </data>
+  <data name="Agent_Stopped" xml:space="preserve">
+    <value>已停止。</value>
+  </data>
+  <data name="BlueprintEditor_PendingWithObjects" xml:space="preserve">
+    <value>类默认值修改 {0} 项，引脚值修改 {1} 项，连线修改 {2} 项，字节码对象修改 {3} 项</value>
+  </data>
+  <data name="BlueprintEditor_NothingPending" xml:space="preserve">
+    <value>没有待提交的修改，无需校验。</value>
+  </data>
+  <data name="Dock_FloatActive" xml:space="preserve">
+    <value>将当前面板浮动为独立窗口</value>
+  </data>
+  <data name="Dock_DockActive" xml:space="preserve">
+    <value>将当前面板停靠回主窗口</value>
+  </data>
+  <data name="Dock_DockAllFloating" xml:space="preserve">
+    <value>停靠所有浮动窗口</value>
+  </data>
+  <data name="Dock_Independent" xml:space="preserve">
+    <value>独立窗口（单独任务栏按钮，可置于主窗口之后）</value>
   </data>
 </root>

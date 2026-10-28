@@ -31,22 +31,7 @@ public partial class TextureEditor : IPackEditor
     public TextureEditor() => InitializeComponent();
 
     /// <summary>Whether the file is a texture asset (a .uasset of Texture2D with its .uexp next to it).</summary>
-    public static bool IsTexture(PackItem item)
-    {
-        if (item.Extension != "uasset" || !File.Exists(Path.ChangeExtension(item.DiskPath, ".uexp")))
-            return false;
-        try
-        {
-            using var stream = File.OpenRead(item.DiskPath);
-            var buffer = new byte[(int) Math.Min(stream.Length, 262144)];
-            stream.ReadExactly(buffer);
-            return System.Text.Encoding.ASCII.GetString(buffer).Contains("Texture2D", StringComparison.Ordinal);
-        }
-        catch
-        {
-            return false;
-        }
-    }
+    public static bool IsTexture(PackItem item) => PackReplace.IsTexture(item);
 
     public void Load(PackItem item, PackWorkspaceViewModel viewModel)
     {
@@ -137,33 +122,12 @@ public partial class TextureEditor : IPackEditor
 
     private async Task ReplaceAsync(string imagePath)
     {
-        var cue4 = ApplicationService.ApplicationView.CUE4Parse;
         var item = _item;
         ReplaceButton.IsEnabled = false;
         ResultText.Text = L("Pack_TexEncoding");
-        var temp = Path.Combine(Path.GetTempPath(), "FloraPack", "tex", Guid.NewGuid().ToString("N"));
         try
         {
-            var written = await Task.Run(async () =>
-            {
-                var input = Path.Combine(temp, "in");
-                var output = Path.Combine(temp, "out");
-                Directory.CreateDirectory(input);
-                Directory.CreateDirectory(output);
-                var name = Path.GetFileName(item.DiskPath);
-                foreach (var part in PackPaths.PackageParts)
-                {
-                    var sibling = Path.ChangeExtension(item.DiskPath, part);
-                    if (File.Exists(sibling)) File.Copy(sibling, Path.Combine(input, Path.ChangeExtension(name, part)), true);
-                }
-                var result = await TextureReplaceService.ReplaceAsync(Path.Combine(input, name), imagePath, Path.Combine(output, name),
-                    cue4.ResolvePackEngineVersion(), cue4.ResolvePackUsmapPath());
-                return new[] { result.AssetPath, result.UexpPath, result.UbulkPath }.Where(o => o != null && File.Exists(o)).Select(o => o!)
-                    .Select(o => (Ext: Path.GetExtension(o), Data: File.ReadAllBytes(o))).ToList();
-            });
-
-            foreach (var (ext, data) in written)
-                _viewModel.ReplaceContent(item.PakPath.EndsWith(ext, StringComparison.OrdinalIgnoreCase) ? item : Sibling(item, ext), data, imagePath);
+            await PackReplace.ReplaceTextureAsync(_viewModel, item, imagePath);
             ResultText.Text = string.Format(L("Pack_TexDone"), Path.GetFileName(imagePath));
             await RefreshAsync(item);
         }
@@ -175,14 +139,6 @@ public partial class TextureEditor : IPackEditor
         finally
         {
             ReplaceButton.IsEnabled = true;
-            try { Directory.Delete(temp, true); } catch { /* temp */ }
         }
-    }
-
-    /// <summary>The item of another part of the package, or a stand-in when the part is new (a .ubulk).</summary>
-    private PackItem Sibling(PackItem item, string extension)
-    {
-        var path = Path.ChangeExtension(item.PakPath, extension).Replace('\\', '/');
-        return _viewModel.Project.Find(path) ?? new PackItem { PakPath = path };
     }
 }

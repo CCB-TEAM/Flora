@@ -1,4 +1,4 @@
-<UserControl x:Class="FModel.Views.BlueprintViewer.BlueprintViewerWindow"
+﻿<UserControl x:Class="FModel.Views.BlueprintViewer.BlueprintViewerWindow"
          xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
          xmlns:loc="clr-namespace:FModel.Localization"
@@ -146,12 +146,6 @@
                     <TextBlock DockPanel.Dock="Bottom" Margin="0 5 0 0" Text="{Binding StatusText}" TextTrimming="CharacterEllipsis" />
                     <Grid>
                         <bp:BlueprintGraphCanvas x:Name="GraphCanvas" />
-                        <TextBox x:Name="InlinePinEditor" Visibility="Collapsed" HorizontalAlignment="Left" VerticalAlignment="Top"
-                                 Padding="3 0" VerticalContentAlignment="Center" BorderBrush="#F0C674" BorderThickness="2"
-                                 PreviewKeyDown="OnInlinePinKeyDown" LostKeyboardFocus="OnInlinePinLostFocus" />
-                        <ComboBox x:Name="InlinePinEnumBox" Visibility="Collapsed" HorizontalAlignment="Left" VerticalAlignment="Top"
-                                  BorderBrush="#F0C674" BorderThickness="2" MaxDropDownHeight="400"
-                                  SelectionChanged="OnInlinePinEnumSelected" DropDownClosed="OnInlinePinEnumClosed" />
                         <Border Background="#80000000" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}">
                             <TextBlock Text="{Binding StatusText}" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontSize="16" />
                         </Border>
@@ -175,14 +169,10 @@
                     <TextBox Grid.Row="1" Text="{Binding SelectionText, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" MinHeight="60" MaxHeight="220"
                              VerticalScrollBarVisibility="Auto" FontFamily="Consolas" />
                     <StackPanel x:Name="PinEditPanel" Grid.Row="2" Margin="0 5 0 0" Visibility="Collapsed">
-                        <TextBlock x:Name="PinEditLabel" FontWeight="SemiBold" Margin="0 0 0 3" TextWrapping="Wrap" />
                         <DockPanel>
                             <Button DockPanel.Dock="Right" Margin="5 0 0 0" MinWidth="60" Content="{loc:Loc BlueprintEditor_Revert}" Click="OnPinRevertClick" ToolTip="{loc:Loc BlueprintEditor_RevertTip}" />
-                            <Button DockPanel.Dock="Right" Margin="5 0 0 0" MinWidth="60" Content="{loc:Loc BlueprintEditor_Apply}" Click="OnPinApplyClick" />
-                            <ComboBox x:Name="PinEditBox" IsEditable="True" IsTextSearchEnabled="True" KeyDown="OnPinEditKeyDown"
-                                      SelectionChanged="OnPinEditPicked" MaxDropDownHeight="400" />
+                            <TextBlock x:Name="PinEditLabel" FontWeight="SemiBold" Foreground="#F0C674" VerticalAlignment="Center" TextWrapping="Wrap" />
                         </DockPanel>
-                        <TextBlock x:Name="PinEditError" Foreground="#E05050" TextWrapping="Wrap" Margin="0 3 0 0" Visibility="Collapsed" />
                     </StackPanel>
                     <TabControl x:Name="DetailTabs" Grid.Row="3" Margin="0 5 0 0">
                         <TabItem Header="{loc:Loc BlueprintEditor_ChangesTab}">
@@ -434,17 +424,8 @@
 
                 <DockPanel Grid.Column="2" Margin="5">
                     <TextBlock x:Name="CdoSelectionTitle" DockPanel.Dock="Top" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0 0 0 5" />
-                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0 0 0 5">
-                        <Button x:Name="CdoApplyButton" MinWidth="70" Content="{loc:Loc BlueprintEditor_Apply}" Click="OnCdoApplyClick" />
-                        <Button x:Name="CdoAddButton" MinWidth="70" Margin="5 0 0 0" Content="{loc:Loc BlueprintEditor_Override}" Click="OnCdoAddClick"
-                                ToolTip="{loc:Loc BlueprintEditor_OverrideTip}" />
-                        <Button x:Name="CdoRemoveButton" MinWidth="70" Margin="5 0 0 0" Content="{loc:Loc BlueprintEditor_Revert}" Click="OnCdoRemoveClick"
-                                ToolTip="{loc:Loc BlueprintEditor_RevertTip}" />
-                    </StackPanel>
-                    <TextBlock x:Name="CdoError" DockPanel.Dock="Top" Foreground="#E05050" TextWrapping="Wrap" Margin="0 0 0 5" Visibility="Collapsed" />
-                    <ComboBox x:Name="CdoValueBox" DockPanel.Dock="Top" IsEditable="True" Visibility="Collapsed" KeyDown="OnCdoValueKeyDown" />
                     <avalonEdit:TextEditor x:Name="CdoJsonEditor" FontFamily="Consolas" FontSize="12" ShowLineNumbers="True" WordWrap="False"
-                                           Background="Transparent" Visibility="Collapsed" />
+                                           IsReadOnly="True" Background="Transparent" Visibility="Collapsed" />
                 </DockPanel>
             </Grid>
         </TabItem>

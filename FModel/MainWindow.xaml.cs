@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
@@ -99,13 +99,22 @@ public partial class MainWindow
 
     private void OnClosing(object sender, CancelEventArgs e)
     {
+        // unsaved edits in a panel (docked or in its own window) ask before the application goes away
+        if (!DockWorkspace.ConfirmCloseAll())
+        {
+            e.Cancel = true;
+            return;
+        }
+
         DockWorkspace.SaveLayout();
+        Framework.BlueprintAgent.McpServer.Instance.Stop();
         _discordHandler.Dispose();
     }
 
     private async void OnLoaded(object sender, RoutedEventArgs e)
     {
         DockWorkspace.RestoreLayout();
+        Framework.BlueprintAgent.McpServer.Instance.ApplySettings();
         DockWorkspace.Activate("Archives");
         const bool newOrUpdated = false;
 
@@ -283,21 +292,31 @@ public partial class MainWindow
     private void OnWindowMenuOpened(object sender, RoutedEventArgs e)
     {
         var active = ActiveLayoutContent;
-        PinActivePanelMenuItem.IsEnabled = DetachActivePanelMenuItem.IsEnabled = active is { CanFloat: true } || active is { IsFloating: true };
+        FloatActivePanelMenuItem.IsEnabled = active != null && DockWorkspace.CanFloat(active);
+        DockActivePanelMenuItem.IsEnabled = active is { IsFloating: true };
+        PinActivePanelMenuItem.IsEnabled = active is { CanFloat: true } || active is { IsFloating: true };
         PinActivePanelMenuItem.IsChecked = active != null && DockWorkspace.IsPinned(active);
-        DetachActivePanelMenuItem.IsChecked = active != null && DockWorkspace.IsDetached(active);
+        DockAllFloatingMenuItem.IsEnabled = DockWorkspace.HasFloatingWindows;
     }
+
+    private void OnFloatActivePanelClick(object sender, RoutedEventArgs e)
+    {
+        if (ActiveLayoutContent is { } active)
+            DockWorkspace.Float(active);
+    }
+
+    private void OnDockActivePanelClick(object sender, RoutedEventArgs e)
+    {
+        if (ActiveLayoutContent is { } active)
+            DockWorkspace.DockBack(active);
+    }
+
+    private void OnDockAllFloatingClick(object sender, RoutedEventArgs e) => DockWorkspace.DockAllFloating();
 
     private void OnPinActivePanelClick(object sender, RoutedEventArgs e)
     {
         if (ActiveLayoutContent is { } active)
             DockWorkspace.SetPinned(active, PinActivePanelMenuItem.IsChecked);
-    }
-
-    private void OnDetachActivePanelClick(object sender, RoutedEventArgs e)
-    {
-        if (ActiveLayoutContent is { } active)
-            DockWorkspace.SetDetached(active, DetachActivePanelMenuItem.IsChecked);
     }
 
     private void OnMappingWizardClick(object sender, RoutedEventArgs e) => DockPanels.ShowMappingWizard();

@@ -55,9 +55,32 @@ public abstract class EditEntry : ViewModel
     /// <summary>What the viewer lists for the function the pin lives in (used to jump back to it).</summary>
     public object Source { get; set; }
 
-    public BPNode Node => Pin.ParentNode;
+    public BPNode Node => Pin?.ParentNode;
     public abstract string Summary { get; }
-    public string Where => $"{FunctionName} / {Pin.ParentNode?.Name}";
+    public virtual string Where => $"{FunctionName} / {Pin?.ParentNode?.Name}";
+}
+
+/// <summary>A local variable declared by the agent, not saved yet.</summary>
+public class LocalEditEntry : EditEntry
+{
+    public LocalDeclaration Declaration { get; init; }
+
+    public override string Summary => $"Declare {Declaration.Name}: {(Declaration.Like != null ? "like " + Declaration.Like.ToString(Newtonsoft.Json.Formatting.None) : Declaration.Type)}" +
+                                       (string.IsNullOrWhiteSpace(Declaration.Description) ? "" : $" ({Declaration.Description})");
+
+    public override string Where => $"{FunctionName} (new local)";
+}
+
+/// <summary>A bytecode object edit (made by the agent) not saved yet; it has no pin.</summary>
+public class ObjectEditEntry : EditEntry
+{
+    public ObjectEdit Edit { get; init; }
+
+    public override string Summary => string.IsNullOrWhiteSpace(Edit.Description)
+        ? $"{Edit.Kind} {Edit.Token}"
+        : $"{Edit.Kind}: {Edit.Description}";
+
+    public override string Where => $"{FunctionName} @ {Edit.Offset} ({Edit.Token})";
 }
 
 /// <summary>A literal pin value changed in the graph and not saved yet.</summary>
@@ -167,7 +190,7 @@ public class BlueprintEditorViewModel : ViewModel
     public bool HasCdo => Session?.Cdo != null;
     public bool IsDirty => Session?.IsDirty == true;
     public bool HasUnsavedChanges => Session?.HasUnsavedChanges == true;
-    public string PendingText => Session == null ? string.Empty : string.Format(L("BlueprintEditor_PendingWithWires"), Session.CdoChangeCount, Session.ConstantChangeCount, Session.WireChangeCount);
+    public string PendingText => Session == null ? string.Empty : string.Format(L("BlueprintEditor_PendingWithObjects"), Session.CdoChangeCount, Session.ConstantChangeCount, Session.WireChangeCount, Session.ObjectChangeCount);
     public string CdoTitle => Session?.Cdo is { } cdo ? $"{cdo.Cdo.ObjectName} ({cdo.ClassName})" : string.Empty;
 
     private static string L(string key) => LocalizationManager.Instance.Get(key);
@@ -237,7 +260,14 @@ public class BlueprintEditorViewModel : ViewModel
         }
     }
 
-    private void OnSessionChanged() => RaiseSessionProperties();
+    /// <summary>Any pending change was made, reverted or discarded (pins, wires, bytecode objects or class defaults).</summary>
+    public event Action Edited;
+
+    private void OnSessionChanged()
+    {
+        RaiseSessionProperties();
+        Edited?.Invoke();
+    }
 
     private void RaiseSessionProperties()
     {
@@ -492,6 +522,8 @@ public class BlueprintEditorViewModel : ViewModel
         }
         _pinEntries.Clear();
         _wireEntries.Clear();
+        _objectEntries.Clear();
+        _localEntries.Clear();
         PinEdits.Clear();
         _undo.Clear();
         _redo.Clear();
@@ -708,6 +740,153 @@ public class BlueprintEditorViewModel : ViewModel
         }
     }
 
+    #region bytecode objects
+
+    private readonly Dictionary<(string, ObjectEditKind, uint), ObjectEditEntry> _objectEntries = new();
+
+    public IEnumerable<ObjectEditEntry> ObjectEntries => _objectEntries.Values;
+
+    /// <summary>
+    /// Records a bytecode object edit after checking that its target exists in the original bytecode and that its JSON builds.
+    /// Returns an error or null; <paramref name="notes"/> lists what applying it would add to the package.
+    /// </summary>
+    public async Task<string> ApplyObjectEditAsync(ObjectEdit edit, object source, List<string> notes)
+    {
+        if (!await EnsureLoadedAsync())
+            return Status;
+
+        var function = KismetConstantPatcher.FindFunction(Session.Working, edit.FunctionName);
+        if (function == null)
+            return $"'{edit.FunctionName}' has no parsed bytecode in the package.";
+        var layout = UAssetAPI.Kismet.KismetCodeLayout.Bind(Session.Working, function);
+        if (!Enum.TryParse<UAssetAPI.Kismet.Bytecode.EExprToken>(edit.Token, out var token) || layout.FindOriginal(edit.Offset, token) is not { } target)
+            return $"No {edit.Token} at offset {edit.Offset} in {edit.FunctionName}.";
+        if (edit.Kind != ObjectEditKind.Replace && !layout.IsStatement(target))
+            return $"The {edit.Token} at {edit.Offset} is not a statement (only whole statements can be removed or inserted after).";
+
+        try
+        {
+            var builder = new KismetObjects.Builder(Session.Working, false);
+            foreach (var local in Session.Locals)
+                builder.DeclaredLocals.Add((local.FunctionName, local.Name));
+            switch (edit.Kind)
+            {
+                case ObjectEditKind.Replace:
+                    builder.Build(edit.Payload, "object");
+                    break;
+                case ObjectEditKind.InsertAfter:
+                    if (edit.Payload is not Newtonsoft.Json.Linq.JArray { Count: > 0 } statements)
+                        return "Insert needs a non-empty array of statement objects.";
+                    for (var i = 0; i < statements.Count; i++)
+                        builder.Build(statements[i], $"statements[{i}]");
+                    break;
+            }
+            foreach (var reference in builder.Targets.Select(o => o.Reference))
+            {
+                if (reference.StartsWith('#') && !builder.Labels.ContainsKey(reference[1..]))
+                    return $"{reference}: no statement of this edit has the label '{reference[1..]}' (labels only reach statements of the same insert).";
+                if (reference.StartsWith('@') && (!uint.TryParse(reference[1..], out var offset) || layout.FindOriginal(offset) is not { } statement || !layout.IsStatement(statement)))
+                    return $"{reference} is not the offset of a statement of the original code.";
+            }
+            notes.AddRange(builder.Notes);
+        }
+        catch (Exception e)
+        {
+            return e.Message;
+        }
+
+        var key = edit.Key;
+        var before = _objectEntries.GetValueOrDefault(key)?.Edit;
+        SetObjectEdit(key, edit, source);
+        PushStep(new EditStep(null, () => SetObjectEdit(key, before, source), () => SetObjectEdit(key, edit, source)));
+        return null;
+    }
+
+    /// <summary>Drops a pending object edit (can be undone); returns false when there is none at that place.</summary>
+    public bool RevertObjectEdit(string functionName, ObjectEditKind kind, uint offset)
+    {
+        var key = (functionName, kind == ObjectEditKind.Remove ? ObjectEditKind.Replace : kind, offset);
+        if (!_objectEntries.TryGetValue(key, out var entry))
+            return false;
+        var edit = entry.Edit;
+        var source = entry.Source;
+        SetObjectEdit(key, null, source);
+        PushStep(new EditStep(null, () => SetObjectEdit(key, edit, source), () => SetObjectEdit(key, null, source)));
+        return true;
+    }
+
+    private readonly Dictionary<(string, string), LocalEditEntry> _localEntries = new();
+
+    /// <summary>Records a new local variable after checking the function, the name and the type. Returns an error or null.</summary>
+    public async Task<string> DeclareLocalAsync(LocalDeclaration declaration, object source, List<string> notes)
+    {
+        if (!await EnsureLoadedAsync())
+            return Status;
+        var function = KismetConstantPatcher.FindFunction(Session.Working, declaration.FunctionName);
+        if (function == null)
+            return $"'{declaration.FunctionName}' has no parsed bytecode in the package.";
+        if (Session.Locals.Any(o => o.FunctionName == declaration.FunctionName && o.Name.Equals(declaration.Name, StringComparison.OrdinalIgnoreCase) && o.Name != declaration.Name))
+            return $"A pending local of {declaration.FunctionName} already has the name {declaration.Name} (in another case).";
+        try
+        {
+            KismetLocals.Build(Session.Working, function, declaration, false, notes);
+        }
+        catch (Exception e)
+        {
+            return e.Message;
+        }
+
+        var key = declaration.Key;
+        var before = _localEntries.GetValueOrDefault(key)?.Declaration;
+        SetLocal(key, declaration, source);
+        PushStep(new EditStep(null, () => SetLocal(key, before, source), () => SetLocal(key, declaration, source)));
+        return null;
+    }
+
+    /// <summary>Drops a pending local declaration (can be undone); false when there is none.</summary>
+    public bool RevertLocal(string functionName, string name)
+    {
+        if (!_localEntries.TryGetValue((functionName, name), out var entry))
+            return false;
+        var declaration = entry.Declaration;
+        var source = entry.Source;
+        SetLocal((functionName, name), null, source);
+        PushStep(new EditStep(null, () => SetLocal((functionName, name), declaration, source), () => SetLocal((functionName, name), null, source)));
+        return true;
+    }
+
+    private void SetLocal((string, string) key, LocalDeclaration declaration, object source)
+    {
+        if (_localEntries.Remove(key, out var old))
+        {
+            Session.RemoveLocal(old.Declaration);
+            PinEdits.Remove(old);
+        }
+        if (declaration == null)
+            return;
+        var entry = new LocalEditEntry { Declaration = declaration, FunctionName = declaration.FunctionName, Source = source };
+        _localEntries[key] = entry;
+        PinEdits.Add(entry);
+        Session.SetLocal(declaration);
+    }
+
+    private void SetObjectEdit((string, ObjectEditKind, uint) key, ObjectEdit edit, object source)
+    {
+        if (_objectEntries.Remove(key, out var old))
+        {
+            Session.RemoveObject(old.Edit);
+            PinEdits.Remove(old);
+        }
+        if (edit == null)
+            return;
+        var entry = new ObjectEditEntry { Edit = edit, FunctionName = edit.FunctionName, Source = source };
+        _objectEntries[key] = entry;
+        PinEdits.Add(entry);
+        Session.SetObject(edit);
+    }
+
+    #endregion
+
     /// <summary>Puts the decompiled links back without touching the session (used when everything is discarded).</summary>
     private static void RestoreLinksOnly(WireEditEntry entry)
     {
@@ -750,6 +929,26 @@ public class BlueprintEditorViewModel : ViewModel
                 }.Where(o => o != null))
                 : string.Format(L("BlueprintEditor_SaveFailed"), result.Message);
             return result;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    /// <summary>Builds and verifies the pending edits without writing anything; returns the result (Success with no paths when valid).</summary>
+    public async Task<BlueprintSaveResult> ValidateAsync()
+    {
+        if (!await EnsureLoadedAsync())
+            return new BlueprintSaveResult { Success = false, Message = Status };
+        if (!IsDirty)
+            return new BlueprintSaveResult { Success = true, Message = L("BlueprintEditor_NothingPending") };
+
+        IsBusy = true;
+        try
+        {
+            var session = Session;
+            return await Task.Run(() => session.Save(false, false, package => Verifier?.Invoke(package, session)));
         }
         finally
         {

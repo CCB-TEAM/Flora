@@ -123,32 +123,13 @@ public partial class AudioEditor : IPackEditor
         var dialog = new OpenFileDialog { Filter = "Audio|*.wav;*.mp3;*.ogg;*.flac;*.m4a;*.wma|All files|*.*" };
         if (dialog.ShowDialog() != true) return;
 
-        var cue4 = ApplicationService.ApplicationView.CUE4Parse;
         var item = _item;
         var quality = QualityBox.SelectedIndex;
         ResultText.Text = L("Pack_AudioEncoding");
-        var temp = Path.Combine(Path.GetTempPath(), "FloraPack", "snd", Guid.NewGuid().ToString("N"));
         try
         {
-            var binka = await BinkaEncoder.EncodeAsync(dialog.FileName, quality);
-            var replacement = await Task.Run(() =>
-            {
-                Directory.CreateDirectory(temp);
-                var name = Path.GetFileName(item.DiskPath);
-                foreach (var part in PackPaths.PackageParts)
-                {
-                    var sibling = Path.ChangeExtension(item.DiskPath, part);
-                    if (File.Exists(sibling)) File.Copy(sibling, Path.Combine(temp, Path.ChangeExtension(name, part)), true);
-                }
-                return SoundWaveReplacer.Replace(Path.Combine(temp, name), binka, cue4.ResolvePackEngineVersion(), cue4.ResolvePackUsmapPath());
-            });
-
             var origin = dialog.FileName;
-            foreach (var (ext, data) in new[] { (".uasset", replacement.Uasset), (".uexp", replacement.Uexp), (".ubulk", replacement.Ubulk) })
-            {
-                var target = Path.ChangeExtension(item.PakPath, ext).Replace('\\', '/');
-                _viewModel.ReplaceContent(_viewModel.Project.Find(target) ?? new PackItem { PakPath = target }, data, origin);
-            }
+            var replacement = await PackReplace.EncodeSoundAsync(_viewModel, item, origin, quality);
             ResultText.Text = string.Format(L("Pack_AudioEncoded"), Path.GetFileName(origin), replacement.Seconds, replacement.Channels, replacement.SampleRate, replacement.Ubulk.Length / 1024);
             Load(item, _viewModel);
         }
@@ -156,10 +137,6 @@ public partial class AudioEditor : IPackEditor
         {
             Log.Error(ex, "Failed to encode sound {Path}", item.PakPath);
             ResultText.Text = string.Format(L("Pack_StatusFailed"), ex.Message);
-        }
-        finally
-        {
-            try { Directory.Delete(temp, true); } catch { /* temp */ }
         }
     }
 
@@ -171,24 +148,7 @@ public partial class AudioEditor : IPackEditor
 
         try
         {
-            var count = 0;
-            foreach (var part in PackPaths.PackageParts)
-            {
-                var source = Path.ChangeExtension(dialog.FileName, part);
-                var target = Path.ChangeExtension(_item.PakPath, part).Replace('\\', '/');
-                if (File.Exists(source))
-                {
-                    var existing = _viewModel.Project.Find(target) ?? new PackItem { PakPath = target };
-                    _viewModel.ReplaceContent(existing, File.ReadAllBytes(source), source);
-                    count++;
-                }
-                else if (part != ".uasset" && _viewModel.Project.Find(target) is { } stale)
-                {
-                    // a part the new sound does not have (a .ubulk) must not stay from the old one
-                    _viewModel.Project.Remove(stale);
-                }
-            }
-            _viewModel.RefreshSummary();
+            var count = PackReplace.ReplaceSoundAsset(_viewModel, _item, dialog.FileName);
             ResultText.Text = string.Format(L("Pack_AudioReplaced"), Path.GetFileName(dialog.FileName), count);
             Load(_item, _viewModel);
         }

@@ -889,10 +889,10 @@
     <value>Output</value>
   </data>
   <data name="Dock_Float" xml:space="preserve">
-    <value>Float</value>
+    <value>Float in Own Window</value>
   </data>
   <data name="Dock_Dock" xml:space="preserve">
-    <value>Dock</value>
+    <value>Dock into Main Window</value>
   </data>
   <data name="Dock_DockAsDocument" xml:space="preserve">
     <value>Dock as Document</value>
@@ -913,16 +913,10 @@
     <value>New Horizontal Tab Group</value>
   </data>
   <data name="Dock_Pin" xml:space="preserve">
-    <value>Always on Top (Sticky Note)</value>
-  </data>
-  <data name="Dock_Detach" xml:space="preserve">
-    <value>Independent Window (Own Taskbar Entry)</value>
+    <value>Always on Top</value>
   </data>
   <data name="Dock_PinActive" xml:space="preserve">
-    <value>Pin Active Panel on Top</value>
-  </data>
-  <data name="Dock_DetachActive" xml:space="preserve">
-    <value>Detach Active Panel as Independent Window</value>
+    <value>Active Panel Always on Top</value>
   </data>
   <data name="Dock_ResetLayout" xml:space="preserve">
     <value>Reset Layout</value>
@@ -1719,5 +1713,95 @@ Only use these tools on games you are allowed to modify. Anti-cheat protected ga
   </data>
   <data name="Pack_AudioNeedTool" xml:space="preserve">
     <value>{0} was not found in {1}. Build it from github.com/595554963github/binkaenc and pick the file; it is copied there (it is not shipped with Flora).</value>
+  </data>
+  <data name="Menu_Views_Agent" xml:space="preserve">
+    <value>Blueprint Agent</value>
+  </data>
+  <data name="Agent_Title" xml:space="preserve">
+    <value>Blueprint Agent</value>
+  </data>
+  <data name="Agent_Settings" xml:space="preserve">
+    <value>Model and MCP settings</value>
+  </data>
+  <data name="Agent_Provider" xml:space="preserve">
+    <value>Provider</value>
+  </data>
+  <data name="Agent_Model" xml:space="preserve">
+    <value>Model</value>
+  </data>
+  <data name="Agent_BaseUrl" xml:space="preserve">
+    <value>Base URL</value>
+  </data>
+  <data name="Agent_BaseUrlHint" xml:space="preserve">
+    <value>Empty: the provider's default</value>
+  </data>
+  <data name="Agent_Effort" xml:space="preserve">
+    <value>Effort</value>
+  </data>
+  <data name="Agent_EffortTip" xml:space="preserve">
+    <value>Claude effort level; higher is more thorough and uses more tokens (ignored by OpenAI-compatible providers).</value>
+  </data>
+  <data name="Agent_ApiKey" xml:space="preserve">
+    <value>API key</value>
+  </data>
+  <data name="Agent_ApiKeyTip" xml:space="preserve">
+    <value>Stored encrypted for your Windows account. Leave empty and save to remove it.</value>
+  </data>
+  <data name="Agent_SaveKey" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Agent_AllowObjects" xml:space="preserve">
+    <value>Allow bytecode object edits (advanced)</value>
+  </data>
+  <data name="Agent_AllowObjectsTip" xml:space="preserve">
+    <value>Offers the kismet_* tools that build Kismet expressions from JSON (replace, insert, remove statements). More powerful and easier to get wrong than graph edits; every edit is still validated and needs your confirmation to save.</value>
+  </data>
+  <data name="Agent_McpEnable" xml:space="preserve">
+    <value>Run the MCP server (for Claude Code and other clients)</value>
+  </data>
+  <data name="Agent_McpTip" xml:space="preserve">
+    <value>Serves the same tools over MCP (Streamable HTTP) on localhost, protected by a bearer token.</value>
+  </data>
+  <data name="Agent_McpPort" xml:space="preserve">
+    <value>Port</value>
+  </data>
+  <data name="Agent_McpCopy" xml:space="preserve">
+    <value>Copy claude mcp add</value>
+  </data>
+  <data name="Agent_Send" xml:space="preserve">
+    <value>Send</value>
+  </data>
+  <data name="Agent_Stop" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="Agent_NewChat" xml:space="preserve">
+    <value>New chat</value>
+  </data>
+  <data name="Agent_InputHint" xml:space="preserve">
+    <value>Describe the change, e.g. "in BP_Hero make the jump height 900 and skip the fall damage call" (Enter sends, Shift+Enter for a new line)</value>
+  </data>
+  <data name="Agent_Started" xml:space="preserve">
+    <value>Conversation with {0}</value>
+  </data>
+  <data name="Agent_Stopped" xml:space="preserve">
+    <value>Stopped.</value>
+  </data>
+  <data name="BlueprintEditor_PendingWithObjects" xml:space="preserve">
+    <value>{0} class default change(s), {1} pin value change(s), {2} wire change(s), {3} bytecode object edit(s)</value>
+  </data>
+  <data name="BlueprintEditor_NothingPending" xml:space="preserve">
+    <value>Nothing to check: there are no pending edits.</value>
+  </data>
+  <data name="Dock_FloatActive" xml:space="preserve">
+    <value>Float Active Panel in Own Window</value>
+  </data>
+  <data name="Dock_DockActive" xml:space="preserve">
+    <value>Dock Active Panel into Main Window</value>
+  </data>
+  <data name="Dock_DockAllFloating" xml:space="preserve">
+    <value>Dock All Floating Windows</value>
+  </data>
+  <data name="Dock_Independent" xml:space="preserve">
+    <value>Independent Window (Own Taskbar Button)</value>
   </data>
 </root>

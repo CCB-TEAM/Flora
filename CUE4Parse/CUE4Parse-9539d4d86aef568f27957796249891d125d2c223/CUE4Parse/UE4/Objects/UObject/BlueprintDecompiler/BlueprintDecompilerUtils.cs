@@ -109,6 +109,7 @@ public static class BlueprintDecompilerUtils
         string parameters)
     {
         if (className.StartsWith("SolarisMathLibrary_") || className == "KismetMathLibrary")
+        try
         {
             if (functionName.StartsWith("EqualEqual_ByteByte")) return $"((!{parametersList[0]}) == (!{parametersList[1]}))";
             if (functionName.StartsWith("NotEqual_ByteByte")) return $"((!{parametersList[0]}) !== (!{parametersList[1]}))";
@@ -152,8 +153,13 @@ public static class BlueprintDecompilerUtils
             if (functionName.StartsWith("Acos")) return $"FMath::Acos({parametersList[0]})";
             if (functionName.StartsWith("Atan")) return $"FMath::Atan({parametersList[0]})";
             if (functionName.StartsWith("Atan2")) return $"FMath::Atan2({parametersList[0]}, {parametersList[1]})";
-            if (functionName.StartsWith("Rand")) return $"FMath::RandHelper({parametersList[0]})";
-            if (functionName.StartsWith("Random")) return $"FMath::FRandRange({parametersList[0]}, {parametersList[1]})";
+            // KismetMathLibrary has no "Rand*" functions, only "Random*". Match them exactly (the former "Rand" prefix
+            // shadowed every one of them and indexed parameters the zero-argument ones don't have).
+            if (functionName.StartsWith("RandomIntegerInRange")) return $"FMath::RandRange({parametersList[0]}, {parametersList[1]})";
+            if (functionName == "RandomInteger") return $"FMath::RandHelper({parametersList[0]})";
+            if (functionName.StartsWith("RandomFloatInRange")) return $"FMath::FRandRange({parametersList[0]}, {parametersList[1]})";
+            if (functionName == "RandomFloat") return "FMath::FRand()";
+            if (functionName == "RandomBool") return "FMath::RandBool()";
             if (functionName.StartsWith("And_IntInt")) return $"({parametersList[0]} & {parametersList[1]})";
             if (functionName.StartsWith("Or_IntInt")) return $"({parametersList[0]} | {parametersList[1]})";
             if (functionName.StartsWith("Xor_IntInt")) return $"({parametersList[0]} ^ {parametersList[1]})";
@@ -361,9 +367,13 @@ public static class BlueprintDecompilerUtils
             if (functionName.StartsWith("FMax")) return $"FMath::FMax({parametersList[0]}, {parametersList[1]})";
             if (functionName.StartsWith("AbsMinus")) return $"FMath::Abs({parametersList[0]} - {parametersList[1]})";
         }
+        catch (ArgumentOutOfRangeException)
+        {
+            // The call has fewer (non-empty) arguments than the operator rewrite above expects: keep it as a plain call below.
+        }
         if (className == "KismetStringLibrary")
         {
-            if (functionName.StartsWith("EqualEqual_")) return $"{parametersList[0]} == {parametersList[1]}";
+if (functionName.StartsWith("EqualEqual_")) return $"{parametersList[0]} == {parametersList[1]}";
             if (functionName.StartsWith("NotEqual_")) return $"({parametersList[0]} !== {parametersList[1]})";
 
             if (functionName.EndsWith("ToDouble")) return $"(double){parametersList[0]}";
