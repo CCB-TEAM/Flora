@@ -2556,6 +2556,25 @@ public class CUE4ParseViewModel : ViewModel
         }
     }
 
+    /// <summary>The blueprint's classes as pseudo C++ (with the UAssetAPI statement annotations), or null when it has no class export.</summary>
+    public string DecompileBlueprintPseudo(GameFile entry)
+    {
+        var package = Provider.LoadPackage(entry);
+        var pseudo = TryDecompileBlueprintToPseudo(package, Provider.MappingsForGame ?? new TypeMappings());
+        if (string.IsNullOrWhiteSpace(pseudo))
+            return null;
+        try
+        {
+            return TryAugmentPseudoWithUAssetApi(entry, package, pseudo);
+        }
+        catch (Exception e)
+        {
+            // the annotations are a bonus: the text without them is still worth reading
+            Log.Warning(e, "Could not annotate the pseudo code of {Path} with UAssetAPI", entry.Path);
+            return pseudo + $"\n// UAssetAPI annotations failed: {e.GetType().Name}: {e.Message}";
+        }
+    }
+
     private static string TryDecompileBlueprintToPseudo(IPackage package, TypeMappings mappings)
     {
         var classExports = new List<UClass>();
@@ -2594,7 +2613,18 @@ public class CUE4ParseViewModel : ViewModel
         for (var idx = 0; idx < classesWithParents.Count; idx++)
         {
             var cls = classesWithParents[idx];
-            var pseudo = cls.DecompileBlueprintToPseudo(mappings, cookedMetaData);
+            string pseudo;
+            try
+            {
+                pseudo = cls.DecompileBlueprintToPseudo(mappings, cookedMetaData);
+            }
+            catch (Exception e)
+            {
+                // the other classes of the chain are still worth reading
+                Log.Warning(e, "Could not decompile class {Class} to pseudo code", cls.Name);
+                var frame = e.StackTrace?.Split('\n').Select(o => o.Trim()).FirstOrDefault(o => o.StartsWith("at ", StringComparison.Ordinal));
+                pseudo = $"/* CLASS DECOMPILE FAILED ({cls.Name}): {e.GetType().Name}: {e.Message} */\n// {frame}";
+            }
             if (string.IsNullOrWhiteSpace(pseudo))
                 continue;
 

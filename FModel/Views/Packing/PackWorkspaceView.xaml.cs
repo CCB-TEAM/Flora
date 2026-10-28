@@ -21,6 +21,9 @@ public partial class PackWorkspaceView
     private const string ProjectFilter = "Flora pack project (*.florapack)|*.florapack";
 
     private readonly PackWorkspaceViewModel _viewModel = new();
+
+    /// <summary>The workspace shown in this panel (the agent tools work on it).</summary>
+    public PackWorkspaceViewModel ViewModel => _viewModel;
     private Point _dragStart;
     private bool _loadingSettings;
     private string _lastTargetFolder = "";
@@ -43,6 +46,9 @@ public partial class PackWorkspaceView
         if (e.PropertyName == nameof(PackWorkspaceViewModel.Project))
             LoadSettings();
     }
+
+    /// <summary>Shows the project settings again after they were changed elsewhere (the agent).</summary>
+    public void ReloadSettings() => LoadSettings();
 
     private void LoadSettings()
     {

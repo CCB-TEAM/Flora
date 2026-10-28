@@ -15,6 +15,12 @@ public class ObjectData
     public Dictionary<string, PropertyData> Properties = new(StringComparer.OrdinalIgnoreCase);
     private Dictionary<string, FunctionData> functions = new(StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>What the object is in a jmap dump (Class, ScriptStruct or Package); null when read from a package.</summary>
+    public string? Kind;
+
+    /// <summary>The functions declared by this object itself (not inherited).</summary>
+    public IReadOnlyCollection<FunctionData> Functions => functions.Values;
+
     public UObject? Object = null;
     
     public ObjectData()

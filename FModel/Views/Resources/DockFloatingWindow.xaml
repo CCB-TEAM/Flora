@@ -1,0 +1,27 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:adonisUi="clr-namespace:AdonisUI;assembly=AdonisUI"
+                    xmlns:dock="clr-namespace:AvalonDock.Controls;assembly=AvalonDock">
+
+    <!--
+        A panel taken out of the main window is a normal Windows window: the system frame and title bar (Aero Snap, Alt+Tab,
+        taskbar button, system menu), not the docking theme's own drawn chrome. AvalonDock still handles dragging it back
+        by its title bar and docking it into the main window.
+    -->
+    <Style x:Key="NativeFloatingWindowStyle" TargetType="{x:Type dock:LayoutFloatingWindowControl}">
+        <Setter Property="Background" Value="{DynamicResource {x:Static adonisUi:Brushes.Layer0BackgroundBrush}}" />
+        <Setter Property="Foreground" Value="{DynamicResource {x:Static adonisUi:Brushes.ForegroundBrush}}" />
+        <Setter Property="WindowStyle" Value="SingleBorderWindow" />
+        <Setter Property="ResizeMode" Value="CanResize" />
+        <Setter Property="UseLayoutRounding" Value="True" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type dock:LayoutFloatingWindowControl}">
+                    <Border Background="{TemplateBinding Background}">
+                        <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>

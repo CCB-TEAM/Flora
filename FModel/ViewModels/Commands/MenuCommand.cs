@@ -48,6 +48,9 @@ public class MenuCommand : ViewModelCommand<ApplicationViewModel>
             case "Views_PackWorkspace":
                 DockPanels.ShowPackWorkspace();
                 break;
+            case "Views_Agent":
+                DockPanels.ShowAgent();
+                break;
             case "Views_ImageMerger":
                 DockPanels.ShowImageMerger();
                 break;

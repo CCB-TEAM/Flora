@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -37,17 +37,10 @@ public partial class BlueprintViewerWindow : IDockPanel
         WidgetJsonEditor.SyntaxHighlighting = AvalonExtensions.HighlighterSelector("json");
         CdoJsonEditor.SyntaxHighlighting = AvalonExtensions.HighlighterSelector("json");
         GraphCanvas.SelectionChanged += OnGraphSelectionChanged;
-        GraphCanvas.PinValueClicked += OnPinValueClicked;
         GraphCanvas.NodeContextRequested += OnNodeContextRequested;
-        GraphCanvas.WireDropped += OnWireDropped;
-        GraphCanvas.PinBreakRequested += OnPinBreakRequested;
-        GraphCanvas.AllowWireEditing = _viewModel.Editor.CanEdit;
-        GraphCanvas.ToolTip = _viewModel.Editor.CanEdit ? L("BlueprintViewer_WireHint") : null;
-        GraphCanvas.PreviewMouseWheel += (_, _) =>
-        {
-            CloseInlinePinEditor(true);
-            OnInlinePinEnumClosed(null, EventArgs.Empty);
-        };
+        // the graph is read-only: edits come from the agent tools, the viewer shows and reviews them
+        _viewModel.Editor.Edited += OnEditsChanged;
+        _viewModel.GraphsReset += OnGraphsReset;
         DesignerCanvas.ImageResolver = _viewModel.Designer.ResolveImage;
         DesignerCanvas.SelectionChanged += OnDesignerSelectionChanged;
         DesignerCanvas.SizeChanged += OnDesignerSizeChanged;
@@ -275,193 +268,47 @@ public partial class BlueprintViewerWindow : IDockPanel
 
     private GraphPin _editedPin;
 
+    /// <summary>Shows the pending change of the selected pin (the graph itself can't be edited), with a revert button.</summary>
     private void ShowPinEditor(GraphPin pin)
     {
-        PinEditError.Visibility = Visibility.Collapsed;
-        if (pin == null || !_viewModel.Editor.CanEdit || _viewModel.Current?.FunctionName == null || !_viewModel.Editor.CanEditPinValue(pin))
-        {
-            _editedPin = null;
-            PinEditPanel.Visibility = Visibility.Collapsed;
-            return;
-        }
-
-        _editedPin = pin;
-        PinEditLabel.Text = string.Format(L("BlueprintEditor_PinValue"), pin.PinFriendlyName, _viewModel.Editor.GetValueKind(pin),
-            Math.Max(1, pin.SourceConstants.Count));
-        var raw = _viewModel.Editor.GetValueText(pin, _viewModel.Current.FunctionName);
-        var enumNames = _viewModel.GetPinEnumNames(pin);
-        _fillingPinEditBox = true;
-        try
-        {
-            PinEditBox.ItemsSource = enumNames.Count > 0 ? enumNames
-                : _viewModel.Editor.GetValueKind(pin) == FModel.BlueprintGraph.Decompiler.EditableConstantKind.Bool ? new[] { "true", "false" }
-                : null;
-            PinEditBox.Text = enumNames.Count > 0 ? _viewModel.FormatPinValue(pin, raw) : raw;
-        }
-        finally
-        {
-            _fillingPinEditBox = false;
-        }
-        PinEditBox.ToolTip = enumNames.Count > 0 ? L("BlueprintEditor_EnumHint") : null;
-        PinEditPanel.Visibility = Visibility.Visible;
+        EditEntry change = pin == null ? null : (EditEntry) _viewModel.Editor.FindPinEdit(pin) ?? _viewModel.Editor.FindWire(pin);
+        _editedPin = change == null ? null : pin;
+        PinEditPanel.Visibility = change == null ? Visibility.Collapsed : Visibility.Visible;
+        PinEditLabel.Text = change?.Summary ?? string.Empty;
     }
 
-    private bool _fillingPinEditBox;
+    private bool _refreshQueued;
 
-    // picking from the drop-down applies right away; typing waits for Enter or Apply
-    private void OnPinEditPicked(object sender, SelectionChangedEventArgs e)
+    /// <summary>The pending edits changed (usually through the agent): redraw once the change is complete.</summary>
+    private void OnEditsChanged()
     {
-        if (_fillingPinEditBox || PinEditBox.SelectedItem is not string picked || !PinEditBox.IsDropDownOpen)
+        if (_refreshQueued)
             return;
-        PinEditBox.Text = picked;
-        ApplyPinEdit();
-    }
-
-    private async void ApplyPinEdit()
-    {
-        if (_editedPin == null)
-            return;
-
-        var error = await CommitPinAsync(_editedPin, PinEditBox.Text);
-        PinEditError.Text = error ?? string.Empty;
-        PinEditError.Visibility = error == null ? Visibility.Collapsed : Visibility.Visible;
-    }
-
-    /// <summary>Applies a new literal value to the pin; returns an error message or null.</summary>
-    private async System.Threading.Tasks.Task<string> CommitPinAsync(GraphPin pin, string text)
-    {
-        if (_viewModel.Current?.FunctionName is not { } functionName)
-            return L("BlueprintEditor_PinNotEditable");
-        if (!_viewModel.Current.IsBytecodeComplete)
-            return L("BlueprintEditor_BytecodeIncomplete");
-
-        text = _viewModel.ParsePinValue(pin, text ?? string.Empty);
-        var error = await _viewModel.Editor.ApplyPinEditAsync(pin, functionName, text, FunctionList.SelectedItem);
-        if (error == null)
+        _refreshQueued = true;
+        Dispatcher.BeginInvoke(() =>
+        {
+            _refreshQueued = false;
             RefreshAfterPinChange();
-        return error;
+            ShowCdoEditor(SelectedCdoItem);
+        }, System.Windows.Threading.DispatcherPriority.Background);
     }
 
-    #region editing on the node
-
-    private GraphPin _inlinePin;
-
-    private async void OnPinValueClicked(GraphPin pin, Rect rect)
+    /// <summary>The decompiled graphs were dropped (pending edits discarded): show the current function again.</summary>
+    private async void OnGraphsReset()
     {
-        if (!_viewModel.Editor.CanEdit || _viewModel.Current?.FunctionName is not { } functionName || !_viewModel.Editor.CanEditPinValue(pin))
+        ShowCdoEditor(SelectedCdoItem);
+        ApplyCdoFilter();
+        if (FunctionList.SelectedItem is not BlueprintFunctionItem item)
             return;
 
-        CloseInlinePinEditor(true);
-
-        var current = _viewModel.Editor.GetValueText(pin, functionName);
-        if (_viewModel.Editor.GetValueKind(pin) == FModel.BlueprintGraph.Decompiler.EditableConstantKind.Bool)
-        {
-            // a click flips a boolean
-            await CommitPinAsync(pin, current.Trim().Equals("true", StringComparison.OrdinalIgnoreCase) ? "false" : "true");
+        var result = await _viewModel.OpenAsync(item);
+        if (result == null)
             return;
-        }
-
-        var enumNames = _viewModel.GetPinEnumNames(pin);
-        if (enumNames.Count > 0)
-        {
-            _inlineEnumPin = null; // no commit while filling
-            InlinePinEnumBox.ItemsSource = enumNames;
-            InlinePinEnumBox.SelectedItem = _viewModel.FormatPinValue(pin, current);
-            InlinePinEnumBox.FontSize = Math.Clamp(12 * GraphCanvas.ViewScale, 9, 28);
-            InlinePinEnumBox.Margin = new Thickness(rect.Left, rect.Top, 0, 0);
-            InlinePinEnumBox.MinWidth = Math.Max(rect.Width + 20, 80);
-            InlinePinEnumBox.Visibility = Visibility.Visible;
-            _inlineEnumPin = pin;
-            _ = Dispatcher.BeginInvoke(new Action(() =>
-            {
-                InlinePinEnumBox.Focus();
-                InlinePinEnumBox.IsDropDownOpen = true;
-            }), System.Windows.Threading.DispatcherPriority.Input);
-            return;
-        }
-
-        _inlinePin = pin;
-        InlinePinEditor.ClearValue(Control.BorderBrushProperty);
-        InlinePinEditor.ToolTip = null;
-        InlinePinEditor.Text = current;
-        InlinePinEditor.FontSize = Math.Clamp(12 * GraphCanvas.ViewScale, 9, 28);
-        InlinePinEditor.Margin = new Thickness(rect.Left, rect.Top, 0, 0);
-        InlinePinEditor.MinWidth = Math.Max(rect.Width, 60);
-        InlinePinEditor.Height = Math.Max(rect.Height, 20);
-        InlinePinEditor.Visibility = Visibility.Visible;
-        _ = Dispatcher.BeginInvoke(new Action(() =>
-        {
-            InlinePinEditor.Focus();
-            InlinePinEditor.SelectAll();
-        }), System.Windows.Threading.DispatcherPriority.Input);
+        GraphCanvas.SetGraph(result.Graph);
+        FunctionJsonEditor.Text = result.BytecodeJson ?? string.Empty;
+        UpdateSearch();
+        GraphCanvas.ZoomToFit();
     }
-
-    private void CloseInlinePinEditor(bool commit)
-    {
-        if (_inlinePin == null)
-            return;
-
-        var pin = _inlinePin;
-        var text = InlinePinEditor.Text;
-        _inlinePin = null;
-        InlinePinEditor.Visibility = Visibility.Collapsed;
-        if (commit)
-            _ = CommitPinAsync(pin, text); // an invalid value is dropped; the side panel shows how to fix it
-    }
-
-    private async void OnInlinePinKeyDown(object sender, KeyEventArgs e)
-    {
-        if (_inlinePin == null)
-            return;
-
-        if (e.Key == Key.Escape)
-        {
-            CloseInlinePinEditor(false);
-            GraphCanvas.Focus();
-            e.Handled = true;
-        }
-        else if (e.Key == Key.Enter)
-        {
-            e.Handled = true;
-            var pin = _inlinePin;
-            var error = await CommitPinAsync(pin, InlinePinEditor.Text);
-            if (error != null)
-            {
-                // stay open so the value can be fixed
-                InlinePinEditor.BorderBrush = System.Windows.Media.Brushes.IndianRed;
-                InlinePinEditor.ToolTip = error;
-                return;
-            }
-
-            _inlinePin = null;
-            InlinePinEditor.Visibility = Visibility.Collapsed;
-            GraphCanvas.Focus();
-        }
-    }
-
-    private void OnInlinePinLostFocus(object sender, KeyboardFocusChangedEventArgs e) => CloseInlinePinEditor(true);
-
-    private GraphPin _inlineEnumPin;
-
-    private async void OnInlinePinEnumSelected(object sender, SelectionChangedEventArgs e)
-    {
-        if (_inlineEnumPin is not { } pin || InlinePinEnumBox.SelectedItem is not string picked)
-            return;
-
-        _inlineEnumPin = null;
-        InlinePinEnumBox.Visibility = Visibility.Collapsed;
-        await CommitPinAsync(pin, picked);
-        GraphCanvas.Focus();
-    }
-
-    private void OnInlinePinEnumClosed(object sender, EventArgs e)
-    {
-        // closed without picking another value
-        _inlineEnumPin = null;
-        InlinePinEnumBox.Visibility = Visibility.Collapsed;
-    }
-
-    #endregion
 
     private void RefreshAfterPinChange()
     {
@@ -496,8 +343,13 @@ public partial class BlueprintViewerWindow : IDockPanel
     private async void OnPinEditListDoubleClick(object sender, MouseButtonEventArgs e)
     {
         if (PinEditList.SelectedItem is EditEntry { Source: BlueprintFunctionItem item } entry)
-            await NavigateToNodeAsync(item, entry.Node);
+            await NavigateToNodeAsync(item, entry.Node ?? (entry is ObjectEditEntry objectEntry ? FindNodeAt(objectEntry.Edit.Offset) : null));
     }
+
+    /// <summary>The node of the current graph whose statement covers the bytecode offset.</summary>
+    private BPNode FindNodeAt(uint offset) =>
+        _viewModel.Current?.Graph.Nodes.Where(o => o.NodeInstr != null && o.NodeInstr.StatementIndex <= offset && offset < o.NodeInstr.EndIndex)
+            .OrderBy(o => o.NodeInstr.EndIndex - o.NodeInstr.StatementIndex).FirstOrDefault();
 
     /// <summary>Opens the graph of the item and centres the node in it.</summary>
     private async System.Threading.Tasks.Task NavigateToNodeAsync(BlueprintFunctionItem item, BPNode node)
@@ -525,16 +377,6 @@ public partial class BlueprintViewerWindow : IDockPanel
         {
             _navigating = false;
         }
-    }
-
-    private void OnPinApplyClick(object sender, RoutedEventArgs e) => ApplyPinEdit();
-
-    private void OnPinEditKeyDown(object sender, KeyEventArgs e)
-    {
-        if (e.Key != Key.Enter)
-            return;
-        ApplyPinEdit();
-        e.Handled = true;
     }
 
     private async void OnModeTabChanged(object sender, SelectionChangedEventArgs e)
@@ -567,86 +409,20 @@ public partial class BlueprintViewerWindow : IDockPanel
 
     private void OnCdoSelected(object sender, SelectionChangedEventArgs e) => ShowCdoEditor(SelectedCdoItem);
 
+    /// <summary>Shows the selected class default (read-only).</summary>
     private void ShowCdoEditor(CdoPropertyItem item)
     {
-        CdoError.Visibility = Visibility.Collapsed;
         if (item == null)
         {
             CdoSelectionTitle.Text = string.Empty;
-            CdoValueBox.Visibility = Visibility.Collapsed;
             CdoJsonEditor.Visibility = Visibility.Collapsed;
-            CdoApplyButton.IsEnabled = CdoAddButton.IsEnabled = CdoRemoveButton.IsEnabled = false;
             return;
         }
 
         CdoSelectionTitle.Text = $"{item.DisplayName} : {item.TypeText}  ({item.Owner})" +
                                  (item.IsOverridden ? string.Empty : Environment.NewLine + L("BlueprintEditor_Inherited"));
-        CdoApplyButton.IsEnabled = item.IsOverridden;
-        CdoAddButton.IsEnabled = !item.IsOverridden;
-        CdoRemoveButton.IsEnabled = item.IsOverridden;
-
-        var text = _viewModel.Editor.GetEditText(item);
-        if (item.IsSimple)
-        {
-            CdoJsonEditor.Visibility = Visibility.Collapsed;
-            CdoValueBox.Visibility = item.IsOverridden ? Visibility.Visible : Visibility.Collapsed;
-            var values = _viewModel.Editor.GetEnumValues(item).ToList();
-            if (item.Property.Type == UAssetAPI.Unversioned.EPropertyType.BoolProperty)
-                values = ["true", "false"];
-            CdoValueBox.ItemsSource = values;
-            CdoValueBox.Text = text;
-        }
-        else
-        {
-            CdoValueBox.Visibility = Visibility.Collapsed;
-            CdoJsonEditor.Visibility = item.IsOverridden ? Visibility.Visible : Visibility.Collapsed;
-            CdoJsonEditor.Text = text;
-        }
-    }
-
-    private void ShowCdoError(string error)
-    {
-        CdoError.Text = error ?? string.Empty;
-        CdoError.Visibility = error == null ? Visibility.Collapsed : Visibility.Visible;
-    }
-
-    private void OnCdoApplyClick(object sender, RoutedEventArgs e)
-    {
-        if (SelectedCdoItem is not { } item)
-            return;
-
-        var error = _viewModel.Editor.ApplyCdoValue(item, item.IsSimple ? CdoValueBox.Text : CdoJsonEditor.Text);
-        if (error == null)
-            ShowCdoEditor(item);
-        ShowCdoError(error);
-    }
-
-    private void OnCdoValueKeyDown(object sender, KeyEventArgs e)
-    {
-        if (e.Key != Key.Enter)
-            return;
-        OnCdoApplyClick(sender, e);
-        e.Handled = true;
-    }
-
-    private void OnCdoAddClick(object sender, RoutedEventArgs e)
-    {
-        if (SelectedCdoItem is not { } item)
-            return;
-
-        var error = _viewModel.Editor.AddCdoOverride(item);
-        if (error == null)
-            ShowCdoEditor(item);
-        ShowCdoError(error);
-    }
-
-    private void OnCdoRemoveClick(object sender, RoutedEventArgs e)
-    {
-        if (SelectedCdoItem is not { } item)
-            return;
-
-        _viewModel.Editor.RemoveCdoOverride(item);
-        ShowCdoEditor(item);
+        CdoJsonEditor.Visibility = item.IsOverridden ? Visibility.Visible : Visibility.Collapsed;
+        CdoJsonEditor.Text = _viewModel.Editor.GetEditText(item);
     }
 
     private async void OnExportAssetClick(object sender, RoutedEventArgs e) => await SaveAsync(true, false);
@@ -672,24 +448,7 @@ public partial class BlueprintViewerWindow : IDockPanel
         if (MessageBox.Show(Window.GetWindow(this)!, L("BlueprintEditor_DiscardConfirm"), _viewModel.Title, MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
             return;
 
-        var hadPinEdits = _viewModel.Editor.Session?.ConstantChangeCount > 0 || _viewModel.Editor.Session?.WireChangeCount > 0;
-        await _viewModel.Editor.DiscardAsync();
-        ShowCdoEditor(SelectedCdoItem);
-        ApplyCdoFilter();
-
-        if (hadPinEdits && FunctionList.SelectedItem is BlueprintFunctionItem item)
-        {
-            // pins show edited values: decompile again from the original bytecode
-            _viewModel.ClearGraphCache();
-            var result = await _viewModel.OpenAsync(item);
-            if (result != null)
-            {
-                GraphCanvas.SetGraph(result.Graph);
-                FunctionJsonEditor.Text = result.BytecodeJson ?? string.Empty;
-                UpdateSearch();
-                GraphCanvas.ZoomToFit();
-            }
-        }
+        await _viewModel.DiscardAllAsync();
     }
 
     public bool OnPanelClosing()
@@ -700,7 +459,9 @@ public partial class BlueprintViewerWindow : IDockPanel
 
     public void OnPanelClosed()
     {
-        _viewModel.Editor.Close();
+        _viewModel.Editor.Edited -= OnEditsChanged;
+        _viewModel.GraphsReset -= OnGraphsReset;
+        _viewModel.Close();
     }
 
     #endregion
@@ -767,21 +528,15 @@ public partial class BlueprintViewerWindow : IDockPanel
     {
         var menu = new ContextMenu { PlacementTarget = GraphCanvas };
 
-        if (pin != null && _viewModel.Editor.CanEdit)
+        if (pin != null && (_viewModel.Editor.FindWire(pin) != null || _viewModel.Editor.FindPinEdit(pin) != null))
         {
-            var breakItem = new MenuItem { Header = L("BlueprintViewer_BreakLinks") };
-            breakItem.Click += (_, _) => OnPinBreakRequested(pin);
-            menu.Items.Add(breakItem);
-            if (_viewModel.Editor.FindWire(pin) != null)
+            var revert = new MenuItem { Header = L("BlueprintViewer_RevertWire") };
+            revert.Click += (_, _) =>
             {
-                var revert = new MenuItem { Header = L("BlueprintViewer_RevertWire") };
-                revert.Click += (_, _) =>
-                {
-                    _viewModel.Editor.RevertPin(pin);
-                    RefreshAfterPinChange();
-                };
-                menu.Items.Add(revert);
-            }
+                _viewModel.Editor.RevertPin(pin);
+                RefreshAfterPinChange();
+            };
+            menu.Items.Add(revert);
             menu.Items.Add(new Separator());
         }
         var links = _viewModel.GetNodeLinks(node);
@@ -882,51 +637,6 @@ public partial class BlueprintViewerWindow : IDockPanel
     #endregion
 
 
-    #region wires
-
-    private async void OnWireDropped(GraphPin from, GraphPin to)
-    {
-        if (_viewModel.Current is not { FunctionName: { } functionName } current)
-            return;
-        if (!current.IsBytecodeComplete)
-        {
-            _viewModel.Editor.Status = L("BlueprintEditor_BytecodeIncomplete");
-            return;
-        }
-
-        var error = await _viewModel.Editor.ConnectAsync(from, to, functionName, FunctionList.SelectedItem, current.Code, current.Graph.Nodes);
-        _viewModel.Editor.Status = error ?? string.Empty;
-        if (error == null)
-            RefreshAfterPinChange();
-    }
-
-    private async void OnPinBreakRequested(GraphPin pin)
-    {
-        if (_viewModel.Current is not { FunctionName: { } functionName } current)
-            return;
-        if (!current.IsBytecodeComplete)
-        {
-            _viewModel.Editor.Status = L("BlueprintEditor_BytecodeIncomplete");
-            return;
-        }
-
-        // breaking an exec input means breaking the exec output that leads to it (when there is exactly one)
-        if (WirePlannerIsExecInput(pin) && pin.LinkedTo.Count == 1)
-            pin = pin.LinkedTo[0];
-        // breaking a data output means breaking the input it feeds (when there is exactly one)
-        else if (!FModel.Framework.BlueprintEditing.WirePlanner.IsExec(pin) && pin.IsOutput && pin.LinkedTo.Count == 1)
-            pin = pin.LinkedTo[0];
-
-        var error = await _viewModel.Editor.BreakAsync(pin, functionName, FunctionList.SelectedItem, current.Code, current.Graph.Nodes);
-        _viewModel.Editor.Status = error ?? string.Empty;
-        if (error == null)
-            RefreshAfterPinChange();
-    }
-
-    private static bool WirePlannerIsExecInput(GraphPin pin) => FModel.Framework.BlueprintEditing.WirePlanner.IsExec(pin) && pin.IsInput;
-
-    #endregion
-
     #region find in blueprint
 
     private System.Threading.CancellationTokenSource _findCancellation;
@@ -1000,12 +710,6 @@ public partial class BlueprintViewerWindow : IDockPanel
         if (e.Key == Key.F && Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift))
         {
             OpenFind();
-            e.Handled = true;
-        }
-        else if (!inTextBox && e.Key == Key.Delete && GraphCanvas.IsKeyboardFocusWithin && GraphCanvas.SelectedPin is { } selectedPin && _viewModel.Editor.CanEdit)
-        {
-            // like deleting a wire in the editor: break the selected pin's link
-            OnPinBreakRequested(selectedPin);
             e.Handled = true;
         }
         else if (!inTextBox && Keyboard.Modifiers == ModifierKeys.Control && (e.Key == Key.Z || e.Key == Key.Y))

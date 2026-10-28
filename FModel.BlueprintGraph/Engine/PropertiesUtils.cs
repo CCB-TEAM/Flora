@@ -130,7 +130,9 @@ namespace FModel.BlueprintGraph.Engine
 
             }
 
-            throw new DecompilerException($"KismetPointerToPropertyUnknownType: failed to convert {pointer.New!.ResolvedOwner.ResolvedObject.GetPathName()}");
+            // the owner itself doesn't resolve: say so instead of failing on it while building the message
+            throw new DecompilerException($"KismetPointerToPropertyUnknownType: the owner of property {ToName(pointer)} " +
+                                          $"({(pointer.New != null ? $"package index {pointer.New.ResolvedOwner?.Index}" : $"old pointer {pointer.Old?.Index}")}) does not resolve to an object");
         }
 
         // Get variable name from expression

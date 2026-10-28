@@ -5,7 +5,9 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
+using System.Windows.Input;
 using System.Windows.Threading;
 using AvalonDock;
 using AvalonDock.Controls;
@@ -38,12 +40,15 @@ public interface IDockPanel
 
 /// <summary>
 /// Owns the main window's <see cref="DockingManager"/>: opens tool panels and documents inside it instead of
-/// separate windows, and lets any panel float as its own window, stay on top of everything (sticky note) or
-/// detach from the main window so it gets its own taskbar entry.
+/// separate windows, and lets any panel float into its own Windows window (own taskbar entry, system frame) or
+/// stay on top of everything (sticky note).
 /// </summary>
 public static class DockWorkspace
 {
-    private static readonly string LayoutPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "FModel", "DockLayout.xml");
+    /// <summary>Where the layout and the window options are saved (a test points it somewhere else).</summary>
+    public static string StorageDirectory { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "FModel");
+
+    private static string LayoutPath => Path.Combine(StorageDirectory, "DockLayout.xml");
 
     // panels declared in MainWindow.xaml (id -> title key), they are never closed (only hidden)
     private static readonly Dictionary<string, string> StaticContents = new()
@@ -55,8 +60,12 @@ public static class DockWorkspace
         ["Output"] = "Main_Tab_Output"
     };
 
+    private static string FlagsPath => Path.Combine(StorageDirectory, "DockFlags.json");
+
     private static readonly HashSet<string> Pinned = [];
-    private static readonly HashSet<string> Detached = [];
+    private static readonly HashSet<string> Independent = [];
+    private static readonly Dictionary<string, Window> Popups = [];
+    private static readonly Dictionary<string, (double Width, double Height)> PopupSizes = [];
     private static readonly Dictionary<string, Func<FrameworkElement>> Restorable = [];
     private static string _defaultLayout;
 
@@ -69,7 +78,7 @@ public static class DockWorkspace
         Manager = manager;
         manager.AnchorableContextMenu = BuildContextMenu(true);
         manager.DocumentContextMenu = BuildContextMenu(false);
-        manager.LayoutFloatingWindowControlCreated += (_, e) => ApplyWindowFlagsLater(e.LayoutFloatingWindowControl, true);
+        manager.LayoutFloatingWindowControlCreated += (_, e) => OnFloatingWindowCreated(e.LayoutFloatingWindowControl);
 
         foreach (var content in AllContents())
             Hook(content);
@@ -184,24 +193,37 @@ public static class DockWorkspace
         content.IsSelected = true;
         content.IsActive = true;
 
-        // a floating panel can be hidden behind other applications
+        // a floating panel is a window of its own: it can be minimized or behind other applications
         if (FindFloatingWindow(content) is { } window)
         {
             if (window.WindowState == WindowState.Minimized)
                 window.WindowState = WindowState.Normal;
+            window.Show();
             window.Activate();
         }
     }
 
     public static void Activate(string contentId)
     {
+        if (Popups.TryGetValue(contentId, out var popup))
+        {
+            ActivatePopup(popup);
+            return;
+        }
+
         if (FindContent(contentId) is { } content)
             Activate(content);
     }
 
     public static void Close(string contentId) => OnUiThread(() => Close(FindContent(contentId)));
 
-    public static void Close(FrameworkElement content) => OnUiThread(() => Close(FindContent(content)));
+    public static void Close(FrameworkElement content) => OnUiThread(() =>
+    {
+        if (Popups.Values.FirstOrDefault(o => ReferenceEquals(o.Content, content)) is { } popup)
+            popup.Close();
+        else
+            Close(FindContent(content));
+    });
 
     private static void OnUiThread(Action action)
     {
@@ -235,60 +257,222 @@ public static class DockWorkspace
 
     public static void SetTitle(FrameworkElement content, string title)
     {
+        if (Popups.Values.FirstOrDefault(o => ReferenceEquals(o.Content, content)) is { } popup)
+        {
+            popup.Title = title;
+            return;
+        }
+
         if (FindContent(content) is { } layoutContent)
             layoutContent.Title = title;
     }
 
+    #region Popup windows
+
+    /// <summary>
+    /// Opens a tool as an ordinary dialog window (system frame, centered over the main window, always above it, no taskbar button) instead
+    /// of a docked panel: for things you open, use and close (key manager, backups, settings...). One window per id; opening it again
+    /// brings it to front. The content's <see cref="IDockPanel"/> hooks run when the window closes.
+    /// </summary>
+    public static T ShowPopup<T>(string id, string title, Func<T> factory, double width, double height, double minWidth = 420, double minHeight = 280,
+        bool closeOnEscape = false) where T : FrameworkElement
+    {
+        if (Popups.TryGetValue(id, out var existing) && existing.Content is T existingContent)
+        {
+            ActivatePopup(existing);
+            return existingContent;
+        }
+
+        var content = factory();
+        PrepareContent(content);
+        var owner = Application.Current?.MainWindow;
+        if (PopupSizes.TryGetValue(id, out var saved))
+            (width, height) = saved;
+
+        var window = new Window
+        {
+            Title = title,
+            Content = content,
+            Width = Math.Min(width, SystemParameters.WorkArea.Width),
+            Height = Math.Min(height, SystemParameters.WorkArea.Height),
+            MinWidth = minWidth,
+            MinHeight = minHeight,
+            ShowInTaskbar = false,
+            ResizeMode = ResizeMode.CanResize,
+            WindowStartupLocation = owner is { IsVisible: true } ? WindowStartupLocation.CenterOwner : WindowStartupLocation.CenterScreen,
+            Icon = owner?.Icon,
+        };
+        if (owner is { IsVisible: true })
+            window.Owner = owner;
+        window.SetResourceReference(Control.BackgroundProperty, AdonisUI.Brushes.Layer0BackgroundBrush);
+        window.SetResourceReference(Control.ForegroundProperty, AdonisUI.Brushes.ForegroundBrush);
+        NativeFrame.ApplyDarkTheme(window);
+
+        window.Closing += (_, e) =>
+        {
+            if (content is IDockPanel panel && !panel.OnPanelClosing())
+                e.Cancel = true;
+        };
+        window.Closed += (_, _) =>
+        {
+            if (window.WindowState == WindowState.Normal)
+                PopupSizes[id] = (window.Width, window.Height);
+            Popups.Remove(id);
+            window.Content = null; // the content may be shown again
+            if (content is IDockPanel panel)
+                panel.OnPanelClosed();
+        };
+        if (closeOnEscape)
+        {
+            window.PreviewKeyDown += (_, e) =>
+            {
+                if (e.Key == Key.Escape && Keyboard.FocusedElement is not (TextBoxBase or ComboBox { IsDropDownOpen: true }))
+                {
+                    e.Handled = true;
+                    window.Close();
+                }
+            };
+        }
+
+        Popups[id] = window;
+        window.Show();
+        window.Activate();
+        return content;
+    }
+
+    private static void ActivatePopup(Window popup)
+    {
+        if (popup.WindowState == WindowState.Minimized)
+            popup.WindowState = WindowState.Normal;
+        popup.Activate();
+    }
+
+    public static bool IsPopupOpen(string id) => Popups.ContainsKey(id);
+
+    #endregion
+
     #region Floating windows
+
+    // A panel taken out of the main window is a real Windows window with the system frame and title bar. Like any Windows tool window it
+    // is owned by the main window: it always stays above it (never hidden behind it, however often the main window is clicked) and is
+    // minimized and restored with it. Two options per panel, both remembered: "Always on top" (above every application) and "Independent
+    // window" (own taskbar button; may go behind the main window). AvalonDock still drags it back and docks it.
+
+    private static Style _floatingStyle;
+
+    private static Style FloatingStyle =>
+        _floatingStyle ??= (Style) new ResourceDictionary { Source = new Uri("pack://application:,,,/Flora;component/Views/Resources/DockFloatingWindow.xaml") }["NativeFloatingWindowStyle"];
 
     public static bool IsPinned(LayoutContent content) => Pinned.Contains(content.ContentId);
 
-    public static bool IsDetached(LayoutContent content) => Detached.Contains(content.ContentId);
-
-    /// <summary>
-    /// Floats the panel and keeps its window above every other window, like a sticky note.
-    /// </summary>
+    /// <summary>Floats the panel into its own window and keeps that window above every other window (like a sticky note).</summary>
     public static void SetPinned(LayoutContent content, bool pinned)
     {
-        Toggle(Pinned, content.ContentId, pinned);
-        FloatAndApply(content, pinned);
+        if (pinned)
+            Pinned.Add(content.ContentId);
+        else
+            Pinned.Remove(content.ContentId);
+
+        if (pinned)
+            Float(content);
+        if (FindFloatingWindow(content) is { } window)
+            ApplyWindowFlagsLater(window);
     }
 
-    /// <summary>
-    /// Floats the panel as an independent window: not owned by the main window (it can go behind it and isn't
-    /// minimized with it) and it gets its own taskbar entry.
-    /// </summary>
-    public static void SetDetached(LayoutContent content, bool detached)
+    public static bool IsIndependent(LayoutContent content) => Independent.Contains(content.ContentId);
+
+    /// <summary>Gives the panel's window its own taskbar button and lets it go behind the main window (otherwise it is owned by it).</summary>
+    public static void SetIndependent(LayoutContent content, bool independent)
     {
-        Toggle(Detached, content.ContentId, detached);
-        FloatAndApply(content, detached);
+        if (independent)
+            Independent.Add(content.ContentId);
+        else
+            Independent.Remove(content.ContentId);
+
+        if (independent)
+            Float(content);
+        if (FindFloatingWindow(content) is { } window)
+            ApplyWindowFlagsLater(window);
     }
 
-    private static void Toggle(HashSet<string> set, string id, bool on)
+    public static bool CanFloat(LayoutContent content) => content is { IsFloating: false, CanFloat: true };
+
+    /// <summary>Moves the panel into its own window.</summary>
+    public static void Float(LayoutContent content)
     {
-        if (on) set.Add(id);
-        else set.Remove(id);
-    }
+        if (content == null || content.IsFloating || !content.CanFloat)
+            return;
 
-    private static void FloatAndApply(LayoutContent content, bool needsWindow)
-    {
-        if (needsWindow && !content.IsFloating)
-        {
-            if (!content.CanFloat)
-                return;
+        if (content is LayoutAnchorable { IsAutoHidden: true } anchorable)
+            anchorable.ToggleAutoHide();
 
-            if (content is LayoutAnchorable { IsAutoHidden: true } anchorable)
-                anchorable.ToggleAutoHide();
-
-            var command = Manager.GetLayoutItemFromModel(content)?.FloatCommand;
-            if (command?.CanExecute(null) == true)
-                command.Execute(null);
-            else
-                content.Float();
-        }
+        var command = Manager.GetLayoutItemFromModel(content)?.FloatCommand;
+        if (command?.CanExecute(null) == true)
+            command.Execute(null);
+        else
+            content.Float();
 
         if (FindFloatingWindow(content) is { } window)
             ApplyWindowFlagsLater(window);
+    }
+
+    /// <summary>Puts a floating panel back where it was docked.</summary>
+    public static void DockBack(LayoutContent content)
+    {
+        if (content is not { IsFloating: true })
+            return;
+
+        if (content is LayoutAnchorable anchorable)
+            anchorable.Dock();
+        else
+            content.DockAsDocument();
+    }
+
+    public static bool HasFloatingWindows => Manager?.FloatingWindows.Any() == true;
+
+    /// <summary>Brings every floating panel back into the main window.</summary>
+    public static void DockAllFloating()
+    {
+        foreach (var content in AllContents().Where(c => c.IsFloating).ToArray())
+            DockBack(content);
+    }
+
+    private static LayoutContent[] ContentsOf(LayoutFloatingWindowControl window) =>
+        window.Model is ILayoutElement model ? model.Descendents().OfType<LayoutContent>().ToArray() : [];
+
+    /// <summary>Docks every panel of a floating window back into the main window.</summary>
+    private static void DockWindow(LayoutFloatingWindowControl window)
+    {
+        foreach (var content in ContentsOf(window))
+            DockBack(content);
+    }
+
+    private static void TogglePinned(LayoutFloatingWindowControl window)
+    {
+        var contents = ContentsOf(window);
+        var pinned = !contents.Any(IsPinned);
+        foreach (var content in contents)
+        {
+            if (pinned)
+                Pinned.Add(content.ContentId);
+            else
+                Pinned.Remove(content.ContentId);
+        }
+        ApplyWindowFlagsLater(window);
+    }
+
+    private static void ToggleIndependent(LayoutFloatingWindowControl window)
+    {
+        var contents = ContentsOf(window);
+        var independent = !contents.Any(IsIndependent);
+        foreach (var content in contents)
+        {
+            if (independent)
+                Independent.Add(content.ContentId);
+            else
+                Independent.Remove(content.ContentId);
+        }
+        ApplyWindowFlagsLater(window);
     }
 
     private static LayoutFloatingWindowControl FindFloatingWindow(LayoutContent content)
@@ -297,9 +481,76 @@ public static class DockWorkspace
             w.Model is ILayoutElement model && model.Descendents().OfType<LayoutContent>().Contains(content));
     }
 
+    private static void OnFloatingWindowCreated(LayoutFloatingWindowControl window)
+    {
+        window.Style = FloatingStyle;
+        // the docking theme draws its own title bar through a window chrome that removes the system frame
+        Microsoft.Windows.Shell.WindowChrome.SetWindowChrome(window, null);
+        NativeFrame.ApplyDarkTheme(window);
+        window.Icon ??= Window.GetWindow(Manager)?.Icon;
+        NativeFrame.AddSystemMenu(window,
+        [
+            new NativeFrame.SystemMenuItem(LocalizationManager.Instance.Get("Dock_Dock"), () => DockWindow(window)),
+            new NativeFrame.SystemMenuItem(LocalizationManager.Instance.Get("Dock_Pin"), () => TogglePinned(window), () => window.Topmost),
+            new NativeFrame.SystemMenuItem(LocalizationManager.Instance.Get("Dock_Independent"), () => ToggleIndependent(window), () => window.ShowInTaskbar),
+        ]);
+        TrackTitle(window);
+        ApplyWindowFlagsLater(window, true);
+        // the chrome may be put back while the window is initialized, and the frame size is measured when the window is created
+        window.SourceInitialized += (_, _) => Microsoft.Windows.Shell.WindowChrome.SetWindowChrome(window, null);
+        window.Dispatcher.BeginInvoke(() =>
+        {
+            Microsoft.Windows.Shell.WindowChrome.SetWindowChrome(window, null);
+            NativeFrame.RefreshFrame(window);
+        }, DispatcherPriority.Loaded);
+    }
+
+    /// <summary>The window title is the title of the selected panel of the window, and follows it.</summary>
+    private static void TrackTitle(LayoutFloatingWindowControl window)
+    {
+        void Update()
+        {
+            if (window.Model is not ILayoutElement model)
+                return;
+            var contents = model.Descendents().OfType<LayoutContent>().ToArray();
+            if (contents.Length > 0)
+                window.Title = (contents.FirstOrDefault(c => c.IsSelected) ?? contents[0]).Title;
+        }
+
+        var titleDescriptor = DependencyPropertyDescriptor.FromProperty(LayoutContent.TitleProperty, typeof(LayoutContent));
+        var watched = new List<LayoutContent>();
+        void Watch()
+        {
+            if (window.Model is not ILayoutElement model)
+                return;
+            foreach (var content in model.Descendents().OfType<LayoutContent>().Except(watched).ToArray())
+            {
+                watched.Add(content);
+                titleDescriptor?.AddValueChanged(content, OnTitleChanged);
+                content.IsSelectedChanged += OnSelectionChanged;
+            }
+        }
+
+        void OnTitleChanged(object s, EventArgs e) => Update();
+        void OnSelectionChanged(object s, EventArgs e) => Update();
+
+        window.Activated += (_, _) => { Watch(); Update(); };
+        window.Closed += (_, _) =>
+        {
+            foreach (var content in watched)
+            {
+                titleDescriptor?.RemoveValueChanged(content, OnTitleChanged);
+                content.IsSelectedChanged -= OnSelectionChanged;
+            }
+            watched.Clear();
+        };
+
+        // the model's children are only attached once the window finished its initialization
+        window.Dispatcher.BeginInvoke(() => { Watch(); Update(); }, DispatcherPriority.Loaded);
+    }
+
     private static void ApplyWindowFlagsLater(LayoutFloatingWindowControl window, bool created = false)
     {
-        // the model's children are only attached once the window finished its initialization
         window.Dispatcher.BeginInvoke(() => ApplyWindowFlags(window, created), DispatcherPriority.Loaded);
     }
 
@@ -321,17 +572,14 @@ public static class DockWorkspace
         if (contents.Length == 0)
             return;
 
-        var pinned = contents.Any(c => Pinned.Contains(c.ContentId));
-        var detached = contents.Any(c => Detached.Contains(c.ContentId));
+        var independent = contents.Any(c => Independent.Contains(c.ContentId));
+        window.Topmost = contents.Any(c => Pinned.Contains(c.ContentId));
+        window.Title = (contents.FirstOrDefault(c => c.IsSelected) ?? contents[0]).Title;
 
-        window.Topmost = pinned;
-        window.ShowInTaskbar = detached;
-        window.Title = contents.FirstOrDefault(c => c.IsSelected)?.Title ?? contents[0].Title;
-
-        var mainWindow = Window.GetWindow(Manager);
-        var owner = detached ? null : mainWindow;
-        if (!ReferenceEquals(window.Owner, owner) && !ReferenceEquals(window, owner))
-            window.Owner = owner;
+        // the docking library sets and clears the owner itself (when the window loads and whenever this property changes);
+        // setting the owner by hand races with it
+        window.OwnedByDockingManagerWindow = !independent;
+        window.ShowInTaskbar = independent;
     }
 
     #endregion
@@ -343,9 +591,9 @@ public static class DockWorkspace
         var menu = new ContextMenu();
 
         menu.Items.Add(CommandItem("Dock_Float", "FloatCommand"));
+        menu.Items.Add(CommandItem("Dock_Dock", "DockCommand"));
         if (anchorable)
         {
-            menu.Items.Add(CommandItem("Dock_Dock", "DockCommand"));
             menu.Items.Add(CommandItem("Dock_DockAsDocument", "DockAsDocumentCommand"));
             menu.Items.Add(CommandItem("Dock_AutoHide", "AutoHideCommand"));
         }
@@ -367,14 +615,14 @@ public static class DockWorkspace
         };
         menu.Items.Add(pin);
 
-        var detach = new MenuItem { IsCheckable = true };
-        detach.SetBinding(HeaderedItemsControl.HeaderProperty, LocBinding("Dock_Detach"));
-        detach.Click += (_, _) =>
+        var independent = new MenuItem { IsCheckable = true };
+        independent.SetBinding(HeaderedItemsControl.HeaderProperty, LocBinding("Dock_Independent"));
+        independent.Click += (_, _) =>
         {
-            if (ContentOf(menu, detach) is { } content)
-                SetDetached(content, detach.IsChecked);
+            if (ContentOf(menu, independent) is { } content)
+                SetIndependent(content, independent.IsChecked);
         };
-        menu.Items.Add(detach);
+        menu.Items.Add(independent);
 
         menu.Items.Add(new Separator());
         if (anchorable)
@@ -387,7 +635,7 @@ public static class DockWorkspace
         {
             var content = ContentOf(menu, pin);
             pin.IsChecked = content != null && IsPinned(content);
-            detach.IsChecked = content != null && IsDetached(content);
+            independent.IsChecked = content != null && IsIndependent(content);
         };
 
         return menu;
@@ -449,10 +697,28 @@ public static class DockWorkspace
         content.Closed += OnContentClosed;
     }
 
+    private static bool _closingApplication;
+
     private static void OnContentClosing(object sender, CancelEventArgs e)
     {
-        if (sender is LayoutContent { Content: IDockPanel panel } && !panel.OnPanelClosing())
+        // the application asked every panel already (ConfirmCloseAll): closing the windows on exit doesn't ask again
+        if (!_closingApplication && sender is LayoutContent { Content: IDockPanel panel } && !panel.OnPanelClosing())
             e.Cancel = true;
+    }
+
+    /// <summary>
+    /// Asks every open panel whether it may close (unsaved edits...) before the application exits; false when one says no.
+    /// </summary>
+    public static bool ConfirmCloseAll()
+    {
+        foreach (var content in AllContents().Where(c => c is not LayoutAnchorable { IsHidden: true }).ToArray())
+        {
+            if (content.Content is IDockPanel panel && !panel.OnPanelClosing())
+                return false;
+        }
+
+        _closingApplication = true;
+        return true;
     }
 
     private static void OnContentClosed(object sender, EventArgs e)
@@ -463,7 +729,7 @@ public static class DockWorkspace
         content.Closing -= OnContentClosing;
         content.Closed -= OnContentClosed;
         Pinned.Remove(content.ContentId);
-        Detached.Remove(content.ContentId);
+        Independent.Remove(content.ContentId);
 
         if (content.Content is IDockPanel panel)
             panel.OnPanelClosed();
@@ -482,6 +748,11 @@ public static class DockWorkspace
         {
             Directory.CreateDirectory(Path.GetDirectoryName(LayoutPath)!);
             File.WriteAllText(LayoutPath, SerializeLayout());
+            File.WriteAllText(FlagsPath, System.Text.Json.JsonSerializer.Serialize(new DockFlags
+            {
+                Pinned = [.. Pinned], Independent = [.. Independent],
+                PopupSizes = PopupSizes.ToDictionary(o => o.Key, o => new[] { o.Value.Width, o.Value.Height }),
+            }));
         }
         catch (Exception e)
         {
@@ -497,6 +768,7 @@ public static class DockWorkspace
         try
         {
             DeserializeLayout(File.ReadAllText(LayoutPath));
+            LoadFlags();
         }
         catch (Exception e)
         {
@@ -512,8 +784,41 @@ public static class DockWorkspace
             content.Close();
 
         Pinned.Clear();
-        Detached.Clear();
+        Independent.Clear();
         DeserializeLayout(_defaultLayout);
+    }
+
+    private sealed class DockFlags
+    {
+        public List<string> Pinned { get; set; } = [];
+        public List<string> Independent { get; set; } = [];
+        public Dictionary<string, double[]> PopupSizes { get; set; } = [];
+    }
+
+    /// <summary>Applies the remembered window options (always on top, independent window) to the panels the layout brought back.</summary>
+    private static void LoadFlags()
+    {
+        Pinned.Clear();
+        Independent.Clear();
+        try
+        {
+            if (File.Exists(FlagsPath) && System.Text.Json.JsonSerializer.Deserialize<DockFlags>(File.ReadAllText(FlagsPath)) is { } flags)
+            {
+                foreach (var id in flags.Pinned.Where(o => AllContents().Any(c => c.ContentId == o)))
+                    Pinned.Add(id);
+                foreach (var id in flags.Independent.Where(o => AllContents().Any(c => c.ContentId == o)))
+                    Independent.Add(id);
+                foreach (var (id, size) in flags.PopupSizes.Where(o => o.Value is { Length: 2 }))
+                    PopupSizes[id] = (size[0], size[1]);
+            }
+        }
+        catch (Exception e)
+        {
+            Log.Warning(e, "Failed to read the dock window flags");
+        }
+
+        foreach (var window in Manager.FloatingWindows.ToArray())
+            ApplyWindowFlagsLater(window);
     }
 
     private static string SerializeLayout()

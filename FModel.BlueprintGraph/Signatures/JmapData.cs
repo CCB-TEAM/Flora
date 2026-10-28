@@ -25,8 +25,21 @@ public class JmapData : ISignatureProvider
 
     public JmapData(string path)
     {
+        SourcePath = path;
         Read(path);
     }
+
+    public string SourcePath { get; }
+
+    /// <summary>Who made the dump and for which engine, e.g. "jmap_dumper, UE 5.3, 2025-01-02".</summary>
+    public string Description { get; private set; } = "";
+
+    /// <summary>Classes, script structs and packages by path.</summary>
+    public IReadOnlyCollection<ObjectData> Objects => _objectsLookup.Values;
+
+    public IReadOnlyCollection<FunctionData> Functions => _functionsLookup.Values;
+
+    public IReadOnlyList<EnumData> Enums => _enums;
     
     public void Read(string path)
     {
@@ -35,6 +48,13 @@ public class JmapData : ISignatureProvider
             ? new GZipStream(file, CompressionMode.Decompress)
             : file;
         var result = JsonSerializer.Deserialize<JmapJson>(reader);
+        if (result.Metadata is { } metadata)
+            Description = string.Join(", ", new[]
+            {
+                metadata.Tool,
+                metadata.EngineVersion is { } version ? $"UE {version.Major}.{version.Minor}" : null,
+                metadata.Timestamp,
+            }.Where(o => !string.IsNullOrEmpty(o)));
 
         foreach (var obj in result.Objects)
         {
@@ -43,6 +63,7 @@ public class JmapData : ISignatureProvider
                 _objectsLookup.Add(obj.Key, new ObjectData()
                 {
                     Name = obj.Key,
+                    Kind = obj.Value.Type,
                     Properties = obj.Value.Properties?.Select(o => GetProperty(o, obj.Key)!)?.ToDictionary(o => o.Name, o => o, StringComparer.OrdinalIgnoreCase) ?? [],
                 });
             }

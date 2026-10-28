@@ -24,6 +24,7 @@ public static class DockPanels
     public const string AboutId = "About";
     public const string MappingWizardId = "MappingWizard";
     public const string PackWorkspaceId = "PackWorkspace";
+    public const string AgentId = "Agent";
 
     private static string L(string key) => LocalizationManager.Instance.Get(key);
 
@@ -35,6 +36,7 @@ public static class DockPanels
     {
         DockWorkspace.RegisterRestorable(AudioPlayerId, () => new AudioPlayer());
         DockWorkspace.RegisterRestorable(ImageMergerId, () => new ImageMerger());
+        DockWorkspace.RegisterRestorable(AgentId, () => new AgentPanel());
     }
 
     public static SearchView ShowSearch(ESearchViewTab tab)
@@ -52,24 +54,28 @@ public static class DockPanels
     public static ImageMerger ShowImageMerger() =>
         DockWorkspace.Show(ImageMergerId, L("Menu_Views_ImageMerger"), () => new ImageMerger(), EDockTarget.Document);
 
+    // dialog-type tools: ordinary popup windows, not docked panels
     public static AesManager ShowAesManager() =>
-        DockWorkspace.Show(AesManagerId, L("AesManager_Title"), () => new AesManager(), EDockTarget.Right, 620, 500);
+        DockWorkspace.ShowPopup(AesManagerId, L("AesManager_Title"), () => new AesManager(), 660, 520, closeOnEscape: true);
 
     public static BackupManager ShowBackupManager() =>
-        DockWorkspace.Show(BackupManagerId, L("Menu_Directory_Backup"),
-            () => new BackupManager(ApplicationService.ApplicationView.CUE4Parse.Provider.ProjectName), EDockTarget.Right, 520, 400);
+        DockWorkspace.ShowPopup(BackupManagerId, L("Menu_Directory_Backup"),
+            () => new BackupManager(ApplicationService.ApplicationView.CUE4Parse.Provider.ProjectName), 560, 440, closeOnEscape: true);
 
     public static SettingsView ShowSettings() =>
-        DockWorkspace.Show(SettingsId, L("Settings_Title"), () => new SettingsView(), EDockTarget.Document);
+        DockWorkspace.ShowPopup(SettingsId, L("Settings_Title"), () => new SettingsView(), 960, 700, 640, 420);
 
     public static MappingWizard ShowMappingWizard() =>
-        DockWorkspace.Show(MappingWizardId, "Mapping Wizard", () => new MappingWizard(), EDockTarget.Document);
+        DockWorkspace.ShowPopup(MappingWizardId, "Mapping Wizard", () => new MappingWizard(), 860, 640, 600, 400);
 
     public static FModel.Views.Packing.PackWorkspaceView ShowPackWorkspace() =>
         DockWorkspace.Show(PackWorkspaceId, L("Pack_Title"), () => new FModel.Views.Packing.PackWorkspaceView(), EDockTarget.Document);
 
+    public static AgentPanel ShowAgent() =>
+        DockWorkspace.Show(AgentId, L("Agent_Title"), () => new AgentPanel(), EDockTarget.Right, 460, 600);
+
     public static About ShowAbout() =>
-        DockWorkspace.Show(AboutId, L("About_Title"), () => new About(), EDockTarget.Document);
+        DockWorkspace.ShowPopup(AboutId, L("About_Title"), () => new About(), 620, 520, 480, 360, closeOnEscape: true);
 
     /// <summary>Shows the viewer of the blueprint; an already open viewer of the same asset is brought forward instead.</summary>
     public static BlueprintViewerWindow ShowBlueprintViewer(BlueprintViewerViewModel viewModel) =>

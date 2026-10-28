@@ -52,24 +52,12 @@ public class BlueprintGraphCanvas : SKElement
 
     public event Action? SelectionChanged;
 
-    /// <summary>A left click landed on the value box of an unconnected input pin; the rectangle is in view coordinates.</summary>
-    public event Action<GraphPin, Rect>? PinValueClicked;
-
     public float ViewScale => _scaling;
 
     /// <summary>A right click (without panning) landed on a node (and maybe one of its pins); the node is selected first. The point is in view coordinates.</summary>
     public event Action<BPNode, GraphPin?, Point>? NodeContextRequested;
 
-    /// <summary>When set, dragging from a pin to another pin asks for a connection and Alt+click on a pin asks to break its links.</summary>
-    public bool AllowWireEditing { get; set; }
-
-    /// <summary>A wire was dragged from the first pin and dropped on the second.</summary>
-    public event Action<GraphPin, GraphPin>? WireDropped;
-
-    /// <summary>Alt+click on a pin.</summary>
-    public event Action<GraphPin>? PinBreakRequested;
-
-    private GraphPin? _wireDragFrom;
+    // wires changed by pending (agent) edits
     private static readonly SKPaint EditedWire = GraphStyle.Stroke(3, 240, 198, 116);
 
     private Point _rightPressPosition;
@@ -173,34 +161,15 @@ public class BlueprintGraphCanvas : SKElement
         Focus();
         _mousePosOnGraphOnPress = _mousePosOnGraph;
 
-        if (e.ChangedButton == MouseButton.Left && TryHitValueBox(e.GetPosition(this), out var hitNode, out var hitPin, out var hitRect))
+        if (e.ChangedButton == MouseButton.Left && TryHitValueBox(e.GetPosition(this), out var hitNode, out var hitPin, out _))
         {
-            // clicking a value box selects its pin and asks to edit it, without starting a node drag
+            // clicking a value box selects its pin, without starting a node drag
             if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
                 SelectedNodes.Clear();
             if (!SelectedNodes.Contains(hitNode))
                 SelectedNodes.Add(hitNode);
             SelectedPin = hitPin;
             SelectionChanged?.Invoke();
-            InvalidateVisual();
-            PinValueClicked?.Invoke(hitPin, hitRect);
-            return;
-        }
-
-        if (e.ChangedButton == MouseButton.Left && AllowWireEditing && MouseOverPin is { } pressedPin)
-        {
-            if (Keyboard.Modifiers.HasFlag(ModifierKeys.Alt))
-            {
-                UpdateNodesSelection();
-                PinBreakRequested?.Invoke(pressedPin);
-                InvalidateVisual();
-                return;
-            }
-
-            // a press on a pin selects it and starts dragging a wire from it
-            UpdateNodesSelection();
-            _wireDragFrom = pressedPin;
-            CaptureMouse();
             InvalidateVisual();
             return;
         }
@@ -260,16 +229,6 @@ public class BlueprintGraphCanvas : SKElement
         base.OnMouseUp(e);
         if (_isSelecting)
             SelectionChanged?.Invoke();
-
-        if (_wireDragFrom is { } from && e.ChangedButton == MouseButton.Left)
-        {
-            _wireDragFrom = null;
-            ReleaseMouseCapture();
-            InvalidateVisual();
-            if (MouseOverPin is { } to && !ReferenceEquals(to, from))
-                WireDropped?.Invoke(from, to);
-            return;
-        }
 
         var position = e.GetPosition(this);
         if (e.ChangedButton == MouseButton.Right && (position - _rightPressPosition).Length < 4)
@@ -449,18 +408,6 @@ public class BlueprintGraphCanvas : SKElement
 
         if (_mouseOverNode != null && MouseOverPin != null)
             RenderPinHighlight(canvas, MouseOverPin);
-
-        if (_wireDragFrom is { } dragged)
-        {
-            // the wire being dragged follows the mouse
-            var endX = (float) _mousePosOnGraph.X;
-            var endY = (float) _mousePosOnGraph.Y;
-            var direction = dragged.IsOutput ? 70 : -70;
-            using var path = new SKPath();
-            path.MoveTo(dragged.X, dragged.Y);
-            path.CubicTo(dragged.X + direction, dragged.Y, endX - direction, endY, endX, endY);
-            canvas.DrawPath(path, EditedWire);
-        }
 
         canvas.Restore();
 

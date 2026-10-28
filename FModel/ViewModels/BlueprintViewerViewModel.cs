@@ -182,13 +182,39 @@ public class BlueprintViewerViewModel : ViewModel
         Editor = new BlueprintEditorViewModel(owner, entry) { Verifier = VerifyEditedPackage, FormatPinValue = FormatPinValue };
     }
 
+    /// <summary>The decompiled graphs were dropped; graphs (and node ids handed out from them) must be fetched again.</summary>
+    public event Action GraphsReset;
+
     /// <summary>Forgets the decompiled graphs, e.g. after discarding pin edits.</summary>
     public void ClearGraphCache()
     {
         _graphs.Clear();
         _current = null;
         RaisePropertyChanged(nameof(Current));
+        GraphsReset?.Invoke();
     }
+
+    /// <summary>Drops every pending edit; graphs showing edited pins or wires are decompiled again from the original bytecode.</summary>
+    public async Task DiscardAllAsync()
+    {
+        var hadGraphEdits = Editor.Session is { } session && (session.ConstantChangeCount > 0 || session.WireChangeCount > 0 || session.ObjectChangeCount > 0);
+        await Editor.DiscardAsync();
+        if (hadGraphEdits)
+            ClearGraphCache();
+        else
+            GraphsReset?.Invoke();
+    }
+
+    /// <summary>The viewer was closed: the agent can't reach the blueprint any more and the edit session is deleted.</summary>
+    public void Close()
+    {
+        Framework.BlueprintAgent.BlueprintAgentHost.Unregister(this);
+        Editor.Close();
+    }
+
+    /// <summary>The loaded package's blueprint model and decompiler context (null until <see cref="LoadAsync"/> succeeded).</summary>
+    public Asset Asset => _asset;
+    public BlueprintGraphContext Context => _context;
 
     /// <summary>
     /// Decompiles every function with edited constants from the saved package and compares the graph shapes
@@ -201,8 +227,12 @@ public class BlueprintViewerViewModel : ViewModel
             return "The saved package is not a blueprint any more.";
         asset.LoadAllProperties(_context);
 
-        var wired = session.Wires.Select(o => o.FunctionName).ToHashSet();
-        foreach (var functionName in session.Constants.Select(o => o.FunctionName).Concat(wired).Distinct())
+        var verified = new Dictionary<string, BPGraph>(StringComparer.Ordinal);
+        VerifiedGraphs = verified;
+
+        // wire and object edits legitimately change the graph; constant edits must not
+        var wired = session.Wires.Select(o => o.FunctionName).Concat(session.Objects.Select(o => o.FunctionName)).ToHashSet();
+        foreach (var functionName in session.EditedFunctions)
         {
             var isUbergraph = functionName.StartsWith("ExecuteUbergraph", StringComparison.Ordinal);
             var function = isUbergraph
@@ -211,10 +241,26 @@ public class BlueprintViewerViewModel : ViewModel
             if (function == null)
                 return $"{functionName} is missing from the saved package.";
 
-            var decompiler = new FunctionDecompiler(new GlobalDecompilerContext(asset, _context, function));
-            var result = decompiler.Decompile(null);
+            FunctionDecompiler decompiler;
+            DecompilationResult result;
+            try
+            {
+                decompiler = new FunctionDecompiler(new GlobalDecompilerContext(asset, _context, function));
+                result = decompiler.Decompile(null);
+            }
+            catch (Exception e)
+            {
+                // a crash of the decompiler is a finding about the edited code too: say where it happened
+                return $"{functionName}: decompiling the edited bytecode threw {Framework.BlueprintEditing.ExceptionText.Describe(e)}";
+            }
             if (result.HasCriticalErrors)
-                return $"{functionName} no longer decompiles: {result.Problems.First(o => o.IsCritical).Message}";
+            {
+                var problem = result.Problems.First(o => o.IsCritical);
+                var at = -1;
+                try { at = problem.Context?.GetInstr().StatementIndex ?? -1; } catch { /* context may point past the block */ }
+                return $"{functionName} no longer decompiles{(at >= 0 ? $" (at statement @{at})" : "")}: {problem.Message}";
+            }
+            verified[functionName] = decompiler.Graph;
 
             var original = _graphs.Values.FirstOrDefault(o => o.FunctionName == functionName);
             // wire edits legitimately add or remove nodes (e.g. a broken link drops the pure node that fed it)
@@ -225,6 +271,9 @@ public class BlueprintViewerViewModel : ViewModel
 
         static string Shape(BPGraph graph) => string.Join(",", graph.Nodes.Select(o => o.NodeType).OrderBy(o => o, StringComparer.Ordinal));
     }
+
+    /// <summary>The graphs decompiled from the edited bytecode by the last save or validation, by bytecode function name.</summary>
+    public IReadOnlyDictionary<string, BPGraph> VerifiedGraphs { get; private set; } = new Dictionary<string, BPGraph>();
 
     /// <summary>
     /// Loads the package and lists its events and functions. Returns false when the asset is not a blueprint.
@@ -280,6 +329,7 @@ public class BlueprintViewerViewModel : ViewModel
             IsWidgetBlueprint = hasWidgetTree;
 
             StatusText = string.Format(L("BlueprintViewer_Summary"), _asset.ObjectName, _asset.Events.Count, _asset.Functions.Count);
+            Framework.BlueprintAgent.BlueprintAgentHost.Register(this);
             return true;
         }
         finally
@@ -328,7 +378,7 @@ public class BlueprintViewerViewModel : ViewModel
     private static string GraphKey(BlueprintFunctionItem item) => item.Kind == EBlueprintFunctionKind.Event ? UbergraphKey : item.Function.Name;
 
     /// <summary>The cached graph of the item, decompiled first if needed (one decompilation at a time).</summary>
-    private async Task<BlueprintGraphResult> GetGraphAsync(BlueprintFunctionItem item)
+    public async Task<BlueprintGraphResult> GetGraphAsync(BlueprintFunctionItem item)
     {
         var key = GraphKey(item);
         await _decompileLock.WaitAsync();

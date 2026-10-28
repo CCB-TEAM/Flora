@@ -301,6 +301,94 @@ namespace FModel.Settings
             set => SetProperty(ref _openBlueprintsInViewer, value);
         }
 
+        #region blueprint agent
+
+        private FModel.Framework.BlueprintAgent.EAgentProvider _agentProvider = FModel.Framework.BlueprintAgent.EAgentProvider.Anthropic;
+        public FModel.Framework.BlueprintAgent.EAgentProvider AgentProvider
+        {
+            get => _agentProvider;
+            set => SetProperty(ref _agentProvider, value);
+        }
+
+        /// <summary>API base URL; empty uses the provider's default.</summary>
+        private string _agentBaseUrl = string.Empty;
+        public string AgentBaseUrl
+        {
+            get => _agentBaseUrl;
+            set => SetProperty(ref _agentBaseUrl, value);
+        }
+
+        private string _agentModel = "claude-opus-5-5";
+        public string AgentModel
+        {
+            get => _agentModel;
+            set => SetProperty(ref _agentModel, value);
+        }
+
+        /// <summary>Claude effort level (low, medium, high, xhigh, max).</summary>
+        private string _agentEffort = "high";
+        public string AgentEffort
+        {
+            get => _agentEffort;
+            set => SetProperty(ref _agentEffort, value);
+        }
+
+        /// <summary>The API key, encrypted for the current Windows user (DPAPI); use <see cref="AgentApiKey"/>.</summary>
+        private string _agentApiKeyProtected = string.Empty;
+        public string AgentApiKeyProtected
+        {
+            get => _agentApiKeyProtected;
+            set => SetProperty(ref _agentApiKeyProtected, value);
+        }
+
+        [JsonIgnore]
+        public string AgentApiKey
+        {
+            get => FModel.Framework.BlueprintAgent.SecretStore.Unprotect(AgentApiKeyProtected);
+            set => AgentApiKeyProtected = FModel.Framework.BlueprintAgent.SecretStore.Protect(value);
+        }
+
+        /// <summary>Prompt size (tokens) at which the agent compacts its conversation into a summary it writes itself; 0 turns it off.</summary>
+        private int _agentCompactAtTokens = 100_000;
+        public int AgentCompactAtTokens
+        {
+            get => _agentCompactAtTokens;
+            // below the size of the system prompt and tools it would compact after every turn
+            set => SetProperty(ref _agentCompactAtTokens, value <= 0 ? 0 : Math.Max(20_000, value));
+        }
+
+        /// <summary>Offers the bytecode object tools (Kismet JSON) to the agent and MCP clients.</summary>
+        private bool _agentAllowBytecodeObjects;
+        public bool AgentAllowBytecodeObjects
+        {
+            get => _agentAllowBytecodeObjects;
+            set => SetProperty(ref _agentAllowBytecodeObjects, value);
+        }
+
+        private bool _mcpServerEnabled;
+        public bool McpServerEnabled
+        {
+            get => _mcpServerEnabled;
+            set => SetProperty(ref _mcpServerEnabled, value);
+        }
+
+        private int _mcpServerPort = 27121;
+        public int McpServerPort
+        {
+            get => _mcpServerPort;
+            set => SetProperty(ref _mcpServerPort, value);
+        }
+
+        /// <summary>Bearer token MCP clients must send; generated on first use.</summary>
+        private string _mcpServerToken = string.Empty;
+        public string McpServerToken
+        {
+            get => _mcpServerToken;
+            set => SetProperty(ref _mcpServerToken, value);
+        }
+
+        #endregion
+
         private bool _autoBlueprintBatchConcurrency = true;
         public bool AutoBlueprintBatchConcurrency
         {

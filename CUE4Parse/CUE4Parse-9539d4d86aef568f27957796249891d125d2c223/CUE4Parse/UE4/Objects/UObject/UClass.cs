@@ -171,6 +171,9 @@ public class UClass : UStruct
             {
                 string? label = null;
                 int? offset = null;
+                // a statement that can't be analyzed only loses its label, never the whole class
+                try
+                {
 
                 switch (expression)
                 {
@@ -212,6 +215,12 @@ public class UClass : UStruct
                         offset = (int) flow.PushingAddress;
                         break;
                 }
+                }
+                catch (Exception)
+                {
+                    label = null;
+                    offset = null;
+                }
 
                 if (!string.IsNullOrEmpty(label) && offset.HasValue)
                 {
@@ -238,7 +247,15 @@ public class UClass : UStruct
                 if (childProperty is not FProperty property || !property.PropertyFlags.HasFlag(EPropertyFlags.Parm))
                     continue;
 
-                var (_, variableType) = BlueprintDecompilerUtils.GetPropertyType(property);
+                string? variableType;
+                try
+                {
+                    (_, variableType) = BlueprintDecompilerUtils.GetPropertyType(property);
+                }
+                catch (Exception e)
+                {
+                    variableType = $"/* {e.GetType().Name}: {e.Message} */ auto";
+                }
                 if (variableType is null)
                     continue;
 
@@ -311,7 +328,16 @@ public class UClass : UStruct
                 if (jumpCodeOffsets.Contains(kismetExpression.StatementIndex))
                     functionStringBuilder.AppendLine($"Label_{kismetExpression.StatementIndex}:");
 
-                var expression = BlueprintDecompilerUtils.GetLineExpression(kismetExpression);
+                string expression;
+                try
+                {
+                    expression = BlueprintDecompilerUtils.GetLineExpression(kismetExpression);
+                }
+                catch (Exception e)
+                {
+                    // one statement that can't be decompiled doesn't take the rest of the function (or class) with it
+                    expression = $"/* DECOMPILE FAILED in {key.Text}: {e.GetType().Name}: {e.Message} @ {FirstFrame(e)} */";
+                }
 
                 if (!string.IsNullOrWhiteSpace(expression))
                 {
@@ -337,6 +363,9 @@ public class UClass : UStruct
         stringBuilder.CloseBlock("};");
         return stringBuilder.ToString();
     }
+
+    private static string FirstFrame(Exception e) =>
+        e.StackTrace?.Split('\n').Select(o => o.Trim()).FirstOrDefault(o => o.StartsWith("at ", StringComparison.Ordinal)) ?? "?";
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
     {
