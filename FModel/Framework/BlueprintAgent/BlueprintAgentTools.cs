@@ -27,6 +27,67 @@ public static class BlueprintAgentTools
 {
     private const int MaxResult = 60_000;
 
+    [System.Runtime.InteropServices.DllImport("psapi.dll")]
+    private static extern bool EmptyWorkingSet(IntPtr process);
+
+    private static Dictionary<string, CUE4Parse.FileProvider.Objects.GameFile> _classDefaultsIndex;
+    private static int _classDefaultsIndexFiles;
+
+    /// <summary>blueprint name -> package, for the packages under Blueprints/ (built once per loaded game).</summary>
+    private static Dictionary<string, CUE4Parse.FileProvider.Objects.GameFile> ClassDefaultsIndex(CUE4Parse.FileProvider.AbstractFileProvider provider)
+    {
+        lock (typeof(BlueprintAgentTools))
+        {
+            if (_classDefaultsIndex != null && _classDefaultsIndexFiles == provider.Files.Count)
+                return _classDefaultsIndex;
+            var index = new Dictionary<string, CUE4Parse.FileProvider.Objects.GameFile>(StringComparer.OrdinalIgnoreCase);
+            foreach (var pair in provider.Files)
+            {
+                if (pair.Key.EndsWith(".uasset", StringComparison.OrdinalIgnoreCase) && pair.Key.Contains("/Blueprints/", StringComparison.OrdinalIgnoreCase))
+                    index.TryAdd(System.IO.Path.GetFileNameWithoutExtension(pair.Key), pair.Value);
+            }
+
+            _classDefaultsIndexFiles = provider.Files.Count;
+            return _classDefaultsIndex = index;
+        }
+    }
+
+    private static JToken RenderDefault(CUE4Parse.UE4.Assets.Objects.FPropertyTag property)
+    {
+        var value = property.Tag?.GenericValue;
+        if (property.Name.Text == "GameplayTags")
+        {
+            var json = JsonConvert.SerializeObject(value);
+            return new JArray(System.Text.RegularExpressions.Regex.Matches(json, @"[A-Za-z]+(?:\.[A-Za-z0-9_]+)+").Select(o => (JToken) o.Value).Distinct(JToken.EqualityComparer));
+        }
+
+        switch (value)
+        {
+            case null:
+                return JValue.CreateNull();
+            case bool or int or long or short or byte or sbyte or uint or ulong or ushort or float or double:
+                return JToken.FromObject(value);
+            case string text:
+                return text;
+            case CUE4Parse.UE4.Objects.UObject.FName fname:
+            {
+                var text = fname.Text;
+                var separator = text.LastIndexOf("::", StringComparison.Ordinal);
+                return separator >= 0 ? text[(separator + 2)..] : text;
+            }
+            default:
+                try
+                {
+                    var json = JsonConvert.SerializeObject(value);
+                    return json.Length > 400 ? json[..400] + "…" : JToken.Parse(json);
+                }
+                catch (Exception)
+                {
+                    return value.ToString();
+                }
+        }
+    }
+
     private static readonly JObject BlueprintArg = String("Open blueprint: package path or name (see list_blueprints). Optional when only one is open.");
     private static readonly JObject FunctionArg = String("Event or function name as list_functions shows it (events share the event graph).");
     private static readonly JObject BytecodeFunctionArg = String("Bytecode function name (e.g. ExecuteUbergraph_BP_Hero or a function name). An event name selects the event graph, like get_graph; 'stub:<event>' is the event's own stub function.");
@@ -178,6 +239,160 @@ public static class BlueprintAgentTools
                 if (open.Count == 0)
                     return Task.FromResult("No blueprint is open.");
                 return Task.FromResult(string.Join("\n", open.Select(o => $"{o.Entry.Path}  ({(o.Editor.Session == null ? "not loaded for editing" : o.Editor.PendingText)})")));
+            },
+        },
+        new()
+        {
+            Name = "export_packages",
+            Description = "Exports the raw package files (.uasset/.uexp/.ubulk) of every asset whose path starts with one of the prefixes into a local directory, keeping the package-relative folder layout. " +
+                          "Read-only: it only reads the game files and writes copies. Use it to feed offline tools (for example a Kismet bytecode transpiler). At most 5000 packages per call.",
+            OffUiThread = true,
+            InputSchema = Object(("prefixes", Array("Package path prefixes, for example kards/Content/Blueprints/Cards", String("Prefix")), true),
+                ("out_dir", String("Absolute output directory (created when missing)"), true),
+                ("limit", Integer("Maximum packages to export (default 5000)"), false)),
+            Run = (args, cancellation) => Task.Run(() =>
+            {
+                var prefixes = (args["prefixes"] as JArray)?.Select(o => o.Value<string>()).Where(o => !string.IsNullOrWhiteSpace(o)).Select(o => o.Trim().Replace('\\', '/').TrimStart('/')).ToList() ?? [];
+                var outDir = args["out_dir"]?.Value<string>();
+                if (prefixes.Count == 0 || string.IsNullOrWhiteSpace(outDir))
+                    throw new AgentToolException("Pass at least one prefix and an out_dir.");
+                var limit = args["limit"]?.Value<int?>() ?? 5000;
+                var provider = ApplicationService.ApplicationView.CUE4Parse.Provider;
+                System.IO.Directory.CreateDirectory(outDir);
+                var exported = 0;
+                var failed = new JArray();
+                foreach (var entry in provider.Files.Values.ToList())
+                {
+                    cancellation.ThrowIfCancellationRequested();
+                    if (exported >= limit) break;
+                    var path = entry.Path.Replace('\\', '/').TrimStart('/');
+                    if (!path.EndsWith(".uasset", StringComparison.OrdinalIgnoreCase)) continue;
+                    if (!prefixes.Any(p => path.StartsWith(p, StringComparison.OrdinalIgnoreCase))) continue;
+                    try
+                    {
+                        if (!provider.TrySavePackage(entry, out var assets) || assets.Count == 0)
+                        {
+                            failed.Add(path);
+                            continue;
+                        }
+                        foreach (var (name, bytes) in assets)
+                        {
+                            var target = System.IO.Path.Combine(outDir, name.Replace('/', System.IO.Path.DirectorySeparatorChar).TrimStart(System.IO.Path.DirectorySeparatorChar));
+                            System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(target)!);
+                            System.IO.File.WriteAllBytes(target, bytes);
+                        }
+                        exported++;
+                    }
+                    catch (Exception exception)
+                    {
+                        failed.Add(path + ": " + exception.Message);
+                    }
+                }
+                return new JObject { ["exported"] = exported, ["failed"] = failed, ["out_dir"] = outDir }.ToString();
+            }, cancellation)
+        },
+        new()
+        {
+            Name = "read_class_defaults",
+            Description = "Reads the class defaults (CDO) of many blueprints WITHOUT opening them in a viewer: no edit session, no UI thread work, nothing stays in memory, so it does not slow Flora down or time out. " +
+                          "For each blueprint it returns the properties that class sets itself (inherited defaults are not listed) as JSON {\"name\": ..., \"path\": ..., \"properties\": {...}}; enum values come without their enum prefix and GameplayTags as a list of tag names. " +
+                          "Give package paths or plain blueprint names (at most 300 per call). Read-only: use the viewer tools to edit.",
+            OffUiThread = true,
+            InputSchema = Object(("blueprints", Array("Package paths or blueprint names", String("Blueprint")), true),
+                ("properties", Array("Only these properties (default: every property the class sets)", String("Property")), false)),
+            Run = (args, cancellation) => Task.Run(() =>
+            {
+                var names = (args["blueprints"] as JArray)?.Select(o => o.Value<string>()).Where(o => !string.IsNullOrWhiteSpace(o)).ToList() ?? [];
+                if (names.Count == 0)
+                    throw new AgentToolException("Pass at least one blueprint.");
+                if (names.Count > 300)
+                    throw new AgentToolException("At most 300 blueprints per call.");
+                var wanted = (args["properties"] as JArray)?.Select(o => o.Value<string>()).ToHashSet(StringComparer.OrdinalIgnoreCase);
+                var provider = ApplicationService.ApplicationView.CUE4Parse.Provider;
+                var index = ClassDefaultsIndex(provider);
+                var result = new JArray();
+                foreach (var name in names)
+                {
+                    cancellation.ThrowIfCancellationRequested();
+                    var key = name.Trim().Replace('\\', '/');
+                    if (!provider.Files.TryGetValue(key, out var entry) && !provider.Files.TryGetValue(key.TrimStart('/'), out entry) &&
+                        !index.TryGetValue(System.IO.Path.GetFileNameWithoutExtension(key), out entry))
+                    {
+                        result.Add(new JObject { ["name"] = name, ["error"] = "not found" });
+                        continue;
+                    }
+
+                    try
+                    {
+                        var properties = new JObject();
+                        var package = provider.LoadPackage(entry);
+                        var cdo = package.GetExports().FirstOrDefault(o => o.Name.StartsWith("Default__", StringComparison.Ordinal));
+                        if (cdo != null)
+                        {
+                            foreach (var property in cdo.Properties)
+                            {
+                                var propertyName = property.Name.Text;
+                                if (wanted != null && !wanted.Contains(propertyName))
+                                    continue;
+                                properties[propertyName] = RenderDefault(property);
+                            }
+                        }
+
+                        result.Add(new JObject { ["name"] = System.IO.Path.GetFileNameWithoutExtension(entry.Path), ["path"] = entry.Path, ["hasCdo"] = cdo != null, ["properties"] = properties });
+                    }
+                    catch (Exception exception)
+                    {
+                        result.Add(new JObject { ["name"] = name, ["error"] = exception.Message });
+                    }
+                }
+
+                return result.ToString(Formatting.None);
+            }, cancellation),
+        },
+        new()
+        {
+            Name = "close_blueprint",
+            Description = "Closes open blueprint viewers to free memory (each open blueprint keeps its decompiled graphs and edit session alive). Name one blueprint, or pass all=true to close every open one. " +
+                          "A viewer with pending edits is left open unless discard=true, which drops those edits first. Nothing is saved or written.",
+            InputSchema = Object(("blueprint", BlueprintArg, false),
+                ("all", Boolean("Close every open blueprint (viewers with pending edits are kept unless discard is true)"), false),
+                ("discard", Boolean("Also close viewers that have pending edits, dropping the edits"), false)),
+            Run = async (args, _) =>
+            {
+                var discard = args.Bool("discard", false);
+                var targets = args.Bool("all", false) ? BlueprintAgentHost.Open.ToList() : [BlueprintAgentHost.Resolve(args.Str("blueprint", false))];
+                var closed = 0;
+                var kept = new List<string>();
+                foreach (var viewer in targets)
+                {
+                    if (viewer.Editor.HasUnsavedChanges)
+                    {
+                        if (!discard)
+                        {
+                            kept.Add(viewer.Entry.Path);
+                            continue;
+                        }
+
+                        await viewer.DiscardAllAsync();
+                    }
+
+                    // same id the viewer was shown with (DockPanels.ShowBlueprintViewer); closing runs OnPanelClosed, which unregisters it and deletes the edit session
+                    Docking.DockWorkspace.Close($"Blueprint:{viewer.Title}");
+                    closed++;
+                }
+
+                var heapBefore = GC.GetTotalMemory(false) / (1024 * 1024);
+                System.Runtime.GCSettings.LargeObjectHeapCompactionMode = System.Runtime.GCLargeObjectHeapCompactionMode.CompactOnce;
+                GC.Collect(2, GCCollectionMode.Aggressive, true, true);
+                GC.WaitForPendingFinalizers();
+                GC.Collect(2, GCCollectionMode.Aggressive, true, true);
+                var heapAfter = GC.GetTotalMemory(true) / (1024 * 1024);
+                // hand the freed pages back to Windows (the working set only shrinks when asked)
+                try { EmptyWorkingSet(System.Diagnostics.Process.GetCurrentProcess().Handle); } catch (Exception) { /* not available: the pages just stay resident */ }
+                var text = $"Closed {closed} blueprint(s); {BlueprintAgentHost.Open.Count} still open. Managed heap {heapBefore} -> {heapAfter} MB.";
+                if (kept.Count > 0)
+                    text += $" Kept {kept.Count} with pending edits (pass discard=true to drop them): {string.Join(", ", kept)}.";
+                return text;
             },
         },
         new()
