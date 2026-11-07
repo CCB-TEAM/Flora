@@ -325,14 +325,33 @@ public partial class BlueprintViewerWindow
         var animation = _animationEditorAnimation;
         if (animation == null)
             return seconds;
-        if (UserSettings.Default.AnimationSnapToDisplayRate && animation.DisplayRate > 0)
-            seconds = Math.Round(seconds * animation.DisplayRate, MidpointRounding.AwayFromZero) / animation.DisplayRate;
-        var oneTick = 1 / channel.TicksPerSecond;
-        var lower = keyIndex == 0 ? _timelineStartSeconds : channel.Times[keyIndex - 1] / channel.TicksPerSecond + oneTick;
-        var upper = keyIndex + 1 >= channel.Times.Length ? _timelineEndSeconds : channel.Times[keyIndex + 1] / channel.TicksPerSecond - oneTick;
-        if (lower > upper)
+        var ticksPerSecond = channel.TicksPerSecond;
+        var lowerTick = keyIndex == 0
+            ? Math.Ceiling(_timelineStartSeconds * ticksPerSecond)
+            : (double) channel.Times[keyIndex - 1] + 1;
+        var upperTick = keyIndex + 1 >= channel.Times.Length
+            ? Math.Floor(_timelineEndSeconds * ticksPerSecond)
+            : (double) channel.Times[keyIndex + 1] - 1;
+        if (lowerTick > upperTick)
             return channel.Times[keyIndex] / channel.TicksPerSecond;
-        return Math.Clamp(seconds, lower, upper);
+
+        var targetTicks = seconds * ticksPerSecond;
+        if (UserSettings.Default.AnimationSnapToDisplayRate && animation.DisplayRate > 0)
+        {
+            var grid = ticksPerSecond / animation.DisplayRate;
+            if (grid > 0 && double.IsFinite(grid))
+            {
+                var firstGridPoint = Math.Ceiling(lowerTick / grid - 1e-10);
+                var lastGridPoint = Math.Floor(upperTick / grid + 1e-10);
+                if (firstGridPoint > lastGridPoint)
+                    return channel.Times[keyIndex] / channel.TicksPerSecond;
+                var requestedGridPoint = Math.Round(targetTicks / grid, MidpointRounding.AwayFromZero);
+                targetTicks = Math.Round(Math.Clamp(requestedGridPoint, firstGridPoint, lastGridPoint) * grid, MidpointRounding.AwayFromZero);
+            }
+        }
+
+        targetTicks = Math.Clamp(Math.Round(targetTicks, MidpointRounding.AwayFromZero), lowerTick, upperTick);
+        return targetTicks / ticksPerSecond;
     }
 
     private void ScrubAnimation(double seconds)
