@@ -2,12 +2,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
 using FModel.BlueprintGraph.Animation;
+using FModel.Settings;
 
 namespace FModel.Views.BlueprintViewer;
 
@@ -19,11 +21,14 @@ public partial class BlueprintViewerWindow
     private DispatcherTimer? _animationTimer;
     private DateTime _lastAnimationTick;
     private bool _syncingAnimationUi;
+    private bool _syncingAnimationSpeed;
 
     private void OnAnimationSelected(object sender, SelectionChangedEventArgs e)
     {
         StopAnimationTimer();
         _player.SetAnimation(AnimationCombo.SelectedItem as WidgetAnim);
+        _player.Loop = UserSettings.Default.AnimationPreviewLoop;
+        AnimationLoopCheck.IsChecked = _player.Loop;
         UpdateGameSpeedItem();
         AnimationCombo.ToolTip = _player.Animation == null ? null : DescribeAnimation(_player.Animation);
 
@@ -73,6 +78,26 @@ public partial class BlueprintViewerWindow
         ApplyAnimation();
     }
 
+    private void OnAnimationSettingsChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (!Dispatcher.CheckAccess())
+        {
+            Dispatcher.BeginInvoke(new Action(() => OnAnimationSettingsChanged(sender, e)));
+            return;
+        }
+
+        if (e.PropertyName == nameof(UserSettings.AnimationPreviewLoop))
+        {
+            _player.Loop = UserSettings.Default.AnimationPreviewLoop;
+            AnimationLoopCheck.IsChecked = _player.Loop;
+        }
+        else if (e.PropertyName is nameof(UserSettings.AnimationPreviewSpeed) or nameof(UserSettings.AnimationPreviewUseBlueprintSpeed))
+        {
+            if (!_syncingAnimationSpeed)
+                UpdateGameSpeedItem();
+        }
+    }
+
     private ComboBoxItem? _gameSpeedItem;
 
     /// <summary>
@@ -81,24 +106,40 @@ public partial class BlueprintViewerWindow
     /// </summary>
     private void UpdateGameSpeedItem()
     {
-        if (_gameSpeedItem != null)
-            AnimationSpeedCombo.Items.Remove(_gameSpeedItem);
-        _gameSpeedItem = null;
+        _syncingAnimationSpeed = true;
+        try
+        {
+            if (_gameSpeedItem != null)
+                AnimationSpeedCombo.Items.Remove(_gameSpeedItem);
+            _gameSpeedItem = null;
 
-        if (_player.Animation?.GameSpeed is { } speed)
-        {
-            _gameSpeedItem = new ComboBoxItem
+            if (_player.Animation?.GameSpeed is { } speed)
             {
-                Content = $"Game ({speed:0.##}x)",
-                Tag = speed.ToString(CultureInfo.InvariantCulture),
-                ToolTip = "The playback speed the blueprint passes to PlayAnimation",
-            };
-            AnimationSpeedCombo.Items.Insert(0, _gameSpeedItem);
-            AnimationSpeedCombo.SelectedItem = _gameSpeedItem;
+                _gameSpeedItem = new ComboBoxItem
+                {
+                    Content = $"Game ({speed:0.##}x)",
+                    Tag = speed.ToString(CultureInfo.InvariantCulture),
+                    ToolTip = "The playback speed the blueprint passes to PlayAnimation",
+                };
+                AnimationSpeedCombo.Items.Insert(0, _gameSpeedItem);
+            }
+
+            var useBlueprintSpeed = UserSettings.Default.AnimationPreviewUseBlueprintSpeed;
+            var selected = useBlueprintSpeed ? _gameSpeedItem : null;
+            if (selected == null)
+            {
+                var defaultTag = UserSettings.Default.AnimationPreviewSpeed.ToString(CultureInfo.InvariantCulture);
+                selected = AnimationSpeedCombo.Items.OfType<ComboBoxItem>().FirstOrDefault(o => o.Tag as string == defaultTag)
+                           ?? AnimationSpeedCombo.Items.OfType<ComboBoxItem>().FirstOrDefault(o => o.Tag as string == "1");
+            }
+
+            AnimationSpeedCombo.SelectedItem = selected;
+            if (selected is ComboBoxItem { Tag: string tag } && double.TryParse(tag, NumberStyles.Float, CultureInfo.InvariantCulture, out var selectedSpeed))
+                _player.Speed = selectedSpeed;
         }
-        else if (AnimationSpeedCombo.SelectedItem is not ComboBoxItem)
+        finally
         {
-            AnimationSpeedCombo.SelectedItem = AnimationSpeedCombo.Items.OfType<ComboBoxItem>().FirstOrDefault(o => o.Tag as string == "1");
+            _syncingAnimationSpeed = false;
         }
     }
 
@@ -156,12 +197,40 @@ public partial class BlueprintViewerWindow
         ApplyAnimation();
     }
 
-    private void OnAnimationLoopClick(object sender, RoutedEventArgs e) => _player.Loop = AnimationLoopCheck.IsChecked == true;
+    private void OnAnimationLoopClick(object sender, RoutedEventArgs e)
+    {
+        _player.Loop = AnimationLoopCheck.IsChecked == true;
+        UserSettings.Default.AnimationPreviewLoop = _player.Loop;
+        UserSettings.Save();
+    }
 
     private void OnAnimationSpeedChanged(object sender, SelectionChangedEventArgs e)
     {
+        if (_syncingAnimationSpeed)
+            return;
+
         if (AnimationSpeedCombo.SelectedItem is ComboBoxItem { Tag: string tag } && double.TryParse(tag, NumberStyles.Float, CultureInfo.InvariantCulture, out var speed))
+        {
             _player.Speed = speed;
+            if (ReferenceEquals(AnimationSpeedCombo.SelectedItem, _gameSpeedItem))
+            {
+                UserSettings.Default.AnimationPreviewUseBlueprintSpeed = true;
+            }
+            else
+            {
+                _syncingAnimationSpeed = true;
+                try
+                {
+                    UserSettings.Default.AnimationPreviewUseBlueprintSpeed = false;
+                    UserSettings.Default.AnimationPreviewSpeed = speed;
+                }
+                finally
+                {
+                    _syncingAnimationSpeed = false;
+                }
+            }
+            UserSettings.Save();
+        }
     }
 
     private void OnAnimationSliderChanged(object sender, RoutedPropertyChangedEventArgs<double> e)

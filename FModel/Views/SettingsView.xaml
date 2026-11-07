@@ -666,6 +666,56 @@
                                             HotKey="{Binding NextAudio, Source={x:Static local:Settings.UserSettings.Default}, Mode=TwoWay}" />
                 </Grid>
             </DataTemplate>
+            <DataTemplate x:Key="AnimationTemplate">
+                <Grid adonisExtensions:LayerExtension.Layer="2">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="10" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Text="Animation preview and editing" FontSize="16" FontWeight="SemiBold" Margin="0 0 0 8" />
+                    <Separator Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Style="{StaticResource CustomSeparator}" Tag="Preview defaults" />
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Default preview speed" VerticalAlignment="Center" Margin="0 0 0 5" />
+                    <ComboBox Grid.Row="2" Grid.Column="2" ItemsSource="{Binding SettingsView.AnimationPreviewSpeeds}"
+                              SelectedItem="{Binding AnimationPreviewSpeed, Source={x:Static local:Settings.UserSettings.Default}, Mode=TwoWay}" Margin="0 0 0 5">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding StringFormat={}{0:0.##}x}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <CheckBox Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" Content="Use blueprint PlayAnimation speed when available"
+                              IsChecked="{Binding AnimationPreviewUseBlueprintSpeed, Source={x:Static local:Settings.UserSettings.Default}, Mode=TwoWay}" Margin="0 0 0 5" />
+                    <CheckBox Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Content="Loop animation previews by default"
+                              IsChecked="{Binding AnimationPreviewLoop, Source={x:Static local:Settings.UserSettings.Default}, Mode=TwoWay}" Margin="0 0 0 8" />
+
+                    <Separator Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="3" Style="{StaticResource CustomSeparator}" Tag="Edit defaults" />
+                    <CheckBox Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="3" Content="Snap entered times to the animation DisplayRate"
+                              IsChecked="{Binding AnimationSnapToDisplayRate, Source={x:Static local:Settings.UserSettings.Default}, Mode=TwoWay}" Margin="0 0 0 5" />
+                    <TextBlock Grid.Row="7" Grid.Column="0" Text="Automatic tangent policy" VerticalAlignment="Center" />
+                    <ComboBox Grid.Row="7" Grid.Column="2" ItemsSource="{Binding SettingsView.AnimationTangentUpdateModes}"
+                              SelectedItem="{Binding AnimationTangentUpdateMode, Source={x:Static local:Settings.UserSettings.Default}, Mode=TwoWay}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Converter={x:Static converters:EnumToStringConverter.Instance}}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </Grid>
+            </DataTemplate>
         </ResourceDictionary>
     </UserControl.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
@@ -742,6 +792,11 @@
                         </Viewbox>
                         <TextBlock Text="{loc:Loc Settings_Category_Keybindings}" HorizontalAlignment="Left" VerticalAlignment="Center" />
                     </StackPanel>
+                </TreeViewItem.Header>
+            </TreeViewItem>
+            <TreeViewItem Tag="AnimationTemplate">
+                <TreeViewItem.Header>
+                    <TextBlock Text="Animation" HorizontalAlignment="Left" VerticalAlignment="Center" />
                 </TreeViewItem.Header>
             </TreeViewItem>
         </TreeView>

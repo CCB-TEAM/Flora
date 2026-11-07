@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using FModel.BlueprintGraph.Animation;
 using FModel.Framework.BlueprintEditing;
+using FModel.Settings;
 using FModel.ViewModels;
 using Newtonsoft.Json.Linq;
 using static FModel.Framework.BlueprintAgent.Schema;
@@ -46,16 +47,16 @@ public static class AnimationEditAgentTools
         {
             Name = "anim_edit",
             Description = "Applies an atomic batch of edits to existing UMG animation float channels in the open widget blueprint. Supports set_key, move_key, set_interp, set_tangent, retime, and set_range. " +
-                          "Times and ranges are timeline seconds at the animation's tick resolution, snapped to its DisplayRate grid by default. Key indices are zero-based as shown by anim_get. " +
-                          "Automatic tangent handling defaults to local; choose local, channel, or none globally or per operation. Time/range changes refresh the affected Section → Track → MovieScene → WidgetAnimation signatures. " +
+                          "Times and ranges are timeline seconds at the animation's tick resolution, snapped to its DisplayRate grid according to the saved preference (on by default). Key indices are zero-based as shown by anim_get. " +
+                          "Automatic tangent handling uses the saved animation setting (local by default); choose local, channel, or none globally or per operation. Time/range changes refresh the affected Section → Track → MovieScene → WidgetAnimation signatures. " +
                           "Weighted channels reject non-identity retime until that conversion is verified. " +
                           "The edit remains pending in the blueprint session; this tool does not export files or build a pak. Use dry_run first to inspect the diff.",
             Access = AgentToolAccess.Edit,
             InputSchema = Object(("blueprint", BlueprintArg, false), ("animation", AnimationArg, true),
                 ("operations", Array("Ordered atomic operations. Each object has an op field; channel edits also identify widget, track_class, property, section, channel, and zero-based key index.", Any("Animation edit operation object.")), true),
-                ("tangents", Enum("Automatic tangent handling for set_key, move_key, and set_interp: local (default), channel, or none."), false),
+                ("tangents", Enum("Automatic tangent handling for set_key, move_key, and set_interp: saved animation setting (local by default), channel, or none."), false),
                 ("dry_run", Boolean("Show the proposed diff without changing the pending blueprint session."), false),
-                ("snap_to_display_rate", Boolean("Snap user-entered seconds to the animation's frame grid (default true)."), false)),
+                ("snap_to_display_rate", Boolean("Snap user-entered seconds to the animation's frame grid (uses the saved setting, on by default)."), false)),
             Run = RunAsync,
         },
     ];
@@ -141,8 +142,10 @@ public static class AnimationEditAgentTools
             throw new AgentToolException("At most 64 operations can be applied atomically.");
 
         var proposed = Clone(animation);
-        var snap = Bool(args, "snap_to_display_rate", true);
-        var tangentUpdate = ReadTangentUpdate(args["tangents"], TangentUpdateMode.Local);
+        var snap = args["snap_to_display_rate"] == null
+            ? UserSettings.Default.AnimationSnapToDisplayRate
+            : Bool(args, "snap_to_display_rate", UserSettings.Default.AnimationSnapToDisplayRate);
+        var tangentUpdate = ReadTangentUpdate(args["tangents"], UserSettings.Default.AnimationTangentUpdateMode);
         var summaries = new List<string>();
         for (var i = 0; i < operations.Count; i++)
         {
