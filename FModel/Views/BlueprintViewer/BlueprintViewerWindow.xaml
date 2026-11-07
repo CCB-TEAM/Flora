@@ -274,6 +274,26 @@
                             <Button DockPanel.Dock="Right" Content="{loc:Loc WidgetEditor_Button}" MinWidth="90" Margin="0 0 5 0"
                                     Click="OnEditPropertiesClick" ToolTip="{loc:Loc WidgetEditor_PreviewOnly}" />
                         </DockPanel>
+                        <!-- animation preview: pick one of the widget's UMG animations, play or scrub it; the canvas draws the widgets as the animation sets them -->
+                        <DockPanel DockPanel.Dock="Top" Margin="0 0 0 5" Visibility="{Binding HasAnimations, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <TextBlock DockPanel.Dock="Left" Text="Animation" VerticalAlignment="Center" Margin="0 0 5 0" />
+                            <ComboBox x:Name="AnimationCombo" DockPanel.Dock="Left" MinWidth="170" ItemsSource="{Binding Animations}"
+                                      SelectionChanged="OnAnimationSelected" ToolTip="UMG animations of this widget blueprint (read from the cooked asset)" />
+                            <ToggleButton x:Name="AnimationPlayButton" DockPanel.Dock="Left" Content="Play" MinWidth="54" Margin="5 0 0 0" Click="OnAnimationPlayClick" />
+                            <Button DockPanel.Dock="Left" Content="Stop" MinWidth="44" Margin="5 0 0 0" Click="OnAnimationStopClick" />
+                            <ComboBox x:Name="AnimationSpeedCombo" DockPanel.Dock="Right" MinWidth="64" Margin="5 0 0 0" SelectionChanged="OnAnimationSpeedChanged"
+                                      ToolTip="Timeline seconds per real second. The game often plays UI animations at 2x to 8x.">
+                                <ComboBoxItem Content="0.25x" Tag="0.25" />
+                                <ComboBoxItem Content="0.5x" Tag="0.5" />
+                                <ComboBoxItem Content="1x" Tag="1" IsSelected="True" />
+                                <ComboBoxItem Content="2x" Tag="2" />
+                                <ComboBoxItem Content="4x" Tag="4" />
+                                <ComboBoxItem Content="8x" Tag="8" />
+                            </ComboBox>
+                            <CheckBox x:Name="AnimationLoopCheck" DockPanel.Dock="Right" Content="Loop" Margin="8 0 0 0" VerticalAlignment="Center" Click="OnAnimationLoopClick" />
+                            <TextBlock x:Name="AnimationTimeText" DockPanel.Dock="Right" Margin="8 0 0 0" VerticalAlignment="Center" MinWidth="92" FontFamily="Consolas" />
+                            <Slider x:Name="AnimationSlider" Margin="8 0 0 0" VerticalAlignment="Center" Minimum="0" Maximum="1" ValueChanged="OnAnimationSliderChanged" />
+                        </DockPanel>
                         <bp:WidgetDesignerCanvas x:Name="DesignerCanvas" />
                     </DockPanel>
 

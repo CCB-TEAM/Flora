@@ -45,6 +45,7 @@ public partial class BlueprintViewerWindow : IDockPanel
         DesignerCanvas.SelectionChanged += OnDesignerSelectionChanged;
         DesignerCanvas.SizeChanged += OnDesignerSizeChanged;
         _viewModel.Designer.PropertiesEdited += OnDesignerPropertiesEdited;
+        _viewModel.Designer.AnimationsChanged += OnDesignerAnimationsChanged;
         Loaded += OnLoaded;
     }
 

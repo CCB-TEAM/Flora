@@ -90,6 +90,10 @@ public class WidgetBinding
 public class WidgetBlueprintInfo
 {
     public WidgetNode? Root;
+
+    /// <summary>The generated class the tree and animations were read from (animations are read lazily from it).</summary>
+    public UWidgetBlueprintGeneratedClass? WidgetClass;
+
     public readonly List<WidgetBinding> Bindings = [];
     public readonly List<string> Animations = [];
 }
@@ -112,6 +116,7 @@ public static class WidgetTreeReader
         var info = new WidgetBlueprintInfo
         {
             Root = ReadTree(widgetClass, nestedDepth, [widgetClass.GetPathName()]),
+            WidgetClass = widgetClass,
         };
 
         foreach (var binding in WidgetProps.Structs(widgetClass, "Bindings"))

@@ -197,8 +197,10 @@ public class BlueprintViewerViewModel : ViewModel
     /// <summary>Drops every pending edit; graphs showing edited pins or wires are decompiled again from the original bytecode.</summary>
     public async Task DiscardAllAsync()
     {
-        var hadGraphEdits = Editor.Session is { } session && (session.ConstantChangeCount > 0 || session.WireChangeCount > 0 || session.ObjectChangeCount > 0);
+        var hadGraphEdits = Editor.Session is { } session &&
+                            (session.ConstantChangeCount > 0 || session.WireChangeCount > 0 || session.ObjectChangeCount - session.AnimationChangeCount > 0);
         await Editor.DiscardAsync();
+        Designer.RefreshAnimations();
         if (hadGraphEdits)
             ClearGraphCache();
         else

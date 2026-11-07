@@ -94,7 +94,7 @@ public static class BlueprintAgentTools
     private static readonly JObject OffsetArg = Integer("In-memory bytecode offset of the original code, as get_graph / kismet_list_statements show it.");
     private static readonly JObject TokenArg = String("The EX_ token expected at that offset (e.g. EX_Let); guards against stale offsets.");
 
-    public static IReadOnlyList<AgentTool> All { get; } = [AgentGuide.Tool, .. Build(), .. DataTableAgentTools.Build(), .. JmapAgentTools.Build(), .. JmapCalls.Build(), .. PackAgentTools.Build()];
+    public static IReadOnlyList<AgentTool> All { get; } = [AgentGuide.Tool, .. Build(), .. DataTableAgentTools.Build(), .. JmapAgentTools.Build(), .. JmapCalls.Build(), .. PackAgentTools.Build(), .. AnimationAgentTools.Build(), .. AnimationEditAgentTools.Build()];
 
     /// <summary>The tools offered now (bytecode object tools only when the setting allows them).</summary>
     public static IEnumerable<AgentTool> Available() =>
