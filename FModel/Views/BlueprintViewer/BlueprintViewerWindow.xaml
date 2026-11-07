@@ -294,6 +294,74 @@
                             <TextBlock x:Name="AnimationTimeText" DockPanel.Dock="Right" Margin="8 0 0 0" VerticalAlignment="Center" MinWidth="92" FontFamily="Consolas" />
                             <Slider x:Name="AnimationSlider" Margin="8 0 0 0" VerticalAlignment="Center" Minimum="0" Maximum="1" ValueChanged="OnAnimationSliderChanged" />
                         </DockPanel>
+                        <Border x:Name="AnimationEditorPanel" DockPanel.Dock="Bottom" Height="292" MinHeight="220" Padding="6"
+                                Margin="0 5 0 0" BorderThickness="1" BorderBrush="{DynamicResource {x:Static adonisUi:Brushes.Layer1BorderBrush}}"
+                                Background="{DynamicResource {x:Static adonisUi:Brushes.Layer1BackgroundBrush}}"
+                                Visibility="{Binding HasAnimations, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <DockPanel Grid.Row="0" Margin="0 0 0 5">
+                                    <TextBlock DockPanel.Dock="Left" Text="Animation Editor" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="AnimationEditorStatus" Margin="12 0 0 0" VerticalAlignment="Center" Opacity="0.75"
+                                               TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
+                                </DockPanel>
+                                <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0 0 0 4">
+                                    <TextBlock Text="Playback range" VerticalAlignment="Center" Margin="0 0 6 0" />
+                                    <TextBlock Text="Start" VerticalAlignment="Center" Opacity="0.7" Margin="0 0 3 0" />
+                                    <TextBox x:Name="AnimationRangeStart" Width="72" Margin="0 0 7 0" VerticalContentAlignment="Center" />
+                                    <TextBlock Text="End" VerticalAlignment="Center" Opacity="0.7" Margin="0 0 3 0" />
+                                    <TextBox x:Name="AnimationRangeEnd" Width="72" Margin="0 0 7 0" VerticalContentAlignment="Center" />
+                                    <Button Content="Apply range" MinWidth="88" Click="OnApplyAnimationRangeClick" />
+                                    <TextBlock Text="Drag a key on the timeline, then apply its properties below." VerticalAlignment="Center" Opacity="0.6" Margin="12 0 0 0" />
+                                </StackPanel>
+                                <WrapPanel Grid.Row="2" Margin="0 0 0 5" VerticalAlignment="Center">
+                                    <TextBlock x:Name="AnimationSelectedKeyText" Text="No key selected" Width="170" VerticalAlignment="Center"
+                                               TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
+                                    <StackPanel Orientation="Horizontal" Margin="0 0 6 0">
+                                        <TextBlock Text="Time" VerticalAlignment="Center" Opacity="0.7" Margin="0 0 3 0" />
+                                        <TextBox x:Name="AnimationKeyTime" Width="68" VerticalContentAlignment="Center" />
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0 0 6 0">
+                                        <TextBlock Text="Value" VerticalAlignment="Center" Opacity="0.7" Margin="0 0 3 0" />
+                                        <TextBox x:Name="AnimationKeyValue" Width="68" VerticalContentAlignment="Center" />
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0 0 6 0">
+                                        <TextBlock Text="Interp" VerticalAlignment="Center" Opacity="0.7" Margin="0 0 3 0" />
+                                        <ComboBox x:Name="AnimationKeyInterp" Width="92" SelectionChanged="OnAnimationEditorTangentModeChanged">
+                                            <ComboBoxItem Content="Linear" Tag="Linear" />
+                                            <ComboBoxItem Content="Constant" Tag="Constant" />
+                                            <ComboBoxItem Content="Cubic" Tag="Cubic" />
+                                            <ComboBoxItem Content="None" Tag="None" />
+                                        </ComboBox>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0 0 6 0">
+                                        <TextBlock Text="Tangent" VerticalAlignment="Center" Opacity="0.7" Margin="0 0 3 0" />
+                                        <ComboBox x:Name="AnimationKeyTangentMode" Width="100" SelectionChanged="OnAnimationEditorTangentModeChanged">
+                                            <ComboBoxItem Content="Auto" Tag="Auto" />
+                                            <ComboBoxItem Content="User" Tag="User" />
+                                            <ComboBoxItem Content="Break" Tag="Break" />
+                                            <ComboBoxItem Content="Smart auto" Tag="SmartAuto" />
+                                        </ComboBox>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0 0 6 0">
+                                        <TextBlock Text="Arrive / leave" VerticalAlignment="Center" Opacity="0.7" Margin="0 0 3 0" />
+                                        <TextBox x:Name="AnimationKeyArriveTangent" Width="64" Margin="0 0 3 0" VerticalContentAlignment="Center" />
+                                        <TextBox x:Name="AnimationKeyLeaveTangent" Width="64" VerticalContentAlignment="Center" />
+                                    </StackPanel>
+                                    <Button x:Name="AnimationKeyApplyButton" Content="Apply key" MinWidth="78" Click="OnApplyAnimationKeyClick" />
+                                </WrapPanel>
+                                <ScrollViewer x:Name="AnimationTimelineScrollViewer" Grid.Row="3" HorizontalScrollBarVisibility="Auto"
+                                              VerticalScrollBarVisibility="Auto" SizeChanged="OnAnimationTimelineSizeChanged">
+                                    <Canvas x:Name="AnimationTimelineCanvas" Background="#20232B"
+                                            MouseLeftButtonDown="OnAnimationTimelineMouseDown" />
+                                </ScrollViewer>
+                            </Grid>
+                        </Border>
                         <bp:WidgetDesignerCanvas x:Name="DesignerCanvas" />
                     </DockPanel>
 

@@ -41,6 +41,7 @@ public partial class BlueprintViewerWindow
         _syncingAnimationUi = false;
 
         ApplyAnimation();
+        RefreshAnimationEditor();
     }
 
     /// <summary>Refreshes the visible preview after an agent edit or after discarding pending animation edits.</summary>
@@ -76,6 +77,7 @@ public partial class BlueprintViewerWindow
         AnimationSlider.Value = Math.Clamp(_player.Time, AnimationSlider.Minimum, AnimationSlider.Maximum);
         _syncingAnimationUi = false;
         ApplyAnimation();
+        RefreshAnimationEditor();
     }
 
     private void OnAnimationSettingsChanged(object? sender, PropertyChangedEventArgs e)

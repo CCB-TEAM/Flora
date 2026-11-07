@@ -208,6 +208,9 @@ public static class AnimationEditAgentTools
         return FormatResult(animation, proposed, committed.Changes, summaries, committed.SignaturesRefreshed, false);
     }
 
+    /// <summary>Runs the same validated, pending-session edit path used by anim_edit from the visual editor.</summary>
+    public static Task<string> RunFromUiAsync(JObject args, CancellationToken cancellation = default) => RunAsync(args, cancellation);
+
     private static string ApplyOperation(WidgetAnim animation, JObject operation, bool snap, TangentUpdateMode defaultTangentUpdate)
     {
         var op = ReadString(operation, "op");
