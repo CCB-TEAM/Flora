@@ -35,6 +35,7 @@ public sealed class BlueprintEditSession : IDisposable
     private readonly Dictionary<(string Function, ObjectEditKind Kind, uint Offset), ObjectEdit> _objects = new();
     private readonly Dictionary<(string Function, string Name), LocalDeclaration> _locals = new();
     private int _saveCounter;
+    private int _animationEditCounter;
 
     public GameFile Entry { get; }
     public UAsset Working { get; private set; }
@@ -44,7 +45,8 @@ public sealed class BlueprintEditSession : IDisposable
     public int CdoChangeCount { get; private set; }
     public int ConstantChangeCount => _constants.Count;
     public int WireChangeCount => _wires.Count;
-    public int ObjectChangeCount => _objects.Count + _locals.Count;
+    public int AnimationChangeCount { get; private set; }
+    public int ObjectChangeCount => _objects.Count + _locals.Count + AnimationChangeCount;
     public int PendingCount => CdoChangeCount + ConstantChangeCount + WireChangeCount + ObjectChangeCount;
 
     /// <summary>What the last save or validation added to the package for object edits (names, imports).</summary>
@@ -147,6 +149,52 @@ public sealed class BlueprintEditSession : IDisposable
             Changed?.Invoke();
     }
 
+    /// <summary>
+    /// Applies one animation edit batch to an isolated copy of the current package, then runs the same write/readback
+    /// validation as a dry-run save. The session keeps the candidate only when validation succeeds.
+    /// </summary>
+    public BlueprintSaveResult ApplyAnimationEdit(Action<UAsset> edit, Func<IPackage, string?> verify)
+    {
+        var previous = Working;
+        var previousCdo = Cdo;
+        var stage = "animation: stage current package";
+        try
+        {
+            var directory = Path.Combine(_workDirectory, "_animation-edits", (++_animationEditCounter).ToString());
+            Directory.CreateDirectory(directory);
+            var path = Path.Combine(directory, Path.GetFileName(_stagedUassetPath));
+            Working.Write(path);
+
+            stage = "animation: clone current package";
+            var candidate = CUE4ParseViewModel.ReadBlueprintAssetLike(Working, path);
+            stage = "animation: apply edit batch";
+            edit(candidate);
+            Working = candidate;
+            Cdo = CdoEditor.TryCreate(candidate);
+
+            stage = "animation: validate write/readback";
+            var result = Save(false, false, verify);
+            if (!result.Success)
+            {
+                Working = previous;
+                Cdo = previousCdo;
+                return result;
+            }
+
+            AnimationChangeCount++;
+            HasUnsavedChanges = true;
+            Changed?.Invoke();
+            return result;
+        }
+        catch (Exception e)
+        {
+            Working = previous;
+            Cdo = previousCdo;
+            Serilog.Log.Error(e, "Failed to apply animation edit to {Path} at stage {Stage}", Entry.Path, stage);
+            return Fail(stage, ExceptionText.Describe(e));
+        }
+    }
+
     /// <summary>Drops every pending change and reloads the staged original.</summary>
     public void Discard()
     {
@@ -157,6 +205,7 @@ public sealed class BlueprintEditSession : IDisposable
         _objects.Clear();
         _locals.Clear();
         CdoChangeCount = 0;
+        AnimationChangeCount = 0;
         HasUnsavedChanges = false;
         Changed?.Invoke();
     }

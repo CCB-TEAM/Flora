@@ -10,6 +10,7 @@ using CUE4Parse.UE4.Versions;
 using CUE4Parse_Conversion.Meshes;
 using CUE4Parse_Conversion.Textures;
 using CUE4Parse_Conversion.UEFormat.Enums;
+using FModel.BlueprintGraph.Animation;
 using FModel.Framework;
 using FModel.Localization;
 using FModel.Services;
@@ -20,6 +21,9 @@ namespace FModel.ViewModels;
 public class SettingsViewModel : ViewModel
 {
     private readonly DiscordHandler _discordHandler = DiscordService.DiscordHandler;
+
+    public IReadOnlyList<double> AnimationPreviewSpeeds { get; } = [0.25, 0.5, 1.0, 2.0, 4.0, 8.0];
+    public IReadOnlyList<TangentUpdateMode> AnimationTangentUpdateModes { get; } = Enum.GetValues<TangentUpdateMode>();
 
     private bool _useCustomOutputFolders;
     public bool UseCustomOutputFolders

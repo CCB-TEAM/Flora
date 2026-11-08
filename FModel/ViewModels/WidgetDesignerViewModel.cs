@@ -12,6 +12,7 @@ using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse_Conversion.Textures;
+using FModel.BlueprintGraph.Animation;
 using FModel.BlueprintGraph.Widgets;
 using FModel.Framework;
 using FModel.Settings;
@@ -92,6 +93,45 @@ public class WidgetDesignerViewModel : ViewModel
     public ObservableCollection<WidgetTreeItem> Roots { get; } = [];
     public ObservableCollection<WidgetBinding> Bindings { get; } = [];
 
+    /// <summary>The UMG animations of the widget blueprint, including pending animation edits for the preview.</summary>
+    public ObservableCollection<WidgetAnim> Animations { get; } = [];
+
+    public bool HasAnimations => Animations.Count > 0;
+
+    private List<WidgetAnim> _animations;
+
+    /// <summary>Reads and caches the animation model from the loaded widget class.</summary>
+    public IReadOnlyList<WidgetAnim> ReadAnimations() =>
+        _animations ??= Info?.WidgetClass == null ? [] : AnimationReader.Read(Info.WidgetClass);
+
+    /// <summary>Signals that a pending animation edit changed the model used by preview and evaluation.</summary>
+    public event Action AnimationsChanged;
+
+    public void NotifyAnimationsChanged()
+    {
+        AnimationsChanged?.Invoke();
+    }
+
+    /// <summary>Reloads the cached animation model from the original cooked widget class after discarding edits.</summary>
+    public void RefreshAnimations()
+    {
+        void Refresh()
+        {
+            _animations = null;
+            Animations.Clear();
+            foreach (var animation in ReadAnimations())
+                Animations.Add(animation);
+            RaisePropertyChanged(nameof(HasAnimations));
+            NotifyAnimationsChanged();
+        }
+
+        var dispatcher = System.Windows.Application.Current?.Dispatcher;
+        if (dispatcher != null && !dispatcher.CheckAccess())
+            dispatcher.Invoke(Refresh);
+        else
+            Refresh();
+    }
+
     /// <summary>Editable properties of the selected widget; edits are preview-only and never saved.</summary>
     public ObservableCollection<WidgetPropertyRow> PropertyRows { get; } = [];
 
@@ -116,7 +156,24 @@ public class WidgetDesignerViewModel : ViewModel
         new() { Label = "2560 x 1440", Width = 2560, Height = 1440 },
         new() { Label = "3840 x 2160", Width = 3840, Height = 2160 },
         new() { Label = string.Format(FModel.Localization.LocalizationManager.Instance.Get("BlueprintViewer_DesignPortrait"), 1080, 1920), Width = 1080, Height = 1920 },
+        // what a player's screen gives a full-screen widget: the game scales its UI by the shortest side (see ScreenScale)
+        ScreenSize(1280, 720),
+        ScreenSize(1920, 1080),
+        ScreenSize(2560, 1440),
+        ScreenSize(3440, 1440),
+        ScreenSize(3840, 2160),
     ];
+
+    private static WidgetDesignSize ScreenSize(int screenWidth, int screenHeight)
+    {
+        var (width, height) = ScreenScale.WidgetSpace(screenWidth, screenHeight);
+        return new WidgetDesignSize
+        {
+            Label = $"Screen {screenWidth} x {screenHeight} (UI space {width:0} x {height:0})",
+            Width = (float) Math.Round(width),
+            Height = (float) Math.Round(height),
+        };
+    }
 
     private WidgetDesignSize _selectedDesignSize;
     public WidgetDesignSize SelectedDesignSize
@@ -175,7 +232,35 @@ public class WidgetDesignerViewModel : ViewModel
             Roots.Add(new WidgetTreeItem(Info.Root, null, 0));
         foreach (var binding in Info?.Bindings ?? [])
             Bindings.Add(binding);
+        Animations.Clear();
+        foreach (var animation in ReadAnimations())
+            Animations.Add(animation);
+        RaisePropertyChanged(nameof(HasAnimations));
         RaisePropertyChanged(nameof(HasTree));
+    }
+
+    /// <summary>
+    /// A separate copy of the widget tree with its own layout, for off-screen rendering (animation filmstrips): laying it out
+    /// for another size does not move anything in the tree the designer shows.
+    /// </summary>
+    public (WidgetNode Root, WidgetLayout Layout)? CreatePreviewScene()
+    {
+        if (Info?.WidgetClass == null)
+            return null;
+
+        var types = _provider?.MappingsForGame?.Types;
+        var layout = new WidgetLayout(WidgetDesignerCanvas.MeasureText,
+            className => types != null && types.TryGetValue(className, out var type) ? type.SuperType : null);
+        var info = WidgetTreeReader.Read(Info.WidgetClass);
+        if (info.Root == null)
+            return null;
+
+        foreach (var node in info.Root.SelfAndDescendants())
+        {
+            if (layout.GetKind(node) is WidgetKind.TextBlock or WidgetKind.RichTextBlock)
+                WidgetDesignerCanvas.FontOf(node);
+        }
+        return (info.Root, layout);
     }
 
     public (float Width, float Height) ResolveDesignSize()

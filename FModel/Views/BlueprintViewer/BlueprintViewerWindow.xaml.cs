@@ -11,6 +11,7 @@ using FModel.BlueprintGraph.Widgets;
 using FModel.Extensions;
 using FModel.Localization;
 using FModel.Services;
+using FModel.Settings;
 using FModel.ViewModels;
 using FModel.Framework.Docking;
 using FModel.Framework.BlueprintEditing;
@@ -27,6 +28,7 @@ public partial class BlueprintViewerWindow : IDockPanel
     private bool _designerFitted;
     private bool _syncingWidgetSelection;
     private bool _loaded;
+    private bool _animationSettingsSubscribed;
 
     public BlueprintViewerWindow(BlueprintViewerViewModel viewModel)
     {
@@ -47,7 +49,26 @@ public partial class BlueprintViewerWindow : IDockPanel
         DesignerCanvas.SelectionChanged += OnDesignerSelectionChanged;
         DesignerCanvas.SizeChanged += OnDesignerSizeChanged;
         _viewModel.Designer.PropertiesEdited += OnDesignerPropertiesEdited;
+        _viewModel.Designer.AnimationsChanged += OnDesignerAnimationsChanged;
+        Loaded += OnAnimationSettingsLoaded;
+        Unloaded += OnAnimationSettingsUnloaded;
         Loaded += OnLoaded;
+    }
+
+    private void OnAnimationSettingsLoaded(object sender, RoutedEventArgs e)
+    {
+        if (_animationSettingsSubscribed)
+            return;
+        UserSettings.Default.PropertyChanged += OnAnimationSettingsChanged;
+        _animationSettingsSubscribed = true;
+    }
+
+    private void OnAnimationSettingsUnloaded(object sender, RoutedEventArgs e)
+    {
+        if (!_animationSettingsSubscribed)
+            return;
+        UserSettings.Default.PropertyChanged -= OnAnimationSettingsChanged;
+        _animationSettingsSubscribed = false;
     }
 
     private async void OnLoaded(object sender, RoutedEventArgs e)
