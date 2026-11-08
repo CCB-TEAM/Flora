@@ -142,8 +142,36 @@ public static class KismetLocals
                 return Init(new FSoftObjectProperty { PropertyClass = Reference("class") ?? FPackageIndex.FromRawIndex(0) }, builder, "SoftObjectProperty", 40,
                     EPropertyFlags.CPF_HasGetValueTypeHash);
             case "struct":
-                Reference("struct");
-                throw new InvalidOperationException($"{path}: a struct's size isn't known here; declare it with 'like' (a property of that struct type in this package).");
+            {
+                // struct:/Script/Module.Struct  or  struct:/Script/Module.Struct@SIZE  (SIZE in bytes; export:Name for a struct of this package).
+                // Flags stay 0 (the struct isn't assumed to be plain data, so the frame constructs and destroys it); the engine links the
+                // property against the struct when the class loads and takes the real size from it, so SIZE is only a hint for the file.
+                var structPath = argument;
+                var size = 0;
+                var at = argument.LastIndexOf('@');
+                if (at >= 0)
+                {
+                    if (!int.TryParse(argument[(at + 1)..].Trim(), out size) || size < 0)
+                        throw new InvalidOperationException($"{path}: '{argument[(at + 1)..]}' is not a size in bytes (struct:/Script/Module.Struct@40)");
+                    structPath = argument[..at].Trim();
+                }
+                if (structPath.Length == 0)
+                    throw new InvalidOperationException($"{path}: struct needs the struct, e.g. struct:/Script/kards.LibraryCard@40");
+                FPackageIndex? structIndex;
+                if (structPath.StartsWith("export:", StringComparison.Ordinal))
+                    structIndex = builder.Reference(structPath, path);
+                else
+                {
+                    var import = structPath.StartsWith("import:", StringComparison.Ordinal) ? structPath["import:".Length..] : structPath;
+                    structIndex = builder.Reference(new Newtonsoft.Json.Linq.JObject
+                    {
+                        ["import"] = import,
+                        ["className"] = "ScriptStruct",
+                        ["classPackage"] = "/Script/CoreUObject",
+                    }, path);
+                }
+                return Init(new FStructProperty { Struct = structIndex ?? FPackageIndex.FromRawIndex(0) }, builder, "StructProperty", size, 0);
+            }
             case "array":
                 if (argument.Length == 0)
                     throw new InvalidOperationException($"{path}: array needs the element type, e.g. array:int");
@@ -211,7 +239,7 @@ public static class KismetLocals
     private static readonly MethodInfo MemberwiseCloneMethod = typeof(object).GetMethod("MemberwiseClone", BindingFlags.Instance | BindingFlags.NonPublic)!;
 
     /// <summary>A deep copy (inner properties of containers too).</summary>
-    private static FProperty Clone(FProperty property)
+    internal static FProperty Clone(FProperty property)
     {
         var copy = (FProperty) MemberwiseCloneMethod.Invoke(property, null)!;
         foreach (var field in copy.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance).Where(o => typeof(FProperty).IsAssignableFrom(o.FieldType)))
@@ -222,7 +250,7 @@ public static class KismetLocals
     }
 
     /// <summary>Names the property and the inner properties of containers (the compiler names them like the property).</summary>
-    private static void Rename(UAsset asset, FProperty property, string name)
+    internal static void Rename(UAsset asset, FProperty property, string name)
     {
         asset.AddNameReference(new FString(name));
         property.Name = FName.FromString(asset, name);

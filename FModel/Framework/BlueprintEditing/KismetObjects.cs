@@ -283,6 +283,9 @@ public static class KismetObjects
         /// <summary>Resolves an object reference ("import:...", "export:..."); null in check mode for imports that don't exist yet.</summary>
         public FPackageIndex? Reference(string symbol, string path) => ResolveIndex(new JValue(symbol), path);
 
+        /// <summary>Same, for the {"import": ..., "className": ..., "classPackage": ...} form (an import whose class can't be guessed, e.g. a ScriptStruct).</summary>
+        public FPackageIndex? Reference(JToken value, string path) => ResolveIndex(value, path);
+
         private readonly Lazy<(long Context, long Skip)> _bias;
 
         public Builder(UAsset asset, bool create)

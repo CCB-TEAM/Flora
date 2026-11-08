@@ -326,7 +326,10 @@ namespace FModel.BlueprintGraph.Decompiler
 
             foreach (var data in GlobalContext.CurrentAsset.ComponentDelegates.Where(o => o.FunctionName != "None"))
             {
-                UFunction func = GlobalContext.CurrentAsset.SortedEvents.Find(o => o.Name.ToString() == data.FunctionName)!;
+                UFunction? func = GlobalContext.CurrentAsset.SortedEvents.Find(o => o.Name.ToString() == data.FunctionName);
+                // a handler created as a plain function (create_widget_handler) is not an ubergraph event: it has its own graph
+                if (func == null)
+                    continue;
                 LocalVariablesStorage localVars = GetEventParamPins(func);
                 BPNode entryNode = new K2Node_ComponentBoundEvent(func.Name, $"{data.DelegateName} ({data.ComponentName})", localVars.GetLocalPins(), null);
                 Graph.AddNode(entryNode);

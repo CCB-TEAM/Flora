@@ -13,6 +13,8 @@ using FModel.Localization;
 using FModel.Services;
 using FModel.ViewModels;
 using FModel.Framework.Docking;
+using FModel.Framework.BlueprintEditing;
+using UAssetAPI.ExportTypes;
 
 namespace FModel.Views.BlueprintViewer;
 
@@ -166,6 +168,48 @@ public partial class BlueprintViewerWindow : IDockPanel
     private void OnResetWidgetClick(object sender, RoutedEventArgs e) => _viewModel.Designer.ResetWidget(DesignerCanvas.SelectedWidget);
 
     private void OnResetAllClick(object sender, RoutedEventArgs e) => _viewModel.Designer.ResetAll();
+
+    private async void OnApplyPreviewClick(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var preview = _viewModel.Designer.GetPreviewChanges();
+            if (preview.Count == 0)
+            {
+                MessageBox.Show(Window.GetWindow(this)!, L("WidgetEditor_ApplyEmpty"), _viewModel.Title);
+                return;
+            }
+            if (!await _viewModel.Editor.EnsureLoadedAsync())
+                throw new InvalidOperationException(_viewModel.Editor.Status);
+            var session = _viewModel.Editor.Session;
+            var asset = session.Working;
+            var changes = new List<WidgetPreviewWriter.Change>();
+            foreach (var edit in preview)
+            {
+                var name = edit.IsSlot ? edit.Node.Slot?.Name : edit.Node.Export?.Name;
+                var parentName = edit.Node.Parent?.Export?.Name;
+                var matches = asset.Exports.Select((export, index) => (export, index))
+                    .Where(x => x.export is NormalExport && x.export.ObjectName.ToString() == name)
+                    .Where(x =>
+                    {
+                        var outer = x.export.OuterIndex?.Index ?? 0;
+                        if (outer <= 0 || outer > asset.Exports.Count) return false;
+                        var owner = asset.Exports[outer - 1];
+                        return edit.IsSlot ? owner.ObjectName.ToString() == parentName : owner.GetClassTypeForAncestry(asset, out _)?.ToString() == "WidgetTree";
+                    }).ToList();
+                if (matches.Count != 1)
+                    throw new InvalidOperationException($"Cannot uniquely resolve {name} in the editable package ({matches.Count} matches).");
+                changes.Add(new WidgetPreviewWriter.Change(matches[0].index + 1, edit.Property, edit.Value));
+            }
+            WidgetPreviewWriter.Apply(asset, changes);
+            session.MarkCdoChanged();
+            MessageBox.Show(Window.GetWindow(this)!, string.Format(L("WidgetEditor_ApplyDone"), changes.Count), _viewModel.Title);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(Window.GetWindow(this)!, ex.Message, _viewModel.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
 
     private void OnResetPropertyClick(object sender, RoutedEventArgs e)
     {

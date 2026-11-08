@@ -9,6 +9,7 @@ using CUE4Parse.FileProvider;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.Texture;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse_Conversion.Textures;
 using FModel.BlueprintGraph.Widgets;
@@ -84,6 +85,7 @@ public class WidgetDesignSize
 /// </summary>
 public class WidgetDesignerViewModel : ViewModel
 {
+    public sealed record PreviewChange(WidgetNode Node, bool IsSlot, string Property, object Value);
 
     public WidgetBlueprintInfo Info { get; private set; }
     public WidgetLayout Layout { get; private set; }
@@ -271,6 +273,33 @@ public class WidgetDesignerViewModel : ViewModel
         if (!_touched.TryGetValue(node, out var holders))
             _touched[node] = holders = new HashSet<IPropertyHolder>(ReferenceEqualityComparer.Instance);
         holders.Add(holder);
+    }
+
+    /// <summary>Collect preview edits with their nested property path; reject unreachable holders.</summary>
+    public IReadOnlyList<PreviewChange> GetPreviewChanges()
+    {
+        var result = new List<PreviewChange>();
+        foreach (var (node, holders) in _touched)
+        {
+            var visited = new HashSet<IPropertyHolder>(ReferenceEqualityComparer.Instance);
+            void Walk(IPropertyHolder holder, bool isSlot, string prefix, int depth)
+            {
+                if (holder == null || depth > 8 || !visited.Add(holder)) return;
+                var values = WidgetProps.GetOverrides(holder);
+                foreach (var (name, value) in values)
+                    result.Add(new PreviewChange(node, isSlot, prefix + name, value));
+                foreach (var name in holder.Properties.Select(p => p.Name.Text).Distinct(StringComparer.OrdinalIgnoreCase))
+                    if (WidgetProps.GetOriginal(holder, name) is FStructFallback nested)
+                        Walk(nested, isSlot, prefix + name + ".", depth + 1);
+            }
+            if (node.Export?.Owner != Info?.Root?.Export?.Owner && holders.Any(WidgetProps.HasOverrides))
+                throw new InvalidOperationException($"{node.Name}: nested user-widget assets must be edited in their own blueprint.");
+            Walk(node.Export, false, "", 0);
+            Walk(node.Slot, true, "", 0);
+            if (holders.Any(h => WidgetProps.HasOverrides(h) && !visited.Contains(h)))
+                throw new InvalidOperationException($"{node.Name}: a preview property could not be located in its owning widget.");
+        }
+        return result;
     }
 
     public void ResetWidget(WidgetNode node)

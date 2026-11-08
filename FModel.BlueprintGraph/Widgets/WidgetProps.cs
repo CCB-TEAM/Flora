@@ -50,6 +50,12 @@ public static class WidgetProps
     public static bool HasOverrides(IPropertyHolder? holder) =>
         holder != null && Overrides.TryGetValue(holder, out var values) && !values.IsEmpty;
 
+    /// <summary>Snapshot of this holder's pending designer preview values.</summary>
+    public static IReadOnlyDictionary<string, object> GetOverrides(IPropertyHolder holder) =>
+        holder != null && Overrides.TryGetValue(holder, out var values)
+            ? new Dictionary<string, object>(values, StringComparer.OrdinalIgnoreCase)
+            : new Dictionary<string, object>();
+
     /// <summary>The value stored in the asset, ignoring preview overrides.</summary>
     public static object? GetOriginal(IPropertyHolder? holder, string name)
     {

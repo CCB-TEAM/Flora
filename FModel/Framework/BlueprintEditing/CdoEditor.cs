@@ -60,6 +60,17 @@ public sealed class CdoEditor
         return cdo == null ? null : new CdoEditor(asset, cdo);
     }
 
+    /// <summary>Edit the serialized properties of an existing export using the same mapping-aware editor as a CDO.</summary>
+    public static CdoEditor ForExport(UAsset asset, NormalExport export)
+    {
+        if (!asset.Exports.Contains(export))
+            throw new ArgumentException("The export does not belong to this asset.", nameof(export));
+        return new CdoEditor(asset, export);
+    }
+
+    // Used to validate an edit on a detached copy before committing a batch to the live session.
+    internal static CdoEditor ForDetachedExport(UAsset asset, NormalExport export) => new(asset, export);
+
     public static bool IsSimpleType(EPropertyType type) => type is EPropertyType.BoolProperty or EPropertyType.ByteProperty or
         EPropertyType.Int8Property or EPropertyType.Int16Property or EPropertyType.IntProperty or EPropertyType.Int64Property or
         EPropertyType.UInt16Property or EPropertyType.UInt32Property or EPropertyType.UInt64Property or
