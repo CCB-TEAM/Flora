@@ -68,6 +68,27 @@ N4 K2Node_CallFunction "Apply Damage" stmt@312..401 EX_Context
 - `value:<kind>` editable literal; `arg` the input's bytecode argument (can be rewired or replaced); `var` the output lives in a variable others can read; `entry@N` an event's start in the event graph; `EDITED` a pending change.
 - All events share one event graph (`ExecuteUbergraph_<Name>`); `get_graph` on any event shows it.
 
+## Cooked widget edits
+
+The widget designer's property grid previews changes; use its Apply to Blueprint button, then save, to write supported changes.
+Agent tools edit the UAssetAPI working copy directly:
+`list_widget_exports` shows widget and slot export indices and identifies unparsed exports. `list_widget_properties` and
+`set_widget_property` read and change existing serialized properties; use `#index` for names that occur more than once.
+`get_widget_value` and `set_widget_value` access nested paths such as `LayoutData.Offsets.Right`; the setter accepts scalar,
+text, `{x,y}` vector and `{r,g,b,a}` color values. Edited text becomes culture-invariant. Missing nested fields are refused.
+`duplicate_widget_leaf` copies a native Image or TextBlock and its slot in the same panel. `duplicate_widget_subtree`
+copies a parsed subtree of supported native widgets, imported user-widget instances and slots with uniquely prefixed names;
+generated widget variables are copied, but event bindings are not. It refuses maps and serialized delegates; referenced
+user-widget classes are shared, not duplicated. `move_widget` moves or reorders a widget between compatible panels, keeping
+its variable and event bindings. `duplicate_bound_widget` copies
+an existing parsed, variable-backed widget with no inline children, creates its generated-class property and slot, but does
+not bind events. For a new independent event, `create_widget_handler` uses an existing same-class widget binding as its
+signature template and creates a separate no-op function. Validate and save the package, reopen that saved copy, then use
+the bytecode tools to insert logic after the handler's `EX_Nothing` at offset 0. `bind_widget_existing_handler` instead
+shares the original action; never use a destructive handler as a placeholder. These operations have not established
+runtime correctness merely by passing package validation. Nested user-widget blueprints, new widget classes and arbitrary
+panels are not created by these operations. Test the saved package in the target game.
+
 ## Packing, localization, textures and sounds
 
 The pak packer (*View → Pak Packer*) holds the files of the mod pak; the `pack_*`, `locres_*`, `texture_*` and `sound_replace` tools work on it and the user sees it change. `save_blueprint` with `create_pak` puts an edited blueprint into the same project, so one pak can carry blueprint edits, text and assets.

@@ -409,6 +409,7 @@
                                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0 0 0 5">
                                         <Button MinWidth="90" Content="{loc:Loc WidgetEditor_ResetWidget}" Click="OnResetWidgetClick" />
                                         <Button MinWidth="90" Margin="5 0 0 0" Content="{loc:Loc WidgetEditor_ResetAll}" Click="OnResetAllClick" />
+                                        <Button MinWidth="90" Margin="5 0 0 0" Content="{loc:Loc WidgetEditor_Apply}" Click="OnApplyPreviewClick" />
                                     </StackPanel>
                                     <TextBlock DockPanel.Dock="Top" Opacity="0.6" TextWrapping="Wrap" Text="{loc:Loc WidgetEditor_NoSelection}"
                                                Visibility="{Binding HasEditableSelection, Converter={x:Static converters:InvertBoolToVisibilityConverter.Instance}}" />

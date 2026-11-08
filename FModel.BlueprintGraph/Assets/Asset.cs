@@ -118,9 +118,10 @@ namespace FModel.BlueprintGraph.Assets
             {
                 Events.Remove(delegateData.FunctionName);
                 string eventName = $"{delegateData.DelegateName} ({delegateData.ComponentName})";
-                if (!Events.ContainsKey(eventName))
+                // a handler that is a plain function (create_widget_handler) is not an ubergraph event stub
+                if (!Events.ContainsKey(eventName) && _events.Find(o => o.Name == delegateData.FunctionName) is { } stub)
                 {
-                    Events[eventName] = _events.Find(o => o.Name == delegateData.FunctionName)!;
+                    Events[eventName] = stub;
                 }
             }
             

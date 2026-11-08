@@ -27,6 +27,36 @@ public static class BlueprintAgentTools
 {
     private const int MaxResult = 60_000;
 
+    // Only exports owned by this package's WidgetTree may be edited here. In particular,
+    // don't accidentally edit a nested widget blueprint or a generated class/CDO.
+    private static IEnumerable<(int Index, Export Export)> WidgetExports(UAssetAPI.UAsset asset)
+    {
+        var trees = asset.Exports.Select((e, i) => (Export: e, Index: i + 1))
+            .Where(x => x.Export.GetClassTypeForAncestry(asset, out _)?.ToString() == "WidgetTree")
+            .Select(x => x.Index).ToHashSet();
+        for (var i = 0; i < asset.Exports.Count; i++)
+        {
+            var candidate = asset.Exports[i];
+            var parent = candidate.OuterIndex?.Index ?? 0;
+            var seen = new HashSet<int>();
+            while (parent > 0 && parent <= asset.Exports.Count && seen.Add(parent))
+            {
+                if (trees.Contains(parent)) { yield return (i + 1, candidate); break; }
+                parent = asset.Exports[parent - 1].OuterIndex?.Index ?? 0;
+            }
+        }
+    }
+
+    private static CdoEditor WidgetEditor(UAssetAPI.UAsset asset, string name)
+    {
+        var matches = WidgetExports(asset).Where(x => name == $"#{x.Index}" || x.Export.ObjectName.ToString() == name).ToList();
+        if (matches.Count != 1)
+            throw new AgentToolException($"Expected one widget export named '{name}', found {matches.Count}; use its #index when names repeat.");
+        if (matches[0].Export is not NormalExport export)
+            throw new AgentToolException($"Widget '{name}' is {matches[0].Export.GetType().Name}, not a parsed property export; editing it would corrupt the package.");
+        return CdoEditor.ForExport(asset, export);
+    }
+
     [System.Runtime.InteropServices.DllImport("psapi.dll")]
     private static extern bool EmptyWorkingSet(IntPtr process);
 
@@ -489,6 +519,225 @@ public static class BlueprintAgentTools
         #endregion
 
         #region class defaults
+
+        new()
+        {
+            Name = "list_widget_exports",
+            Description = "Lists serialized widget and slot exports owned by this blueprint's WidgetTree. These are existing objects only.",
+            InputSchema = Object(("blueprint", BlueprintArg, false)),
+            Run = async (args, _) =>
+            {
+                var viewer = await LoadedAsync(args);
+                var asset = viewer.Editor.Session.Working;
+                return string.Join("\n", WidgetExports(asset).Select(x =>
+                    $"#{x.Index}: {x.Export.ObjectName} [{x.Export.GetClassTypeForAncestry(asset, out var module)}] outer=#{x.Export.OuterIndex?.Index ?? 0} {(x.Export is NormalExport ? "parsed" : x.Export.GetType().Name)}"));
+            },
+        },
+        new()
+        {
+            Name = "list_widget_properties",
+            Description = "Lists serialized and mapped properties for an existing widget or slot export.",
+            InputSchema = Object(("blueprint", BlueprintArg, false), ("widget", String("Exact export name or #index from list_widget_exports"), true)),
+            Run = async (args, _) =>
+            {
+                var viewer = await LoadedAsync(args);
+                var editor = WidgetEditor(viewer.Editor.Session.Working, args.Str("widget"));
+                return string.Join("\n", editor.ListProperties().Select(p =>
+                    $"{p.DisplayName} : {p.TypeText} = {(p.Current == null ? "(inherited)" : p.IsSimple ? CdoEditor.FormatValue(p.Current) : editor.GetJson(p))}"));
+            },
+        },
+        new()
+        {
+            Name = "set_widget_property",
+            Description = "Changes an existing serialized property on a widget or slot. Simple values use text; other types use the UAssetAPI JSON from list_widget_properties. Save and validate the blueprint afterwards.",
+            Access = AgentToolAccess.Edit,
+            InputSchema = Object(("blueprint", BlueprintArg, false), ("widget", String("Exact widget export name or #index"), true),
+                ("property", String("Exact existing property name"), true), ("value", Any("Simple value or UAssetAPI property JSON"), true)),
+            Run = async (args, _) =>
+            {
+                var viewer = await LoadedAsync(args);
+                var editor = WidgetEditor(viewer.Editor.Session.Working, args.Str("widget"));
+                var property = editor.ListProperties().SingleOrDefault(p => p.DisplayName == args.Str("property"))
+                    ?? throw new AgentToolException("Widget property not found or ambiguous.");
+                if (!property.IsOverridden)
+                    throw new AgentToolException("This first version only edits existing serialized properties.");
+                if (property.IsSimple) editor.SetValue(property, args.Str("value"));
+                else editor.SetJson(property, args.Str("value"));
+                viewer.Editor.Session.MarkCdoChanged();
+                return $"{args.Str("widget")}.{property.DisplayName} updated (pending); validate and save the blueprint.";
+            },
+        },
+        new()
+        {
+            Name = "get_widget_value",
+            Description = "Reads one serialized widget or slot property, including nested structures using dot-separated names such as LayoutData.Offsets.Right. Returns UAssetAPI property JSON.",
+            InputSchema = Object(("blueprint", BlueprintArg, false), ("widget", String("Exact export name or #index"), true),
+                ("path", String("Dot-separated property path"), true)),
+            Run = async (args, _) =>
+            {
+                var viewer = await LoadedAsync(args);
+                var editor = WidgetEditor(viewer.Editor.Session.Working, args.Str("widget"));
+                var path = args.Str("path").Split('.');
+                var property = editor.Cdo.Data.SingleOrDefault(p => p.Name.ToString() == path[0] && p.ArrayIndex == 0)
+                    ?? throw new AgentToolException($"Property '{path[0]}' is not serialized.");
+                for (var i = 1; i < path.Length; i++)
+                    property = property is UAssetAPI.PropertyTypes.Structs.StructPropertyData parent
+                        ? parent.Value?.SingleOrDefault(p => p.Name.ToString() == path[i] && p.ArrayIndex == 0)
+                          ?? throw new AgentToolException($"Property '{path[i]}' is not serialized.")
+                        : throw new AgentToolException($"Property '{path[i - 1]}' is not a structure.");
+                return viewer.Editor.Session.Working.SerializeJsonObject(property, Newtonsoft.Json.Formatting.Indented);
+            },
+        },
+        new()
+        {
+            Name = "set_widget_value",
+            Description = "Sets a scalar, text, vector or color value on an existing widget/slot property, including a nested path such as LayoutData.Offsets.Right. Vectors use {x,y}; colors use {r,g,b,a}. Edited text becomes culture-invariant. Nested properties must already be serialized. Validate and save afterward.",
+            Access = AgentToolAccess.Edit,
+            InputSchema = Object(("blueprint", BlueprintArg, false), ("widget", String("Exact export name or #index"), true),
+                ("path", String("Dot-separated property path"), true), ("value", Any("String, number, boolean, {x,y}, or {r,g,b,a}"), true)),
+            Run = async (args, _) =>
+            {
+                var viewer = await LoadedAsync(args);
+                var asset = viewer.Editor.Session.Working;
+                var selector = args.Str("widget");
+                var matches = WidgetExports(asset).Where(x => selector == $"#{x.Index}" || x.Export.ObjectName.ToString() == selector).ToList();
+                if (matches.Count != 1) throw new AgentToolException($"Expected one widget for '{selector}', found {matches.Count}.");
+                object value;
+                if (args["value"] is JValue scalar && scalar.Type is JTokenType.String or JTokenType.Integer or JTokenType.Float or JTokenType.Boolean)
+                    value = scalar.Value;
+                else if (args["value"] is JObject obj)
+                {
+                    float Component(string key)
+                    {
+                        if (obj[key]?.Type is not (JTokenType.Integer or JTokenType.Float))
+                            throw new AgentToolException($"'{key}' must be a finite number.");
+                        var number = obj.Value<float>(key);
+                        if (!float.IsFinite(number)) throw new AgentToolException($"'{key}' must be a finite number.");
+                        return number;
+                    }
+                    if (obj.Count == 2 && obj.ContainsKey("x") && obj.ContainsKey("y"))
+                        value = new CUE4Parse.UE4.Objects.Core.Math.FVector2D(Component("x"), Component("y"));
+                    else if (obj.Count == 4 && obj.ContainsKey("r") && obj.ContainsKey("g") && obj.ContainsKey("b") && obj.ContainsKey("a"))
+                        value = new CUE4Parse.UE4.Objects.Core.Math.FLinearColor(Component("r"), Component("g"), Component("b"), Component("a"));
+                    else throw new AgentToolException("Object must contain exactly x,y or r,g,b,a.");
+                }
+                else throw new AgentToolException("Value must be a scalar, vector or color.");
+                WidgetPreviewWriter.Apply(asset, [new WidgetPreviewWriter.Change(matches[0].Index, args.Str("path"), value)]);
+                viewer.Editor.Session.MarkCdoChanged();
+                return $"{selector}.{args.Str("path")} updated (pending). Validate and save the blueprint.";
+            },
+        },
+        new()
+        {
+            Name = "duplicate_widget_leaf",
+            Description = "Duplicates an existing native Image or TextBlock, including its slot, immediately after it in the same panel. This does not create event bindings. Validate and save the blueprint afterward.",
+            Access = AgentToolAccess.Edit,
+            InputSchema = Object(("blueprint", BlueprintArg, false), ("widget", String("Exact widget name or #index from list_widget_exports"), true),
+                ("name", String("Unique name for the new widget"), true)),
+            Run = async (args, _) =>
+            {
+                var viewer = await LoadedAsync(args);
+                var asset = viewer.Editor.Session.Working;
+                var selector = args.Str("widget");
+                var matches = WidgetExports(asset).Where(x => selector == $"#{x.Index}" || x.Export.ObjectName.ToString() == selector).ToList();
+                if (matches.Count != 1)
+                    throw new AgentToolException($"Expected one widget for '{selector}', found {matches.Count}; use #index for duplicate names.");
+                var result = WidgetTreeEditor.DuplicateLeaf(asset, matches[0].Index, args.Str("name"));
+                viewer.Editor.Session.MarkCdoChanged();
+                return $"Created widget #{result.Widget} and slot #{result.Slot} (pending). Validate and save; runtime behavior remains untested.";
+            },
+        },
+        new()
+        {
+            Name = "duplicate_widget_subtree",
+            Description = "Duplicates a subtree of parsed supported native widgets and imported user-widget instances, with their slots, after the template in the same multi-child panel. Generated widget variables are copied; event bindings are NOT copied. Maps and serialized delegates are refused; referenced user-widget blueprints are not duplicated. Validate, save, and test in game.",
+            Access = AgentToolAccess.Edit,
+            InputSchema = Object(("blueprint", BlueprintArg, false), ("widget", String("Root widget name or #index"), true),
+                ("prefix", String("Unique prefix for copied widget and slot names"), true)),
+            Run = async (args, _) =>
+            {
+                var viewer = await LoadedAsync(args);
+                var asset = viewer.Editor.Session.Working;
+                var selector = args.Str("widget");
+                var matches = WidgetExports(asset).Where(x => selector == $"#{x.Index}" || x.Export.ObjectName.ToString() == selector).ToList();
+                if (matches.Count != 1) throw new AgentToolException($"Expected one widget for '{selector}', found {matches.Count}.");
+                var result = WidgetTreeEditor.DuplicateWidgetSubtree(asset, matches[0].Index, args.Str("prefix"));
+                viewer.Editor.Session.MarkCdoChanged();
+                return $"Duplicated {result.Count} exports, root widget #{result.Widget} and root slot #{result.Slot} (pending); event bindings were not copied.";
+            },
+        },
+        new()
+        {
+            Name = "move_widget",
+            Description = "Moves or reorders an existing widget within the same tree while preserving its variable and event bindings. The old slot type must match the destination panel. Position is a zero-based insertion index after removing the widget from its current parent.",
+            Access = AgentToolAccess.Edit,
+            InputSchema = Object(("blueprint", BlueprintArg, false), ("widget", String("Widget name or #index"), true),
+                ("parent", String("Destination panel name or #index"), true), ("position", Integer("Zero-based insertion index"), true)),
+            Run = async (args, _) =>
+            {
+                var viewer = await LoadedAsync(args);
+                var asset = viewer.Editor.Session.Working;
+                int Find(string selector)
+                {
+                    var matches = WidgetExports(asset).Where(x => selector == $"#{x.Index}" || x.Export.ObjectName.ToString() == selector).ToList();
+                    return matches.Count == 1 ? matches[0].Index : throw new AgentToolException($"Expected one widget for '{selector}', found {matches.Count}.");
+                }
+                WidgetTreeEditor.MoveWidget(asset, Find(args.Str("widget")), Find(args.Str("parent")), args.Int("position", -1));
+                viewer.Editor.Session.MarkCdoChanged();
+                return "Widget moved (pending). Validate, save, and test in game.";
+            },
+        },
+        new()
+        {
+            Name = "duplicate_bound_widget",
+            Description = "Duplicates a parsed variable-backed widget and slot in the same panel, and declares a matching widget variable on its generated class. The widget must have no inline children. It has no event binding until explicitly bound; validate, save, and test in game.",
+            Access = AgentToolAccess.Edit,
+            InputSchema = Object(("blueprint", BlueprintArg, false), ("widget", String("Template widget name or #index"), true), ("name", String("Unique new widget and variable name"), true)),
+            Run = async (args, _) =>
+            {
+                var viewer = await LoadedAsync(args);
+                var asset = viewer.Editor.Session.Working;
+                var selector = args.Str("widget");
+                var matches = WidgetExports(asset).Where(x => selector == $"#{x.Index}" || x.Export.ObjectName.ToString() == selector).ToList();
+                if (matches.Count != 1) throw new AgentToolException($"Expected one widget for '{selector}', found {matches.Count}.");
+                var result = WidgetTreeEditor.DuplicateBoundWidget(asset, matches[0].Index, args.Str("name"));
+                viewer.Editor.Session.MarkCdoChanged();
+                return $"Created widget #{result.Widget}, slot #{result.Slot}, and class variable (pending); no event is bound.";
+            },
+        },
+        new()
+        {
+            Name = "bind_widget_existing_handler",
+            Description = "Bind a widget to a handler already used by another widget of the same class and delegate. Both widgets will invoke the SAME handler, so do not use a surrender or destructive handler as a placeholder. Validate, save, and test in game.",
+            Access = AgentToolAccess.Edit,
+            InputSchema = Object(("blueprint", BlueprintArg, false), ("widget", String("Target widget variable name"), true),
+                ("template", String("Widget variable already bound to this handler"), true), ("delegate", String("Delegate property name"), true),
+                ("handler", String("Existing handler function name"), true)),
+            Run = async (args, _) =>
+            {
+                var viewer = await LoadedAsync(args);
+                WidgetTreeEditor.BindExistingHandler(viewer.Editor.Session.Working, args.Str("widget"), args.Str("template"), args.Str("delegate"), args.Str("handler"));
+                viewer.Editor.Session.MarkCdoChanged();
+                return "Existing handler binding added (pending). Both widgets will invoke that handler.";
+            },
+        },
+        new()
+        {
+            Name = "create_widget_handler",
+            Description = "Creates and binds a separate no-op event handler with the signature of a proven compatible existing widget binding. The handler does not copy the template action. Save, reopen the resulting blueprint, then insert event logic after its EX_Nothing at offset 0; validate and test in game.",
+            Access = AgentToolAccess.Edit,
+            InputSchema = Object(("blueprint", BlueprintArg, false), ("widget", String("Target widget variable name"), true),
+                ("template", String("Widget variable with the compatible binding"), true), ("delegate", String("Delegate property name"), true),
+                ("template_handler", String("Existing compatible handler function"), true), ("name", String("Unique new handler function name"), true)),
+            Run = async (args, _) =>
+            {
+                var viewer = await LoadedAsync(args);
+                var index = WidgetTreeEditor.CreateIndependentHandler(viewer.Editor.Session.Working, args.Str("widget"), args.Str("template"),
+                    args.Str("delegate"), args.Str("template_handler"), args.Str("name"));
+                viewer.Editor.Session.MarkCdoChanged();
+                return $"Created and bound independent no-op handler #{index} (pending). Save and reopen before editing its bytecode.";
+            },
+        },
 
         new()
         {

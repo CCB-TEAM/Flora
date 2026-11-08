@@ -931,8 +931,11 @@
     <value>Edit (Preview)</value>
   </data>
   <data name="WidgetEditor_PreviewOnly" xml:space="preserve">
-    <value>Preview only: edits change this designer preview and are never saved to the asset.</value>
+    <value>Edits are previews until applied to the blueprint and saved. Reset affects only the preview, not applied changes. Existing scalar and supported nested layout properties can be applied; changed text becomes culture-invariant.</value>
   </data>
+  <data name="WidgetEditor_Apply" xml:space="preserve"><value>Apply to Blueprint</value></data>
+  <data name="WidgetEditor_ApplyDone" xml:space="preserve"><value>Applied {0} preview changes. Save the blueprint to write them.</value></data>
+  <data name="WidgetEditor_ApplyEmpty" xml:space="preserve"><value>There are no preview changes to apply.</value></data>
   <data name="WidgetEditor_ResetWidget" xml:space="preserve">
     <value>Reset Widget</value>
   </data>

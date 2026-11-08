@@ -931,8 +931,11 @@
     <value>编辑(预览)</value>
   </data>
   <data name="WidgetEditor_PreviewOnly" xml:space="preserve">
-    <value>仅预览:修改只影响当前设计器预览,不会保存到资源。</value>
+    <value>修改先用于预览，需应用到蓝图并保存。重置只影响预览，不撤销已应用的修改。支持已有的标量和部分嵌套布局属性；修改的文本将设为不随语言变化。</value>
   </data>
+  <data name="WidgetEditor_Apply" xml:space="preserve"><value>应用到蓝图</value></data>
+  <data name="WidgetEditor_ApplyDone" xml:space="preserve"><value>已应用 {0} 项预览修改，请保存蓝图以写入资源。</value></data>
+  <data name="WidgetEditor_ApplyEmpty" xml:space="preserve"><value>没有需要应用的预览修改。</value></data>
   <data name="WidgetEditor_ResetWidget" xml:space="preserve">
     <value>重置此控件</value>
   </data>
