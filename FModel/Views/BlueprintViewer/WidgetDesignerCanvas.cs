@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Input;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Objects;
+using FModel.BlueprintGraph.Animation;
 using FModel.BlueprintGraph.Widgets;
 using SkiaSharp;
 using SkiaSharp.Views.Desktop;
@@ -45,6 +46,34 @@ public partial class WidgetDesignerCanvas : SKElement
     public WidgetNode? SelectedWidget { get; private set; }
     public WidgetNode? HoveredWidget { get; private set; }
     public bool ShowOutlines { get; set; } = true;
+
+    /// <summary>The status line at the bottom; the animation filmstrip turns it off.</summary>
+    public bool ShowFooter { get; set; } = true;
+
+    private IReadOnlyDictionary<WidgetNode, WidgetAnimOverride>? _animation;
+
+    /// <summary>The values an animation sets on the widgets right now; null draws the widgets as the asset stores them.</summary>
+    public void SetAnimation(IReadOnlyDictionary<WidgetNode, WidgetAnimOverride>? state)
+    {
+        _animation = state;
+        InvalidateVisual();
+    }
+
+    private WidgetAnimOverride? AnimationOf(WidgetNode node) => _animation != null && _animation.TryGetValue(node, out var value) ? value : null;
+
+    /// <summary>The color of a color property with the components the running animation drives replaced.</summary>
+    private WidgetColor Animated(WidgetNode node, string property, WidgetColor original)
+    {
+        var animation = AnimationOf(node);
+        var color = property switch
+        {
+            "ColorAndOpacity" => animation?.ColorAndOpacity,
+            "BrushColor" => animation?.BrushColor,
+            "FillColorAndOpacity" => animation?.FillColor,
+            _ => null,
+        };
+        return color == null ? original : color.ApplyTo(original);
+    }
 
     /// <summary>Returns a decoded image for a brush resource (texture/material), or null while it isn't available.</summary>
     public Func<UObject, SKBitmap?>? ImageResolver { get; set; }
@@ -231,14 +260,17 @@ public partial class WidgetDesignerCanvas : SKElement
         }
         canvas.Restore();
 
-        canvas.DrawRect(new SKRect(0, height - 25, width, height), FooterPaint);
-        var status = $"Design size: {_designWidth:0}x{_designHeight:0}    Zoom: {_scaling:N2}";
-        if (HoveredWidget != null)
+        if (ShowFooter)
         {
-            var (hx, hy, hw, hh) = HoveredWidget.DesignRect();
-            status += $"    {HoveredWidget.DisplayName}  ({hx:0}, {hy:0})  {hw:0}x{hh:0}";
+            canvas.DrawRect(new SKRect(0, height - 25, width, height), FooterPaint);
+            var status = $"Design size: {_designWidth:0}x{_designHeight:0}    Zoom: {_scaling:N2}";
+            if (HoveredWidget != null)
+            {
+                var (hx, hy, hw, hh) = HoveredWidget.DesignRect();
+                status += $"    {HoveredWidget.DisplayName}  ({hx:0}, {hy:0})  {hw:0}x{hh:0}";
+            }
+            canvas.DrawText2(status, 5, height - 8, SKTextAlign.Left, GraphStyle.TextFont, TextPaint);
         }
-        canvas.DrawText2(status, 5, height - 8, SKTextAlign.Left, GraphStyle.TextFont, TextPaint);
     }
 
     private static SKRect RectOf(WidgetNode node) => SKRect.Create(node.X, node.Y, node.Width, node.Height);
@@ -255,12 +287,13 @@ public partial class WidgetDesignerCanvas : SKElement
             return;
 
         var e = node.Export;
-        var opacity = parentOpacity * WidgetProps.Float(e, "RenderOpacity", 1);
+        var animated = AnimationOf(node);
+        var opacity = parentOpacity * (animated?.Opacity ?? WidgetProps.Float(e, "RenderOpacity", 1)) * (animated?.TintAlpha ?? 1);
         var hidden = node.Visibility == "Hidden";
         var rect = RectOf(node);
 
         canvas.Save();
-        ApplyRenderTransform(canvas, node, rect);
+        ApplyRenderTransform(canvas, node, rect, animated);
 
         if (WidgetProps.Enum(e, "Clipping", "Inherit") is "ClipToBounds" or "ClipToBoundsAlways" || _layout?.GetKind(node) == WidgetKind.ScrollBox)
             canvas.ClipRect(rect);
@@ -295,22 +328,38 @@ public partial class WidgetDesignerCanvas : SKElement
         canvas.Restore();
     }
 
-    private static void ApplyRenderTransform(SKCanvas canvas, WidgetNode node, SKRect rect)
+    private static void ApplyRenderTransform(SKCanvas canvas, WidgetNode node, SKRect rect, WidgetAnimOverride? animated)
     {
         var transform = WidgetProps.Struct(node.Export, "RenderTransform");
-        if (transform == null)
+        if (transform == null && animated is not { HasTransform: true })
             return;
 
+        // the asset's own transform, then the components an animation drives replace theirs (the others keep the asset's value)
         var (tx, ty) = WidgetProps.Vector2(transform, "Translation");
         var (sx, sy) = WidgetProps.Vector2(transform, "Scale", 1, 1);
+        var (shx, shy) = WidgetProps.Vector2(transform, "Shear");
         var angle = WidgetProps.Float(transform, "Angle");
+        if (animated != null)
+        {
+            tx = animated.TranslateX ?? tx;
+            ty = animated.TranslateY ?? ty;
+            sx = animated.ScaleX ?? sx;
+            sy = animated.ScaleY ?? sy;
+            shx = animated.ShearX ?? shx;
+            shy = animated.ShearY ?? shy;
+            angle = animated.Angle ?? angle;
+        }
+
         var (px, py) = WidgetProps.Vector2(node.Export, "RenderTransformPivot", 0.5f, 0.5f);
         var pivotX = rect.Left + rect.Width * px;
         var pivotY = rect.Top + rect.Height * py;
 
+        // UMG applies scale, then shear, then rotation, then translation, around the pivot (shear is in degrees)
         canvas.Translate(tx, ty);
         canvas.Translate(pivotX, pivotY);
         canvas.RotateDegrees(angle);
+        if (shx != 0 || shy != 0)
+            canvas.Skew(MathF.Tan(shx * MathF.PI / 180), MathF.Tan(shy * MathF.PI / 180));
         canvas.Scale(sx, sy);
         canvas.Translate(-pivotX, -pivotY);
     }
@@ -322,13 +371,13 @@ public partial class WidgetDesignerCanvas : SKElement
         {
             case WidgetKind.Image:
             {
-                var tint = WidgetProps.LinearColor(e, "ColorAndOpacity", WidgetColor.White);
+                var tint = Animated(node, "ColorAndOpacity", WidgetProps.LinearColor(e, "ColorAndOpacity", WidgetColor.White));
                 DrawBrush(canvas, WidgetProps.Struct(e, "Brush"), rect, tint.WithAlpha(opacity));
                 break;
             }
             case WidgetKind.Border:
             {
-                var tint = WidgetProps.LinearColor(e, "BrushColor", WidgetColor.White);
+                var tint = Animated(node, "BrushColor", WidgetProps.LinearColor(e, "BrushColor", WidgetColor.White));
                 DrawBrush(canvas, WidgetProps.Struct(e, "Background"), rect, tint.WithAlpha(opacity));
                 break;
             }
@@ -348,7 +397,7 @@ public partial class WidgetDesignerCanvas : SKElement
                 var style = WidgetProps.Struct(e, "WidgetStyle");
                 DrawBrush(canvas, WidgetProps.Struct(style, "BackgroundImage"), rect, new WidgetColor(0.2f, 0.2f, 0.2f, opacity), true);
                 var percent = Math.Clamp(WidgetProps.Float(e, "Percent"), 0, 1);
-                var fillTint = WidgetProps.LinearColor(e, "FillColorAndOpacity", WidgetColor.White).WithAlpha(opacity);
+                var fillTint = Animated(node, "FillColorAndOpacity", WidgetProps.LinearColor(e, "FillColorAndOpacity", WidgetColor.White)).WithAlpha(opacity);
                 var fillType = WidgetProps.Enum(e, "BarFillType", "LeftToRight");
                 var fillRect = fillType switch
                 {
@@ -545,7 +594,7 @@ public partial class WidgetDesignerCanvas : SKElement
             return;
 
         var e = node.Export;
-        var color = ToSkColor(WidgetProps.SlateColor(e, "ColorAndOpacity", WidgetColor.White).WithAlpha(opacity));
+        var color = ToSkColor(Animated(node, "ColorAndOpacity", WidgetProps.SlateColor(e, "ColorAndOpacity", WidgetColor.White)).WithAlpha(opacity));
         var margin = WidgetProps.Margin(e, "Margin", WidgetMargin.Zero);
         var inner = new SKRect(rect.Left + margin.Left, rect.Top + margin.Top, rect.Right - margin.Right, rect.Bottom - margin.Bottom);
         var fontSize = WidgetLayout.FontSizePx(node);

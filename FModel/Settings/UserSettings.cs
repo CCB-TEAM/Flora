@@ -11,6 +11,7 @@ using CUE4Parse_Conversion.Animations;
 using CUE4Parse_Conversion.Meshes;
 using CUE4Parse_Conversion.Textures;
 using CUE4Parse_Conversion.UEFormat.Enums;
+using FModel.BlueprintGraph.Animation;
 using FModel.Framework;
 using FModel.ViewModels;
 using FModel.ViewModels.ApiEndpoints.Models;
@@ -436,6 +437,46 @@ namespace FModel.Settings
         {
             get => _widgetDesignerHeight;
             set => SetProperty(ref _widgetDesignerHeight, Math.Max(1, value));
+        }
+
+        private double _animationPreviewSpeed = 1.0;
+        public double AnimationPreviewSpeed
+        {
+            get => _animationPreviewSpeed;
+            set
+            {
+                var speed = double.IsFinite(value) ? value : 1.0;
+                speed = speed < 0.375 ? 0.25 : speed < 0.75 ? 0.5 : speed < 1.5 ? 1.0 : speed < 3.0 ? 2.0 : speed < 6.0 ? 4.0 : 8.0;
+                SetProperty(ref _animationPreviewSpeed, speed);
+            }
+        }
+
+        private bool _animationPreviewUseBlueprintSpeed = true;
+        public bool AnimationPreviewUseBlueprintSpeed
+        {
+            get => _animationPreviewUseBlueprintSpeed;
+            set => SetProperty(ref _animationPreviewUseBlueprintSpeed, value);
+        }
+
+        private bool _animationPreviewLoop;
+        public bool AnimationPreviewLoop
+        {
+            get => _animationPreviewLoop;
+            set => SetProperty(ref _animationPreviewLoop, value);
+        }
+
+        private bool _animationSnapToDisplayRate = true;
+        public bool AnimationSnapToDisplayRate
+        {
+            get => _animationSnapToDisplayRate;
+            set => SetProperty(ref _animationSnapToDisplayRate, value);
+        }
+
+        private TangentUpdateMode _animationTangentUpdateMode = TangentUpdateMode.Local;
+        public TangentUpdateMode AnimationTangentUpdateMode
+        {
+            get => _animationTangentUpdateMode;
+            set => SetProperty(ref _animationTangentUpdateMode, Enum.IsDefined(value) ? value : TangentUpdateMode.Local);
         }
 
         private IDictionary<string, DirectorySettings> _perDirectory = new Dictionary<string, DirectorySettings>();
