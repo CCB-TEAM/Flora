@@ -115,8 +115,8 @@ public static class GameReload
 
         var application = ApplicationService.ApplicationView;
         var cue4Parse = application.CUE4Parse;
+        var before = cue4Parse.Provider.Files.Count; // read before ClearProvider empties it
         cue4Parse.ClearProvider();
-        var before = cue4Parse.Provider.Files.Count;
         await ApplicationService.ThreadWorkerView.Begin(cancellationToken =>
         {
             cue4Parse.Provider.ClearAllVfs();
