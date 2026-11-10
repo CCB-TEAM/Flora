@@ -510,6 +510,22 @@ namespace CUE4Parse.FileProvider.Vfs
                 VfsUnmounted?.Invoke(reader, _unloadedVfs.Count);
             }
         }
+        /// <summary>
+        /// Drops every file and disposes every archive reader (mounted or not), so a following Initialize() opens the containers on disk again.
+        /// UnloadAllVfs keeps the old readers (and their open streams); this is for when the files changed on disk.
+        /// </summary>
+        public void ClearAllVfs()
+        {
+            Files.Clear();
+            foreach (var reader in _unloadedVfs.Keys) { try { reader.Dispose(); } catch { /* already closed */ } }
+            _unloadedVfs.Clear();
+            foreach (var reader in _mountedVfs.Keys) { try { reader.Dispose(); } catch { /* already closed */ } }
+            _mountedVfs.Clear();
+            _keys.Clear();
+            _requiredKeys.Clear();
+            GlobalData = null;
+        }
+
         public void UnloadNonStreamedVfs()
         {
             var onDemandFiles = new Dictionary<string, GameFile>(PathComparer);

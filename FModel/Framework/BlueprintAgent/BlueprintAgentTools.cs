@@ -124,7 +124,7 @@ public static class BlueprintAgentTools
     private static readonly JObject OffsetArg = Integer("In-memory bytecode offset of the original code, as get_graph / kismet_list_statements show it.");
     private static readonly JObject TokenArg = String("The EX_ token expected at that offset (e.g. EX_Let); guards against stale offsets.");
 
-    public static IReadOnlyList<AgentTool> All { get; } = [AgentGuide.Tool, .. Build(), .. DataTableAgentTools.Build(), .. JmapAgentTools.Build(), .. JmapCalls.Build(), .. PackAgentTools.Build(), .. AnimationAgentTools.Build(), .. AnimationEditAgentTools.Build()];
+    public static IReadOnlyList<AgentTool> All { get; } = [AgentGuide.Tool, .. Build(), .. DataTableAgentTools.Build(), .. JmapAgentTools.Build(), .. JmapCalls.Build(), .. PackAgentTools.Build(), .. AnimationAgentTools.Build(), .. AnimationEditAgentTools.Build(), .. ClaudeAgentTools.Build()];
 
     /// <summary>The tools offered now (bytecode object tools only when the setting allows them).</summary>
     public static IEnumerable<AgentTool> Available() =>
@@ -141,8 +141,10 @@ public static class BlueprintAgentTools
         }
         try
         {
+            // a pak rebuilt while Flora runs is mounted again before the tools that look things up in the game
+            var note = name is "find_assets" or "open_blueprint" or "open_datatable" ? await BlueprintAgentHost.OnUiAsync(GameReload.EnsureFreshAsync) : null;
             var text = tool.OffUiThread ? await tool.Run(args ?? new JObject(), cancellation) : await BlueprintAgentHost.OnUiAsync(() => tool.Run(args ?? new JObject(), cancellation));
-            return (Truncate(text), false);
+            return (Truncate(note + text), false);
         }
         catch (AgentToolException e)
         {
@@ -155,7 +157,10 @@ public static class BlueprintAgentTools
         catch (Exception e)
         {
             Serilog.Log.Error(e, "Agent tool {Tool} failed", name);
-            return ($"{e.GetType().Name}: {e.Message}", true);
+            var hint = e.Message.Contains("Invalid uasset magic", StringComparison.OrdinalIgnoreCase)
+                ? " (the game's pak probably changed on disk after Flora mounted it: call reload_game, then retry)"
+                : "";
+            return ($"{e.GetType().Name}: {e.Message}{hint}", true);
         }
     }
 
