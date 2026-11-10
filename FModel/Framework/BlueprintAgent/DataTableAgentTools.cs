@@ -145,6 +145,17 @@ public static class DataTableAgentTools
 {
     private static readonly Dictionary<string, DataTableSession> Sessions = new(StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>The DataTables open for editing (a copy; for reload_game).</summary>
+    public static IReadOnlyList<DataTableSession> OpenSessions => Sessions.Values.ToList();
+
+    /// <summary>Closes every open DataTable, dropping pending changes (for reload_game).</summary>
+    public static void CloseAllSessions()
+    {
+        foreach (var session in Sessions.Values.ToList())
+            session.Dispose();
+        Sessions.Clear();
+    }
+
     private static readonly JObject TableArg = String("Open DataTable: package path or name (see list_datatables). Optional when only one is open.");
 
     public static IEnumerable<AgentTool> Build() =>
